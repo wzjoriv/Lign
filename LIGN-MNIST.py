@@ -28,14 +28,17 @@ from collections import defaultdict
 
 
 
-#set gpu if available
+"""#set gpu if available
 if th.cuda.is_available():
     print("GPU is available")
     #device = th.device("cuda")
     device = th.device("cuda")
 else:
     print("GPU not available, CPU used")
-    device = th.device("cpu")
+    device = th.device("cpu")"""
+
+print("GPU not available, CPU used")
+device = th.device("cpu")
 
 
 # In[3]:
