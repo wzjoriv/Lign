@@ -1,2 +1,3 @@
 *.lnk
 .ipynb_checkpoints
+mnist/mnist_train.csv
