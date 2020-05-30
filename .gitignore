@@ -2,3 +2,5 @@
 .ipynb_checkpoints
 mnist/mnist_train.csv
 rug/
+data/
+.vscode/
