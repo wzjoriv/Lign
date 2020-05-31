@@ -1,4 +1,4 @@
-__record__ = [] #tracks labels used thus far
+__record_labels__ = [] #tracks labels used thus far
 
 def complete(model, dataset, order=[], labels=[]):
     pass

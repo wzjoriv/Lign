@@ -1,4 +1,4 @@
+from dataset import Dataset
 import graph as gh
-import dataset as data
 
-__all__ = []
+__all__ = ["Dataset"]

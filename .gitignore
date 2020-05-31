@@ -1,6 +1,7 @@
 *.lnk
-.ipynb_checkpoints
-mnist/mnist_train.csv
+.ipynb_checkpoints/
 .rug/
 data/
 .vscode/
+*.pyc
+__pycache__
