@@ -12,19 +12,24 @@ class GraphDataset(Dataset):
     def __init__(self, file="../utils/defaults/graph.lign", heavy=False, workers = 1):
         self.dataset = None
         self.heavy = heavy
-        self.__folder__ = os.path.dirname(file)
-        self.__files__ = {"file": file}
+
+        self.__folder__ = ""
+        self.__files__ = {"file": ""}
+        if file != "../utils/defaults/graph.lign":
+            self.__folder__ = os.path.dirname(file)
+            self.__files__["file"] = file
+
         self.workers = workers
 
         if self.heavy:
-            self.__files__["data"] = os.path.join(self.__folder__, ".data", "")
-            self.__files__["edges"] = os.path.join(self.__folder__, ".edges", "")
+            self.__files__["data"] = os.path.join(self.__folder__, ".data_LIGN/", "")
+            self.__files__["edges"] = os.path.join(self.__folder__, ".edges_LIGN/", "")
 
         with open(file, "r") as read_file:
             self.dataset = json.load(read_file)
 
-        if "count" not in self.dataset or "data" not in self.dataset or \
-            "edges" not in self.dataset or "count" not in self.dataset:
+        if "count" not in self.dataset and "data" not in self.dataset and \
+            "edges" not in self.dataset and "count" not in self.dataset:
             raise FileNotFoundError
     
     def __len__(self):
