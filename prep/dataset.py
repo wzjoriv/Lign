@@ -1,25 +1,27 @@
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
-import json
+import json.load, json.dumps
 import pickle.load, pickle.dump
 import os.path
 
 """
-
+    nodes = {
+        data: [],
+        edges: []
+    }
 """
 
 class GraphDataset(Dataset):
     def __init__(self, file="../utils/defaults/graph.lign", heavy=False, workers = 1):
         self.dataset = None
         self.heavy = heavy
+        self.workers = workers
 
         self.__folder__ = ""
         self.__files__ = {"file": ""}
         if file != "../utils/defaults/graph.lign":
             self.__folder__ = os.path.dirname(file)
             self.__files__["file"] = file
-
-        self.workers = workers
 
         if self.heavy:
             self.__files__["data"] = os.path.join(self.__folder__, ".data_LIGN/", "")
@@ -82,19 +84,19 @@ class GraphDataset(Dataset):
     def subgraph(self, nodes, edges = False):
         pass
 
-    def pull(nodes=[]):
+    def pull(nodes=[]): #pulls other's data from nodes that it points to into it's temp
         pass
 
-    def push(nodes=[]):
+    def push(nodes=[]): #pushes its data to nodes that it points to into nodes's temp
         pass
 
     def apply(func, nodes=[]):
         pass
 
-    def reset_temp():
+    def reset_temp(): #clear collected data from other nodes
         self.dataset["__temp__"] = [[] for i in range(self.dataset["count"])]
 
-    def filter(func):
+    def filter(func): #returns nodes that pass the filter
         pass
 
     def save(self, file="data/graph.lign", heavy = False):
@@ -109,14 +111,14 @@ formats cheatsheet:
         - = other data
         (NAME) = give data the name NAME in the data field
         [##] = options
-            csv: [attr to sep] #defaukt: each field is is
+            csv: [label1, label2, 3, 0-9]
 
     data type:
         imgs = images
         csv = csv file
 
     example:
-        format = ("imgs-csv(labels)", "data/", "labels.txt")
+        format = ('imgs-csv[label](labels)', 'data/', 'labels.txt')
 """
 
 def data_to_dataset(format, out_path, heavy = False):
