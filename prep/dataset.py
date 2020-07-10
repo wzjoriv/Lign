@@ -5,17 +5,19 @@ import pickle.load, pickle.dump
 import os.path
 
 """
-    nodes = {
-        data: [],
+    node = {
+        data: {},
         edges: []
     }
+    
 """
 
 class GraphDataset(Dataset):
-    def __init__(self, file="../utils/defaults/graph.lign", heavy=False, workers = 1):
+    def __init__(self, file="../utils/defaults/graph.lign", heavy=False, workers = 1, transform = (None, 'x')):
         self.dataset = None
         self.heavy = heavy
         self.workers = workers
+        self.transform = transform
 
         self.__folder__ = ""
         self.__files__ = {"file": ""}
@@ -51,6 +53,10 @@ class GraphDataset(Dataset):
             out["data"] = self.dataset["data"][indx]
             out["edges"] = self.dataset["edges"][indx]
 
+        if self.transform[0]:
+            for data_x in self.transform[1:]:
+                out["data"][data_x] = self.transform[0](data_x)
+
         return out
 
     def add(self, nodes):
@@ -81,10 +87,11 @@ class GraphDataset(Dataset):
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
 
-    def subgraph(self, nodes, edges = False):
-        pass
+    def subgraph(self, nodes, edges = False, linked = True): #returns graph instance
+        subgraph = SubGraph(self, nodes, edges, linked)
+        return subgraph
 
-    def pull(nodes=[]): #pulls other's data from nodes that it points to into it's temp
+    def pull(nodes=[]): #pulls others' data from nodes that it points to into it's temp
         pass
 
     def push(nodes=[]): #pushes its data to nodes that it points to into nodes's temp
@@ -99,27 +106,82 @@ class GraphDataset(Dataset):
     def filter(func): #returns nodes that pass the filter
         pass
 
-    def save(self, file="data/graph.lign", heavy = False):
+    def save(self, file="", heavy = False):
+
+        if len(file):
+            if self.heavy:
+                pass
+            else:
+                pass
+        
         pass
 
+class SubGraph(): #creates a isolated graph from the dataset. Meant to be more efficient if only changing a few nodes from the dataset
+    def __init__(self, graph_dataset, nodes, edges = False, linked = False):
+        self.dataset = graph_dataset
+        self.count = len(nodes)
+        self.__temp__ = [[] for i in range(self.count)]
+        self.__nodes__ = self.dataset[nodes]                             ### Need to fix
+        
+        if edges: 
+            self.__edges__ = [[] for i in range(self.count)]
+        if not linked: 
+            self.__linked_nodes__ = self.__nodes__
+            self.__nodes__ = [self.dataset[i].copy() for i in nodes]   ### Need to fix
+    
+    def __len__(self):
+        return self.dataset["count"]
+
+    def __getitem__(self, indx):
+        pass
+
+    def add(self, nodes):
+        pass
+
+    def pull(nodes=[]): #pulls others' data from nodes that it points to into it's temp
+        pass
+
+    def push(nodes=[]): #pushes its data to nodes that it points to into nodes's temp
+        pass
+
+    def apply(func, nodes=[]):
+        pass
+
+    def reset_temp(): #clear collected data from other nodes
+        self.__temp__ = [[] for i in range(self.count)]
+
+    def filter(func): #returns nodes that pass the filter
+        pass
+
+    def to_dataset(): #if not linked
+        pass
+
+
+
+
+
+
+
+
 """
-formats cheatsheet:
-    (format[, folder/file1, folder/file2])
-    size of data type must be the same
+formats cheat sheet:
+    (format[, folder/file1, folder/file2])                  ## size of data type in format must be the same as the number of directories/files
 
     syntax:
-        - = other data
+        - = addition entries in the data field
         (NAME) = give data the name NAME in the data field
-        [##] = options
-            csv: [label1, label2, 3, 0-9]
+        [##] = optional
+            csv: [column1, column2, 3, [0_9]]               ##  Indicate index or column name to retrieve; multiple columns are merges as one
 
     data type:
-        imgs = images
+        imgs = images folder                                ### Heavy lign graph suggested for large images
         csv = csv file
+        imgs_url = file of list of images url                ### Heavy lign graph suggested
 
     example:
-        format = ('imgs-csv[label](labels)', 'data/', 'labels.txt')
+        format = ('imgs(x)-csv(label)[column2]', 'data/', 'labels.txt')
 """
 
 def data_to_dataset(format, out_path, heavy = False):
     pass
+    return out_path

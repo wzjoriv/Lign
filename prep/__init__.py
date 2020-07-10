@@ -1,3 +1,3 @@
-from dataset import GraphDataset
+from dataset import GraphDataset, SubGraph
 
-__all__ = ["GraphDataset"]
+__all__ = ["GraphDataset", "SubGraph"]
