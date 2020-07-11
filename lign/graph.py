@@ -1,39 +1,52 @@
+import torch
 from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
-import json.load, json.dumps
-import pickle.load, pickle.dump
 import os.path
+from .utils import io
 
 """
     node = {
-        data: {},
-        edges: []
+        "data": {},
+        "edges": []
+    }
+
+    dataset = {
+        "count": 0,
+        "heavy": False,
+        "data": [],
+        "edges": [],
+        "__temp__": []
     }
     
 """
 
 class GraphDataset(Dataset):
-    def __init__(self, file="../utils/defaults/graph.lign", heavy=False, workers = 1, transform = (None, 'x')):
+    def __init__(self, fl="", workers = 1, heavy=False):
         self.dataset = None
-        self.heavy = heavy
         self.workers = workers
-        self.transform = transform
 
-        self.__folder__ = ""
-        self.__files__ = {"file": ""}
-        if file != "../utils/defaults/graph.lign":
-            self.__folder__ = os.path.dirname(file)
-            self.__files__["file"] = file
+        self.__files__ = {}
 
-        if self.heavy:
-            self.__files__["data"] = os.path.join(self.__folder__, ".data_LIGN/", "")
-            self.__files__["edges"] = os.path.join(self.__folder__, ".edges_LIGN/", "")
+        if not len(fl):
+            fl = os.path.join(os.path.dirname(__file__), "utils", "defaults","graph.lign")
+            self.__files__["file"] = "data\graph.lign"
+            self.__files__["folder"] = os.path.dirname(self.__files__["file"])
 
-        with open(file, "r") as read_file:
-            self.dataset = json.load(read_file)
+        else:
+            self.__files__["file"] = fl
+            self.__files__["folder"] = os.path.dirname(self.__files__["file"])
+
+        self.dataset = io.unpickle(fl)
+
+        if not len(fl):
+            self.dataset["heavy"] = heavy
+
+        if self.dataset["heavy"]:
+            self.__files__["data"] = os.path.join(self.__files__["folder"], ".data_LIGN", "")
+            self.__files__["edges"] = os.path.join(self.__files__["folder"], ".edges_LIGN", "")
 
         if "count" not in self.dataset and "data" not in self.dataset and \
-            "edges" not in self.dataset and "count" not in self.dataset:
+            "edges" not in self.dataset and "__temp__" not in self.dataset and \
+            "heavy" not in self.dataset:
             raise FileNotFoundError
     
     def __len__(self):
@@ -42,20 +55,13 @@ class GraphDataset(Dataset):
     def __getitem__(self, indx):
         out = {}
 
-        if self.heavy:
-            with open(self.dataset["data"][indx], "rb") as read_file:
-                out["data"] = pickle.load(read_file)
-
-            with open(self.dataset["edges"][indx], "rb") as read_file:
-                out["edges"] = pickle.load(read_file)
+        if self.dataset["heavy"]:
+            out["data"] = io.unpickle(self.dataset["data"][indx])
+            out["edges"] = io.unpickle(self.dataset["edges"][indx])
             
         else:
             out["data"] = self.dataset["data"][indx]
             out["edges"] = self.dataset["edges"][indx]
-
-        if self.transform[0]:
-            for data_x in self.transform[1:]:
-                out["data"][data_x] = self.transform[0](data_x)
 
         return out
 
@@ -66,20 +72,18 @@ class GraphDataset(Dataset):
             nodes = [nodes]
 
         for nd in nodes:
-            nd["edges"].add(self.dataset["count"])
+            nd["edges"].append(self.dataset["count"])
 
-            if self.heavy:
+            if self.dataset["heavy"]:
                 fl = str(self.dataset["count"]) + ".lign.dt"
 
                 out = os.path.join(self.__files__["data"], fl)
                 self.dataset["data"].append(out)
-                with open(out, "w") as write_file:
-                    pickle.dump(nd["data"], write_file)
+                io.pickle(nd["data"], out)
 
                 out = os.path.join(self.__files__["edges"], fl)
                 self.dataset["edges"].append(out)
-                with open(out, "w") as write_file:
-                    pickle.dump(nd["edges"], write_file)
+                io.pickle(nd["data"], out)
             else:
                 self.dataset["data"].append(nd["data"])
                 self.dataset["edges"].append(nd["edges"])
@@ -106,15 +110,16 @@ class GraphDataset(Dataset):
     def filter(func): #returns nodes that pass the filter
         pass
 
-    def save(self, file="", heavy = False):
+    def save(self, fl=""):
+        if not len(fl):
+            fl = self.__files__["file"]
 
-        if len(file):
-            if self.heavy:
-                pass
-            else:
-                pass
-        
-        pass
+        io.pickle(self.dataset, fl)
+        folder = os.path.dirname(fl)
+
+        if self.dataset["heavy"]:
+            io.move_dir(self.__files__["data"], os.path.join(folder, ".data_LIGN", ""))
+            io.move_dir(self.__files__["edges"], os.path.join(folder, ".edges_LIGN", ""))
 
 class SubGraph(): #creates a isolated graph from the dataset. Meant to be more efficient if only changing a few nodes from the dataset
     def __init__(self, graph_dataset, nodes, edges = False, linked = False):
