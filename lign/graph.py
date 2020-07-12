@@ -11,8 +11,7 @@ from .utils import io
 
     dataset = {
         "count": 0,
-        "heavy": False,
-        "data": [],
+        "data": {},
         "edges": [],
         "__temp__": []
     }
@@ -20,7 +19,7 @@ from .utils import io
 """
 
 class GraphDataset(Dataset):
-    def __init__(self, fl="", workers = 1, heavy=False):
+    def __init__(self, fl="", workers = 1):
         self.dataset = None
         self.workers = workers
 
@@ -28,90 +27,101 @@ class GraphDataset(Dataset):
 
         if not len(fl):
             fl = os.path.join(os.path.dirname(__file__), "utils", "defaults","graph.lign")
-            self.__files__["file"] = "data\graph.lign"
+            self.__files__["file"] = os.path.join("data", "graph.lign")
             self.__files__["folder"] = os.path.dirname(self.__files__["file"])
-
         else:
             self.__files__["file"] = fl
             self.__files__["folder"] = os.path.dirname(self.__files__["file"])
 
         self.dataset = io.unpickle(fl)
 
-        if not len(fl):
-            self.dataset["heavy"] = heavy
-
-        if self.dataset["heavy"]:
-            self.__files__["data"] = os.path.join(self.__files__["folder"], ".data_LIGN", "")
-            self.__files__["edges"] = os.path.join(self.__files__["folder"], ".edges_LIGN", "")
-
         if "count" not in self.dataset and "data" not in self.dataset and \
-            "edges" not in self.dataset and "__temp__" not in self.dataset and \
-            "heavy" not in self.dataset:
+            "edges" not in self.dataset and "__temp__" not in self.dataset:
             raise FileNotFoundError
     
     def __len__(self):
         return self.dataset["count"]
 
     def __getitem__(self, indx):
-        out = {}
+        node = {
+            "data": {}
+        }
 
-        if self.dataset["heavy"]:
-            out["data"] = io.unpickle(self.dataset["data"][indx])
-            out["edges"] = io.unpickle(self.dataset["edges"][indx])
-            
+        for key in self.dataset.keys():
+            node["data"][key] = self.dataset["data"][key][indx]
+
+        node["edges"] = self.dataset["edges"][indx]
+
+        return node
+
+    def get_data(self, data, nodes=[]):
+        ls = io.to_iter(nodes)
+        if not len(ls):
+            return self.dataset["data"][data]
         else:
-            out["data"] = self.dataset["data"][indx]
-            out["edges"] = self.dataset["edges"][indx]
+            if torch.is_tensor(self.dataset["data"][data]):
+                return self.dataset["data"][data][nodes]
+            else:
+                return [self.dataset["data"][data][nd] for nd in ls]
 
-        return out
+    def set_data(self, data, features, nodes=[]):
+        ls = io.to_iter(nodes)
+        if not len(ls):
+            self.dataset["data"][data] = features
+        else:
+            if torch.is_tensor(self.dataset["data"][data]):
+                self.dataset["data"][data][nodes] = features
+            else:
+                for indx, nd in enumerate(ls):
+                    self.dataset["data"][data][nd] = features[indx]
 
-    def get_data(data, nodes=[]):
-        if not len(nodes):
-            nodes = range(self.database["count"])
+    def __add_data__(self, obj, data):
+        if torch.is_tensor(data):
+            obj = torch.cat(obj, data.unqueeze(0))
+        else:
+            obj.append(data)
 
-        return [nd["data"][data] for nd in nodes]
+    def __copy_node__(self, node1):
+        node = {
+            "data": {}
+        }
 
-    def set_data(data, features, nodes=[]):
-        if not len(nodes):
-            nodes = range(self.database["count"])
+        for key, value in node1.items():
+            if torch.is_tensor(value):
+                node[key] = value.detach().clone()
+            elif io.is_primitive(value):
+                node[key] = value
+            else:
+                node[key] = value.copy()
+        
+        return node
 
-        for nd in nodes:
-            nd["data"][data] = features[nd]
+    def del_data(self, data):
+        self.dataset["data"].pop(data, None)
 
     def add(self, nodes):
-        tp = type(nodes)
-
-        if tp != list or tp != tuple or tp != set:
-            nodes = [nodes]
+        nodes = io.to_iter(nodes)
 
         for nd in nodes:
-            nd["edges"] = set(nd["edges"])
+            nd["edges"] = nd["edges"]
             nd["edges"].add(self.dataset["count"])
 
-            if self.dataset["heavy"]:
-                fl = str(self.dataset["count"]) + ".lign.dt"
+            for key in self.dataset["data"].keys():
+                self.__add_data__(self.dataset["data"][key], node["data"][key])
 
-                out = os.path.join(self.__files__["data"], fl)
-                self.dataset["data"].append(out)
-                io.pickle(nd["data"], out)
-
-                out = os.path.join(self.__files__["edges"], fl)
-                self.dataset["edges"].append(out)
-                io.pickle(nd["data"], out)
-            else:
-                self.dataset["data"].append(nd["data"])
-                self.dataset["edges"].append(nd["edges"])
+            self.dataset["edges"].append(nd["edges"])
                 
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
 
-    def subgraph(self, nodes, linked = False): #returns graph instance
-        subgraph = SubGraph(self, nodes, edges, linked)
+    def subgraph(self, nodes): #returns isolated graph
+        nodes = io.to_iter(nodes)
+        subgraph = SubGraph(self, nodes)
         return subgraph
 
-    def pull(self, nodes=[], func = None): #pulls others' data from nodes that it points to into it's temp
-        
+    def pull(self, nodes=[], func = None, data = 'x'): #pulls others' data from nodes that it points to into it's temp
         temp = self.dataset["__temp__"]
+        nodes = io.to_iter(nodes)
 
         if not len(nodes):
             push(self, func = func)
@@ -120,19 +130,24 @@ class GraphDataset(Dataset):
             lis = range(self.database["count"])
 
             for node in lis:
-                nd = self.__getitem__(node)
+                tw = nodes.intersection(nd["edges"])
 
-                for el in nodes.intersection(nd["edges"]):
-                    self.dataset["__temp__"][el].append(nd)
+                if len(tw):
+                    nd = self.__getitem__(node)
+                    for el in tw:
+                        self.dataset["__temp__"][el].append(nd)
 
             if func:
+                out = []
                 for node in nodes:
-                    func(self.__getitem__(node), self.dataset["__temp__"][edge])
+                    out.append(func(self.dataset["__temp__"][node][data]))
+
+                for indx, node in enumerate(nodes):
+                    self.dataset["data"][data][node] = out[indx]
         
         self.dataset["__temp__"] = temp
-        del temp
 
-    def push(self, nodes=[], func = None): #pushes its data to nodes that it points to into nodes's temp
+    def push(self, nodes=[], func = None, data = 'x'): #pushes its data to nodes that it points to into nodes's temp
         
         temp = self.dataset["__temp__"]
 
@@ -145,11 +160,14 @@ class GraphDataset(Dataset):
                 self.dataset["__temp__"][edge].append(nd)
 
         if func:
+            out = []
             for node in nodes:
-                func(self.__getitem__(node), self.dataset["__temp__"][node])
+                out.append(func(self.dataset["__temp__"][node][data]))
+
+            for indx, node in enumerate(nodes):
+                self.dataset["data"][data][node] = out[indx]
         
         self.dataset["__temp__"] = temp
-        del temp
 
     def apply(self, func, nodes=[]):
 
@@ -174,22 +192,16 @@ class GraphDataset(Dataset):
             fl = self.__files__["file"]
 
         io.pickle(self.dataset, fl)
-        folder = os.path.dirname(fl)
-
-        if self.dataset["heavy"]:
-            io.move_dir(self.__files__["data"], os.path.join(folder, ".data_LIGN", ""))
-            io.move_dir(self.__files__["edges"], os.path.join(folder, ".edges_LIGN", ""))
 
 class SubGraph(): #creates a isolated graph from the dataset. Meant to be more efficient if only changing a few nodes from the dataset
-    def __init__(self, graph_dataset, nodes, linked = True):
+    def __init__(self, graph_dataset, nodes):
         self.dataset = graph_dataset
         self.count = len(nodes)
         self.__temp__ = [[] for i in range(self.count)]
         self.__nodes__ = self.dataset[nodes]                             ### Need to fix
 
-        if not linked: 
-            self.__linked_nodes__ = self.__nodes__
-            self.__nodes__ = [self.dataset[i].copy() for i in nodes]   ### Need to fix
+        self.__linked_nodes__ = self.__nodes__
+        self.__nodes__ = [self.dataset[i].copy() for i in nodes]   ### Need to fix
     
     def __len__(self):
         return self.dataset["count"]
@@ -213,9 +225,6 @@ class SubGraph(): #creates a isolated graph from the dataset. Meant to be more e
         self.__temp__ = [[] for i in range(self.count)]
 
     def filter(func): #returns nodes that pass the filter
-        pass
-
-    def to_dataset(): #if not linked
         pass
 
 
