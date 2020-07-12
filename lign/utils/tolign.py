@@ -15,7 +15,7 @@ def cifar_to_lign(path):
                     "x": img,
                     "true_label": lab
                 },
-                "edges": []
+                "edges": set()
             }
         graph.add(out)
 
