@@ -1,4 +1,5 @@
 import torch
+from torch.nn import nn.Module
 from torch.utils.data import Dataset, DataLoader
 import os.path
 from .utils import io
@@ -96,8 +97,8 @@ class GraphDataset(Dataset):
         
         return node
 
-    def del_data(self, data):
-        self.dataset["data"].pop(data, None)
+    def pop_data(self, data):
+        return self.dataset["data"].pop(data, None)
 
     def add(self, nodes):
         nodes = io.to_iter(nodes)
@@ -148,8 +149,8 @@ class GraphDataset(Dataset):
         self.dataset["__temp__"] = temp
 
     def push(self, nodes=[], func = None, data = 'x'): #pushes its data to nodes that it points to into nodes's temp
-        
         temp = self.dataset["__temp__"]
+        nodes = io.to_iter(nodes)
 
         if not len(nodes):
             nodes = range(self.database["count"])
@@ -169,20 +170,28 @@ class GraphDataset(Dataset):
         
         self.dataset["__temp__"] = temp
 
-    def apply(self, func, nodes=[]):
+    def apply(self, func, data, nodes=[]):
+        nodes = io.to_iter(nodes)
+
+        if not len(nodes):
+            if(issubclass(func, nn.Module)):
+                self.dataset["data"][data] = func(data)
+                return
+            nodes = range(self.database["count"])
+
+        if(issubclass(func, nn.Module)):
+            self.dataset["data"][data][nodes] = func(data)
+        else:
+            for indx, node in enumarate(nodes):
+                self.dataset["data"][data][node] = func(data[ind])
+
+    def reset_temp(self, nodes=[]): #clear collected data from other nodes
+        nodes = io.to_iter(nodes)
 
         if not len(nodes):
             nodes = range(self.database["count"])
 
-        for node in nodes:
-            func(self.__getitem__(node))
-
-    def reset_temp(self, nodes=[]): #clear collected data from other nodes
-        if len(nodes):
-            for nd in nodes:
-                self.dataset["__temp__"][nd] = []
-        else:
-            self.dataset["__temp__"] = [[] for i in range(self.dataset["count"])]
+        self.dataset["__temp__"] = [[] for i in nodes]
 
     def filter(self, func): #returns nodes that pass the filter
         pass
@@ -218,7 +227,7 @@ class SubGraph(): #creates a isolated graph from the dataset. Meant to be more e
     def push(self): #pushes its data to nodes that it points to into nodes's temp
         pass
 
-    def apply(func, nodes=[]):
+    def apply(self, func, nodes=[]):
         pass
 
     def reset_temp(): #clear collected data from other nodes

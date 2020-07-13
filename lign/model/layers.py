@@ -4,7 +4,7 @@ import torch.nn as nn
 
 #gcn layer in network
 class GCN(nn.Module):
-    def __init__(self, graph, data, func = None, module_pre = None, module_post = None):
+    def __init__(self, graph, func, module_post = None, module_pre = None):
         super(GCN, self).__init__()
         self.g = graph
         self.data = data
@@ -12,6 +12,15 @@ class GCN(nn.Module):
         self.module_pre = module_pre
         self.module_post = module_post
 
-    def forward(self):
-        g.push(func = func, data = data)
-        return g.ndata.pop('h')
+    def forward(self, data):
+        g.set_data("h", data)
+
+        if self.module_pre:
+            g.apply(self.module_pre, "h")
+
+        g.push(func = func, data = "h")
+        
+        if self.module_post:
+            g.apply(self.module_post, "h")
+
+        return g.pop_data("h")
