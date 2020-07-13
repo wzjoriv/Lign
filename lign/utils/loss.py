@@ -1,11 +1,14 @@
 import torch as th
 
 def similarity_matrix(x): #pairwise distance
-    """x_norm = (x**2).sum(1).view(-1, 1)
+    """
+    x_norm = (x**2).sum(1).view(-1, 1)
     y = x
     y_norm = x_norm.view(1, -1)
 
-    dist = x_norm + y_norm - 2.0 * th.mm(x, th.transpose(y, 0, 1))"""
+    dist = x_norm + y_norm - 2.0 * th.mm(x, th.transpose(y, 0, 1))
+    """
+
     n = x.size(0)
     d = x.size(1)
 
@@ -27,6 +30,7 @@ def pairwaise_loss(output, labels):
     if nodes with the same label: x^2
     if nodes with different label: -x^2
     """
+
     sim = similarity_matrix(output)
     same = same_label(labels)
     diff = temp*(-1) + 1  #turns 1's to 0's and 0's to 1's 

@@ -1,5 +1,5 @@
 import torch
-from torch.nn import nn.Module
+from torch import nn
 from torch.utils.data import Dataset, DataLoader
 import os.path
 from .utils import io
@@ -48,7 +48,7 @@ class GraphDataset(Dataset):
             "data": {}
         }
 
-        for key in self.dataset.keys():
+        for key in self.dataset["data"].keys():
             node["data"][key] = self.dataset["data"][key][indx]
 
         node["edges"] = self.dataset["edges"][indx]
@@ -76,11 +76,25 @@ class GraphDataset(Dataset):
                 for indx, nd in enumerate(ls):
                     self.dataset["data"][data][nd] = features[indx]
 
-    def __add_data__(self, obj, data):
-        if torch.is_tensor(data):
-            obj = torch.cat(obj, data.unqueeze(0))
+    def add_edge(self, node, edges):
+        edges = io.to_iter(edges)
+        self.dataset["edges"][node].update(edges)
+
+    def remove_edge(self, node, edges):
+        edges = io.to_iter(edges)
+        self.dataset["edges"][node].difference_update(edges)
+
+    def __add_data__(self, data, obj):
+        if torch.is_tensor(obj):
+            if data not in self.dataset["data"]:
+                self.dataset["data"][data] = obj.unsqueeze(0)
+            else:
+                self.dataset["data"][data] = torch.cat((self.dataset["data"][data], obj.unsqueeze(0)))
         else:
-            obj.append(data)
+            if data not in self.dataset["data"]:
+                self.dataset["data"][data] = [obj]
+            else:
+                self.dataset["data"][data].append(data)
 
     def __copy_node__(self, node1):
         node = {
@@ -102,13 +116,12 @@ class GraphDataset(Dataset):
 
     def add(self, nodes):
         nodes = io.to_iter(nodes)
-
         for nd in nodes:
             nd["edges"] = nd["edges"]
             nd["edges"].add(self.dataset["count"])
 
-            for key in self.dataset["data"].keys():
-                self.__add_data__(self.dataset["data"][key], node["data"][key])
+            for key in nd["data"].keys():
+                self.__add_data__(key, nd["data"][key])
 
             self.dataset["edges"].append(nd["edges"])
                 
@@ -120,8 +133,7 @@ class GraphDataset(Dataset):
         subgraph = SubGraph(self, nodes)
         return subgraph
 
-    def pull(self, nodes=[], func = None, data = 'x'): #pulls others' data from nodes that it points to into it's temp
-        temp = self.dataset["__temp__"]
+    def pull(self, nodes=[], func = None, data = 'x', reset_buffer = True): #pulls others' data from nodes that it points to into it's temp
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
@@ -146,10 +158,9 @@ class GraphDataset(Dataset):
                 for indx, node in enumerate(nodes):
                     self.dataset["data"][data][node] = out[indx]
         
-        self.dataset["__temp__"] = temp
+        self.reset_temp() if reset_buffer else print("Temporaty buffer was not reset")
 
-    def push(self, nodes=[], func = None, data = 'x'): #pushes its data to nodes that it points to into nodes's temp
-        temp = self.dataset["__temp__"]
+    def push(self, nodes=[], func = None, data = 'x', reset_buffer = True): #pushes its data to nodes that it points to into nodes's temp
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
@@ -168,7 +179,7 @@ class GraphDataset(Dataset):
             for indx, node in enumerate(nodes):
                 self.dataset["data"][data][node] = out[indx]
         
-        self.dataset["__temp__"] = temp
+        self.reset_temp() if reset_buffer else print("Temporaty buffer was not reset")
 
     def apply(self, func, data, nodes=[]):
         nodes = io.to_iter(nodes)
