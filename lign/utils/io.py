@@ -2,7 +2,7 @@ import json as jn
 import pickle as pk
 import os
 from torchvision import datasets
-from torch import is_tensor, stack
+from torch import is_tensor, stack, LongTensor
 from collections.abc import Iterable
 
 def unpickle(fl):
@@ -47,11 +47,10 @@ def cifar_to_lign(path, transforms = None):
     graph = GraphDataset()
 
     imgs = []
+    labels = []
     for img, lab in dataset:
         out = {
-                "data": {
-                    "true_label": lab
-                },
+                "data": {},
                 "edges": set()
             }
 
@@ -59,12 +58,15 @@ def cifar_to_lign(path, transforms = None):
             img = transforms(img)
 
         imgs.append(img)
+        labels.append(lab)
         graph.add(out)
     
     if(is_tensor(imgs[0])):
         imgs = stack(imgs)
+        labels = LongTensor(labels)
 
     graph.set_data('x', imgs)
+    graph.set_data('labels', labels)
 
     return graph
 
