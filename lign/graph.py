@@ -160,7 +160,7 @@ class GraphDataset(Dataset):
         
         self.reset_temp() if reset_buffer else print("Temporaty buffer was not reset")
 
-    def push(self, nodes=[], func = None, data = 'x', reset_buffer = True): #pushes its data to nodes that it points to into nodes's temp
+    def push(self, func = None, data = 'x', nodes=[], reset_buffer = True): #pushes its data to nodes that it points to into nodes's temp
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
@@ -186,15 +186,15 @@ class GraphDataset(Dataset):
 
         if not len(nodes):
             if(issubclass(func, nn.Module)):
-                self.dataset["data"][data] = func(data)
+                self.dataset["data"][data] = func(self.dataset["data"][data])
                 return
             nodes = range(self.database["count"])
 
         if(issubclass(func, nn.Module)):
-            self.dataset["data"][data][nodes] = func(data)
+            self.dataset["data"][data][nodes] = func(self.dataset["data"][data])
         else:
             for indx, node in enumarate(nodes):
-                self.dataset["data"][data][node] = func(data[ind])
+                self.dataset["data"][data][node] = func(self.dataset["data"][data][indx])
 
     def reset_temp(self, nodes=[]): #clear collected data from other nodes
         nodes = io.to_iter(nodes)
@@ -204,8 +204,15 @@ class GraphDataset(Dataset):
 
         self.dataset["__temp__"] = [[] for i in nodes]
 
-    def filter(self, func): #returns nodes that pass the filter
-        pass
+    def filter(self, funcs, data): #returns nodes' index that pass at least one of the filters
+        funs = io.to_iter(func)
+        
+        out = funs[0](self.dataset["data"][data])
+
+        for fun in funs[1:]:
+            out |= fun(self.dataset["data"][data])
+
+        return torch.nonzero(out)
 
     def save(self, fl=""):
         if not len(fl):
@@ -268,6 +275,6 @@ formats cheat sheet:
         format = ('imgs(x)-csv(label)[column2]', 'data/', 'labels.txt')
 """
 
-def data_to_dataset(format, out_path, heavy = False):
+def data_to_dataset(format, out_path):
     pass
     return out_path
