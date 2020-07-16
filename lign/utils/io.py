@@ -2,7 +2,7 @@ import json as jn
 import pickle as pk
 import os
 from torchvision import datasets
-from torch import is_tensor, stack, LongTensor
+import torch
 from collections.abc import Iterable
 
 def unpickle(fl):
@@ -35,7 +35,7 @@ def to_iter(data):
     return data
 
 def is_primitve(data):
-    return type(value) in (int, str, bool, float)
+    return type(data) in (int, str, bool, float)
 
 def cal_to_lign(path):
     pass
@@ -61,9 +61,9 @@ def cifar_to_lign(path, transforms = None):
         labels.append(lab)
         graph.add(out)
     
-    if(is_tensor(imgs[0])):
-        imgs = stack(imgs)
-        labels = LongTensor(labels)
+    if(torch.is_tensor(imgs[0])):
+        imgs = torch.stack(imgs)
+        labels = torch.LongTensor(labels)
 
     graph.set_data('x', imgs)
     graph.set_data('labels', labels)

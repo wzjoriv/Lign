@@ -19,15 +19,17 @@ from .utils import io
     
 """
 
+
 class GraphDataset(Dataset):
-    def __init__(self, fl="", workers = 1):
+    def __init__(self, fl="", workers=1):
         self.dataset = None
         self.workers = workers
 
         self.__files__ = {}
 
         if not len(fl):
-            fl = os.path.join(os.path.dirname(__file__), "utils", "defaults","graph.lign")
+            fl = os.path.join(os.path.dirname(__file__),
+                              "utils", "defaults", "graph.lign")
             self.__files__["file"] = os.path.join("data", "graph.lign")
             self.__files__["folder"] = os.path.dirname(self.__files__["file"])
         else:
@@ -37,9 +39,9 @@ class GraphDataset(Dataset):
         self.dataset = io.unpickle(fl)
 
         if "count" not in self.dataset and "data" not in self.dataset and \
-            "edges" not in self.dataset and "__temp__" not in self.dataset:
+                "edges" not in self.dataset and "__temp__" not in self.dataset:
             raise FileNotFoundError
-    
+
     def __len__(self):
         return self.dataset["count"]
 
@@ -89,7 +91,8 @@ class GraphDataset(Dataset):
             if data not in self.dataset["data"]:
                 self.dataset["data"][data] = obj.unsqueeze(0)
             else:
-                self.dataset["data"][data] = torch.cat((self.dataset["data"][data], obj.unsqueeze(0)))
+                self.dataset["data"][data] = torch.cat(
+                    (self.dataset["data"][data], obj.unsqueeze(0)))
         else:
             if data not in self.dataset["data"]:
                 self.dataset["data"][data] = [obj]
@@ -104,11 +107,11 @@ class GraphDataset(Dataset):
         for key, value in node1.items():
             if torch.is_tensor(value):
                 node[key] = value.detach().clone()
-            elif io.is_primitive(value):
+            elif io.is_primitve(value):
                 node[key] = value
             else:
                 node[key] = value.copy()
-        
+
         return node
 
     def pop_data(self, data):
@@ -124,23 +127,24 @@ class GraphDataset(Dataset):
                 self.__add_data__(key, nd["data"][key])
 
             self.dataset["edges"].append(nd["edges"])
-                
+
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
 
-    def subgraph(self, nodes): #returns isolated graph
+    def subgraph(self, nodes):  # returns isolated graph
         nodes = io.to_iter(nodes)
         subgraph = SubGraph(self, nodes)
         return subgraph
 
-    def pull(self, nodes=[], func = None, data = 'x', reset_buffer = True): #pulls others' data from nodes that it points to into it's temp
+    # pulls others' data from nodes that it points to into it's temp
+    def pull(self, nodes=[], func=None, data='x', reset_buffer=True):
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
-            push(self, nodes = nodes, func = func, data=data, reset_buffer=reset_buffer)
+            self.push(nodes, func, data, reset_buffer)
         else:
             nodes = set(nodes)
-            lis = range(self.database["count"])
+            lis = range(self.dataset["count"])
 
             for node in lis:
                 nd = self.__getitem__(node)
@@ -156,14 +160,15 @@ class GraphDataset(Dataset):
 
                 for indx, node in enumerate(nodes):
                     self.dataset["data"][data][node] = out[indx]
-        
+
         self.reset_temp() if reset_buffer else print("Temporaty buffer was not reset")
 
-    def push(self, func = None, data = 'x', nodes=[], reset_buffer = True): #pushes its data to nodes that it points to into nodes's temp
+    # pushes its data to nodes that it points to into nodes's temp
+    def push(self, func=None, data='x', nodes=[], reset_buffer=True):
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
-            nodes = range(self.database["count"])
+            nodes = range(self.dataset["count"])
 
         for node in nodes:
             nd = self.__getitem__(node)
@@ -177,7 +182,7 @@ class GraphDataset(Dataset):
 
             for indx, node in enumerate(nodes):
                 self.dataset["data"][data][node] = out[indx]
-        
+
         self.reset_temp() if reset_buffer else print("Temporaty buffer was not reset")
 
     def apply(self, func, data, nodes=[]):
@@ -187,25 +192,27 @@ class GraphDataset(Dataset):
             if(issubclass(func, nn.Module)):
                 self.dataset["data"][data] = func(self.dataset["data"][data])
                 return
-            nodes = range(self.database["count"])
+            nodes = range(self.dataset["count"])
 
         if(issubclass(func, nn.Module)):
-            self.dataset["data"][data][nodes] = func(self.dataset["data"][data][nodes])
+            self.dataset["data"][data][nodes] = func(
+                self.dataset["data"][data][nodes])
         else:
-            for indx, node in enumarate(nodes):
-                self.dataset["data"][data][node] = func(self.dataset["data"][data][indx])
+            for indx, node in enumerate(nodes):
+                self.dataset["data"][data][node] = func(
+                    self.dataset["data"][data][indx])
 
-    def reset_temp(self, nodes=[]): #clear collected data from other nodes
+    def reset_temp(self, nodes=[]):  # clear collected data from other nodes
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
-            nodes = range(self.database["count"])
+            nodes = range(self.dataset["count"])
 
         self.dataset["__temp__"] = [[] for i in nodes]
 
-    def filter(self, funcs, data): #returns nodes' index that pass at least one of the filters
-        funs = io.to_iter(func)
-        
+    def filter(self, funcs, data):  # returns nodes' index that pass at least one of the filters
+        funs = io.to_iter(funcs)
+
         out = funs[0](self.dataset["data"][data])
 
         for fun in funs[1:]:
@@ -219,24 +226,25 @@ class GraphDataset(Dataset):
 
         io.pickle(self.dataset, fl)
 
-class SubGraph(): #creates a isolated graph from the dataset. Meant to be more efficient if only changing a few nodes from the dataset
+
+class SubGraph():  # creates a isolated graph from the dataset. Meant to be more efficient if only changing a few nodes from the dataset
     def __init__(self, graph_dataset, nodes):
         self.dataset = graph_dataset
         self.count = len(nodes)
         self.nodes = io.to_iter(nodes)
-    
+
     def __len__(self):
         return self.count
 
     def __getitem__(self, indx):
-        return self.dataset(nodes[indx])
+        return self.dataset(self.nodes[indx])
 
-    def from_dataset(self, nodes): ### Add nodes prom dataset
+    def from_dataset(self, nodes):  # Add nodes prom dataset
         nodes = io.to_iter(nodes)
         self.nodes.extend(nodes)
         self.count += len(nodes)
 
-    def __get_parent_nodes__(nodes):
+    def __get_parent_nodes__(self, nodes):
         nodes = io.to_iter(nodes)
 
         if len(nodes) == len(self.nodes) or not len(nodes):
@@ -244,12 +252,16 @@ class SubGraph(): #creates a isolated graph from the dataset. Meant to be more e
 
         return [self.nodes[i] for i in nodes]
 
-    def pull(self, func = None, data = 'x', nodes=[]): #pulls others' data from nodes that it points to into it's temp
+    # pulls others' data from nodes that it points to into it's temp
+    def pull(self, func=None, data='x', nodes=[]):
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
-            push(self, func = func, data = data, nodes=nodes)
+            self.push(func, data, nodes)
         else:
+            stor = self.dataset.dataset["__temp__"]
+            self.dataset.reset_temp()
+
             nodes = set(self.__get_parent_nodes__(nodes))
             lis = self.__get_parent_nodes__([])
 
@@ -267,41 +279,42 @@ class SubGraph(): #creates a isolated graph from the dataset. Meant to be more e
 
                 for indx, node in enumerate(nodes):
                     self.dataset["data"][data][node] = out[indx]
-        
-        self.reset_temp() if reset_buffer else print("Temporaty buffer was not reset")
 
-    def push(self, func = None, data = 'x', nodes=[]): #pushes its data to nodes that it points to into nodes's temp
+            self.dataset.dataset["__temp__"] = stor
+
+    # pushes its data to nodes that it points to into nodes's temp
+    def push(self, func=None, data='x', nodes=[]):
         stor = self.dataset.dataset["__temp__"]
         self.dataset.reset_temp()
 
         nodes = self.__get_parent_nodes__(nodes)
 
-        self.dataset.push(func = func, data = data, nodes = nodes, reset_buffer=False)
+        self.dataset.push(func=func, data=data,
+                          nodes=nodes, reset_buffer=False)
 
         self.dataset.dataset["__temp__"] = stor
 
     def apply(self, func, data, nodes=[]):
         nodes = self.__get_parent_nodes__(nodes)
 
-        self.dataset.apply(func = func, data=data, nodes=nodes)
+        self.dataset.apply(func=func, data=data, nodes=nodes)
 
-    def reset_temp(self, nodes = []): # clears collected data from other nodes
+    def reset_temp(self, nodes=[]):  # clears collected data from other nodes
         nodes = self.__get_parent_nodes__(nodes)
 
         self.dataset.reset_temp(nodes)
 
-    def filter(self, funcs, data): # returns nodes that pass the filter
-        funs = io.to_iter(func)
-        
-        p_data = self.dataset.get_data(data = data, nodes=self.nodes)
+    def filter(self, funcs, data):  # returns nodes that pass the filter
+        funs = io.to_iter(funcs)
+
+        p_data = self.dataset.get_data(data=data, nodes=self.nodes)
 
         out = funs[0](p_data)
-        
+
         for fun in funs[1:]:
             out |= fun(p_data)
 
         return torch.nonzero(out)
-
 
 
 """
@@ -322,6 +335,7 @@ formats cheat sheet:
     example:
         format = ('imgs(x)-csv(label)[column2]', 'data/', 'labels.txt')
 """
+
 
 def data_to_dataset(format, out_path):
     pass
