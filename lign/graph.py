@@ -137,18 +137,17 @@ class GraphDataset(Dataset):
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
-            push(self, func = func)
+            push(self, nodes = nodes, func = func, data=data, reset_buffer=reset_buffer)
         else:
             nodes = set(nodes)
             lis = range(self.database["count"])
 
             for node in lis:
+                nd = self.__getitem__(node)
                 tw = nodes.intersection(nd["edges"])
 
-                if len(tw):
-                    nd = self.__getitem__(node)
-                    for el in tw:
-                        self.dataset["__temp__"][el].append(nd)
+                for el in tw:
+                    self.dataset["__temp__"][el].append(nd)
 
             if func:
                 out = []
@@ -191,7 +190,7 @@ class GraphDataset(Dataset):
             nodes = range(self.database["count"])
 
         if(issubclass(func, nn.Module)):
-            self.dataset["data"][data][nodes] = func(self.dataset["data"][data])
+            self.dataset["data"][data][nodes] = func(self.dataset["data"][data][nodes])
         else:
             for indx, node in enumarate(nodes):
                 self.dataset["data"][data][node] = func(self.dataset["data"][data][indx])
@@ -224,35 +223,84 @@ class SubGraph(): #creates a isolated graph from the dataset. Meant to be more e
     def __init__(self, graph_dataset, nodes):
         self.dataset = graph_dataset
         self.count = len(nodes)
-        self.__temp__ = [[] for i in range(self.count)]
-        self.__nodes__ = self.dataset[nodes]                             ### Need to fix
-
-        self.__linked_nodes__ = self.__nodes__
-        self.__nodes__ = [self.dataset[i].copy() for i in nodes]   ### Need to fix
+        self.nodes = io.to_iter(nodes)
     
     def __len__(self):
-        return self.dataset["count"]
+        return self.count
 
     def __getitem__(self, indx):
-        pass
+        return self.dataset(nodes[indx])
 
     def from_dataset(self, nodes): ### Add nodes prom dataset
-        pass
+        nodes = io.to_iter(nodes)
+        self.nodes.extend(nodes)
+        self.count += len(nodes)
 
-    def pull(self): #pulls others' data from nodes that it points to into it's temp
-        pass
+    def __get_parent_nodes__(nodes):
+        nodes = io.to_iter(nodes)
 
-    def push(self): #pushes its data to nodes that it points to into nodes's temp
-        pass
+        if len(nodes) == len(self.nodes) or not len(nodes):
+            return self.nodes
 
-    def apply(self, func, nodes=[]):
-        pass
+        return [self.nodes[i] for i in nodes]
 
-    def reset_temp(): #clear collected data from other nodes
-        self.__temp__ = [[] for i in range(self.count)]
+    def pull(self, func = None, data = 'x', nodes=[]): #pulls others' data from nodes that it points to into it's temp
+        nodes = io.to_iter(nodes)
 
-    def filter(func): #returns nodes that pass the filter
-        pass
+        if not len(nodes):
+            push(self, func = func, data = data, nodes=nodes)
+        else:
+            nodes = set(self.__get_parent_nodes__(nodes))
+            lis = self.__get_parent_nodes__([])
+
+            for node in lis:
+                nd = self.dataset[node]
+                tw = nodes.intersection(nd["edges"])
+
+                for el in tw:
+                    self.dataset.dataset["__temp__"][el].append(nd)
+
+            if func:
+                out = []
+                for node in nodes:
+                    out.append(func(self.dataset["__temp__"][node][data]))
+
+                for indx, node in enumerate(nodes):
+                    self.dataset["data"][data][node] = out[indx]
+        
+        self.reset_temp() if reset_buffer else print("Temporaty buffer was not reset")
+
+    def push(self, func = None, data = 'x', nodes=[]): #pushes its data to nodes that it points to into nodes's temp
+        stor = self.dataset.dataset["__temp__"]
+        self.dataset.reset_temp()
+
+        nodes = self.__get_parent_nodes__(nodes)
+
+        self.dataset.push(func = func, data = data, nodes = nodes, reset_buffer=False)
+
+        self.dataset.dataset["__temp__"] = stor
+
+    def apply(self, func, data, nodes=[]):
+        nodes = self.__get_parent_nodes__(nodes)
+
+        self.dataset.apply(func = func, data=data, nodes=nodes)
+
+    def reset_temp(self, nodes = []): # clears collected data from other nodes
+        nodes = self.__get_parent_nodes__(nodes)
+
+        self.dataset.reset_temp(nodes)
+
+    def filter(self, funcs, data): # returns nodes that pass the filter
+        funs = io.to_iter(func)
+        
+        p_data = self.dataset.get_data(data = data, nodes=self.nodes)
+
+        out = funs[0](p_data)
+        
+        for fun in funs[1:]:
+            out |= fun(p_data)
+
+        return torch.nonzero(out)
 
 
 
