@@ -239,7 +239,7 @@ class SubGraph():  # creates a isolated graph from the dataset. Meant to be more
     def __getitem__(self, indx):
         return self.dataset(self.nodes[indx])
 
-    def from_dataset(self, nodes):  # Add nodes prom dataset
+    def from_dataset(self, nodes):  # Add nodes from dataset
         nodes = io.to_iter(nodes)
         self.nodes.extend(nodes)
         self.count += len(nodes)

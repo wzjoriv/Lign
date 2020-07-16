@@ -1,4 +1,4 @@
-import torch as th
+import torch
 
 def similarity_matrix(x): #pairwise distance
     """
@@ -6,7 +6,7 @@ def similarity_matrix(x): #pairwise distance
     y = x
     y_norm = x_norm.view(1, -1)
 
-    dist = x_norm + y_norm - 2.0 * th.mm(x, th.transpose(y, 0, 1))
+    dist = x_norm + y_norm - 2.0 * torch.mm(x, torch.transpose(y, 0, 1))
     """
 
     n = x.size(0)
@@ -15,7 +15,7 @@ def similarity_matrix(x): #pairwise distance
     y = x.unsqueeze(0).expand(n, n, d)
     x = x.unsqueeze(1).expand(n, n, d)
     
-    dist = th.pow(x - y, 2).sum(2)
+    dist = torch.pow(x - y, 2).sum(2)
     
     return dist
 
@@ -27,16 +27,16 @@ def same_label(y):
 
 def pairwaise_loss(output, labels):
     """
-    if nodes with the same label: x^2
-    if nodes with different label: -x^2
+    if nodes with the same label: 
+    if nodes with different label: 
     """
 
     sim = similarity_matrix(output)
     same = same_label(labels)
-    diff = temp*(-1) + 1  #turns 1's to 0's and 0's to 1's 
+    diff = same*(-1) + 1  #turns 1's to 0's and 0's to 1's 
     
     same_M = (same * sim)
     diff_M = (diff * sim)
-    loss = (th.sum(same_M)/th.sum(same))**2 - (th.sum(diff_M)/th.sum(diff))**2
+    loss = torch.sqrt(torch.sum(same_M))/torch.sum(same) - torch.sqrt(torch.sum(diff_M))/torch.sum(diff)
     
     return loss
