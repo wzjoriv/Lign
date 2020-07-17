@@ -1,25 +1,43 @@
 import torch as th
 import torch.nn as nn
 
-
 #gcn layer in network
 class GCN(nn.Module):
-    def __init__(self, graph, func, module_post = None, module_pre = None):
+    def __init__(self, func, module_post = None, module_pre = None):
         super(GCN, self).__init__()
-        self.g = graph
         self.func = func
         self.module_pre = module_pre
         self.module_post = module_post
 
-    def forward(self, data):
-        self.g.set_data("h", data)
+    def forward(self, g, data):
+        g.set_data("h", data)
 
         if self.module_pre:
-            self.g.apply(self.module_pre, "h")
+            g.apply(self.module_pre, "hidden")
 
-        self.g.push(func = self.func, data = "h")
+        g.push(func = self.func, data = "hidden")
         
         if self.module_post:
-            self.g.apply(self.module_post, "h")
+            g.apply(self.module_post, "hidden")
 
-        return self.g.pop_data("h")
+        return g.pop_data("hidden")
+
+class G_LSTM(nn.Module):
+    def __init__(self, func, module_post = None, module_pre = None):
+        super(G_LSTM, self).__init__()
+        self.func = func
+        self.module_pre = module_pre
+        self.module_post = module_post
+
+    def forward(self, g, data):
+        g.set_data("hidden", data)
+
+        if self.module_pre:
+            g.apply(self.module_pre, "hidden")
+
+        g.push(func = self.func, data = "hidden")
+        
+        if self.module_post:
+            g.apply(self.module_post, "hidden")
+
+        return g.pop_data("hidden")
