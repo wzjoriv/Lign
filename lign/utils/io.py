@@ -40,10 +40,10 @@ def is_primitve(data):
 def cal_to_lign(path):
     pass
 
-def cifar_to_lign(path, transforms = None):
+def cifar_to_lign(path, transforms = None, train = True):
     from ..graph import GraphDataset
 
-    dataset =  datasets.CIFAR100(path)
+    dataset =  datasets.CIFAR100(path, train=train)
     graph = GraphDataset()
 
     imgs = []
