@@ -3,7 +3,7 @@ import torch.nn as nn
 
 #gcn layer in network
 class GCN(nn.Module):
-    def __init__(self, func, module_post = None, module_pre = None):
+    def __init__(self, func = None, module_post = None, module_pre = None):
         super(GCN, self).__init__()
         self.func = func
         self.module_pre = module_pre
@@ -15,7 +15,8 @@ class GCN(nn.Module):
         if self.module_pre:
             g.apply(self.module_pre, "hidden")
 
-        g.push(func = self.func, data = "hidden")
+        if self.func:
+            g.push(func = self.func, data = "hidden")
         
         if self.module_post:
             g.apply(self.module_post, "hidden")
@@ -23,21 +24,12 @@ class GCN(nn.Module):
         return g.pop_data("hidden")
 
 class G_LSTM(nn.Module):
-    def __init__(self, func, module_post = None, module_pre = None):
+    def __init__(self):
         super(G_LSTM, self).__init__()
-        self.func = func
-        self.module_pre = module_pre
-        self.module_post = module_post
 
     def forward(self, g, data):
         g.set_data("hidden", data)
 
-        if self.module_pre:
-            g.apply(self.module_pre, "hidden")
-
-        g.push(func = self.func, data = "hidden")
-        
-        if self.module_post:
-            g.apply(self.module_post, "hidden")
+        #cool
 
         return g.pop_data("hidden")
