@@ -227,22 +227,28 @@ class GraphDataset(Dataset):
         io.pickle(self.dataset, fl)
 
 
-class SubGraph():  # creates a isolated graph from the dataset. Meant to be more efficient if only changing a few nodes from the dataset
+class SubGraph(GraphDataset):  # creates a isolated graph from the dataset. Meant to be more efficient if only changing a few nodes from the dataset
     def __init__(self, graph_dataset, nodes):
-        self.dataset = graph_dataset
-        self.count = len(nodes)
+        super.__init__()
+
+        self.parent = graph_dataset
         self.nodes = io.to_iter(nodes)
 
+        self.graph = GraphDataset()
+
+        self.from_dataset(nodes)
+
     def __len__(self):
-        return self.count
+        #return self.count
+        pass
 
     def __getitem__(self, indx):
-        return self.dataset(self.nodes[indx])
+        return self.parent(self.nodes[indx])
 
     def from_dataset(self, nodes):  # Add nodes from dataset
         nodes = io.to_iter(nodes)
         self.nodes.extend(nodes)
-        self.count += len(nodes)
+        #self.count += len(nodes)
 
     def __get_parent_nodes__(self, nodes):
         nodes = io.to_iter(nodes)
@@ -259,55 +265,55 @@ class SubGraph():  # creates a isolated graph from the dataset. Meant to be more
         if not len(nodes):
             self.push(func, data, nodes)
         else:
-            stor = self.dataset.dataset["__temp__"]
-            self.dataset.reset_temp()
+            stor = self.parent.dataset["__temp__"]
+            self.parent.reset_temp()
 
             nodes = set(self.__get_parent_nodes__(nodes))
             lis = self.__get_parent_nodes__([])
 
             for node in lis:
-                nd = self.dataset[node]
+                nd = self.parent[node]
                 tw = nodes.intersection(nd["edges"])
 
                 for el in tw:
-                    self.dataset.dataset["__temp__"][el].append(nd)
+                    self.parent.dataset["__temp__"][el].append(nd)
 
             if func:
                 out = []
                 for node in nodes:
-                    out.append(func(self.dataset["__temp__"][node][data]))
+                    out.append(func(self.parent["__temp__"][node][data]))
 
                 for indx, node in enumerate(nodes):
-                    self.dataset["data"][data][node] = out[indx]
+                    self.parent["data"][data][node] = out[indx]
 
-            self.dataset.dataset["__temp__"] = stor
+            self.parent.dataset["__temp__"] = stor
 
     # pushes its data to nodes that it points to into nodes's temp
     def push(self, func=None, data='x', nodes=[]):
-        stor = self.dataset.dataset["__temp__"]
-        self.dataset.reset_temp()
+        stor = self.parent.dataset["__temp__"]
+        self.parent.reset_temp()
 
         nodes = self.__get_parent_nodes__(nodes)
 
-        self.dataset.push(func=func, data=data,
+        self.parent.push(func=func, data=data,
                           nodes=nodes, reset_buffer=False)
 
-        self.dataset.dataset["__temp__"] = stor
+        self.parent.dataset["__temp__"] = stor
 
     def apply(self, func, data, nodes=[]):
         nodes = self.__get_parent_nodes__(nodes)
 
-        self.dataset.apply(func=func, data=data, nodes=nodes)
+        self.parent.apply(func=func, data=data, nodes=nodes)
 
     def reset_temp(self, nodes=[]):  # clears collected data from other nodes
         nodes = self.__get_parent_nodes__(nodes)
 
-        self.dataset.reset_temp(nodes)
+        self.parent.reset_temp(nodes)
 
     def filter(self, funcs, data):  # returns nodes that pass the filter
         funs = io.to_iter(funcs)
 
-        p_data = self.dataset.get_data(data=data, nodes=self.nodes)
+        p_data = self.parent.get_data(data=data, nodes=self.nodes)
 
         out = funs[0](p_data)
 
