@@ -82,6 +82,9 @@ class GraphDataset(Dataset):
         edges = io.to_iter(edges)
         self.dataset["edges"][node].update(edges)
 
+    def get_edge(self, node):
+        return self.dataset["edges"][node]
+
     def remove_edge(self, node, edges):
         edges = io.to_iter(edges)
         self.dataset["edges"][node].difference_update(edges)
@@ -227,100 +230,49 @@ class GraphDataset(Dataset):
         io.pickle(self.dataset, fl)
 
 
-class SubGraph(GraphDataset):  # creates a isolated graph from the dataset. Meant to be more efficient if only changing a few nodes from the dataset
+class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e. changes made here might not be written back to parents unless data is a reference). Meant to be more efficient if only processing a few nodes from the dataset
     def __init__(self, graph_dataset, nodes):
         super.__init__()
 
         self.parent = graph_dataset
         self.nodes = io.to_iter(nodes)
 
-        self.graph = GraphDataset()
-
-        self.from_dataset(nodes)
-
-    def __len__(self):
-        #return self.count
-        pass
-
-    def __getitem__(self, indx):
-        return self.parent(self.nodes[indx])
-
-    def from_dataset(self, nodes):  # Add nodes from dataset
+    def add_parent_node(self, nodes):
         nodes = io.to_iter(nodes)
-        self.nodes.extend(nodes)
-        #self.count += len(nodes)
+        
+        mutual_data = set(self.dataset["data"].keys())
+        mutual_data = mutual_data.intersection(self.parent.dataset["data"].keys())
 
-    def __get_parent_nodes__(self, nodes):
+        for node in nodes:
+            mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
+            edges = [self.nodes.index(ed) for ed in mutual_edges]
+
+            out = {"data": {},
+                   "edges": set(edges)}
+
+            for mut in mutual_data:
+                out["data"][mut] = self.parent.get_data(mut, nodes=node)[0]
+
+            self.add(out)
+            self.nodes.append(node)
+
+    def get_parent_node(self, nodes):
+        nodes = io.to_iter(nodes)
+        return [self.parent[node] for node in nodes]
+
+    def get_parent_data(self, data):
+        p_data = self.parent.get_data(data, nodes=self.nodes)
+
+        self.dataset.set_data(data, p_data)
+        return p_data
+
+    def get_parent_index(self, nodes=[]):
         nodes = io.to_iter(nodes)
 
         if len(nodes) == len(self.nodes) or not len(nodes):
             return self.nodes
 
         return [self.nodes[i] for i in nodes]
-
-    # pulls others' data from nodes that it points to into it's temp
-    def pull(self, func=None, data='x', nodes=[]):
-        nodes = io.to_iter(nodes)
-
-        if not len(nodes):
-            self.push(func, data, nodes)
-        else:
-            stor = self.parent.dataset["__temp__"]
-            self.parent.reset_temp()
-
-            nodes = set(self.__get_parent_nodes__(nodes))
-            lis = self.__get_parent_nodes__([])
-
-            for node in lis:
-                nd = self.parent[node]
-                tw = nodes.intersection(nd["edges"])
-
-                for el in tw:
-                    self.parent.dataset["__temp__"][el].append(nd)
-
-            if func:
-                out = []
-                for node in nodes:
-                    out.append(func(self.parent["__temp__"][node][data]))
-
-                for indx, node in enumerate(nodes):
-                    self.parent["data"][data][node] = out[indx]
-
-            self.parent.dataset["__temp__"] = stor
-
-    # pushes its data to nodes that it points to into nodes's temp
-    def push(self, func=None, data='x', nodes=[]):
-        stor = self.parent.dataset["__temp__"]
-        self.parent.reset_temp()
-
-        nodes = self.__get_parent_nodes__(nodes)
-
-        self.parent.push(func=func, data=data,
-                          nodes=nodes, reset_buffer=False)
-
-        self.parent.dataset["__temp__"] = stor
-
-    def apply(self, func, data, nodes=[]):
-        nodes = self.__get_parent_nodes__(nodes)
-
-        self.parent.apply(func=func, data=data, nodes=nodes)
-
-    def reset_temp(self, nodes=[]):  # clears collected data from other nodes
-        nodes = self.__get_parent_nodes__(nodes)
-
-        self.parent.reset_temp(nodes)
-
-    def filter(self, funcs, data):  # returns nodes that pass the filter
-        funs = io.to_iter(funcs)
-
-        p_data = self.parent.get_data(data=data, nodes=self.nodes)
-
-        out = funs[0](p_data)
-
-        for fun in funs[1:]:
-            out |= fun(p_data)
-
-        return torch.nonzero(out)
 
 
 """
