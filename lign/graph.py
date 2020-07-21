@@ -19,7 +19,6 @@ from .utils import io
     
 """
 
-
 class GraphDataset(Dataset):
     def __init__(self, fl="", workers=1):
         self.dataset = None
