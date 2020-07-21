@@ -1,10 +1,10 @@
 
-from .model import layers as ly
+from .models import layers as ly
 import torch.nn as nn
 import torch.nn.functional as F
 import torch as th
 from .utils import loss as ls
-from .model import LIGN as lg
+from .models import LIGN as lg
 from torch.cuda.amp import autocast, GradScaler
 
 def filter(data, labels, graph):
