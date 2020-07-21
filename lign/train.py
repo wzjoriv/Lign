@@ -5,7 +5,6 @@ import torch.nn.functional as F
 import torch as th
 from .utils import loss as ls
 from .models import LIGN as lg
-from torch.cuda.amp import autocast, GradScaler
 
 def filter(data, labels, graph):
     fils = [lambda x: x == i for i in labels]
@@ -37,7 +36,7 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, Lambda, labels, device 
         outp = sub.get_parent_data(tag_out).to(device(0))
 
         if amp_enable:
-            with autocast():
+            with th.cuda.amp.autocast():
                 out1 = model(sub, inp)
                 out2 = temp_ly(sub, out1)
                 out2 = th.log_softmax(out2, 1)
