@@ -15,13 +15,16 @@ def filter(data, labels, graph):
 def randomize(tensor):
     return tensor[th.randperm(len(tensor))]
 
-def unsuperv(model, opt, graph, tag_in, tag_out, vec_size, lam, labels, device = (th.device('cpu'), None), epochs=100, subgraph_size = 200, clustering = None):
+def norm_labels(labels, base):
     pass
 
-def superv(model, opt, graph, tag_in, tag_out, vec_size, Lambda, labels, device = (th.device('cpu'), None), epochs=100, subgraph_size = 200):
+def unsuperv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), epochs=100, subgraph_size = 200, clustering = None):
+    pass
+
+def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), epochs=100, subgraph_size = 200):
     
     labels_len = len(labels)
-    temp_ly = ly.GCN(func = lg.sum_neighs_data, module_post = nn.Linear(vec_size, labels_len))
+    temp_ly = ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len))
     nodes = filter(tag_out, labels, graph)
     scaler = device(1)
     amp_enable = device(1) != None
@@ -40,7 +43,7 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, Lambda, labels, device 
                 out1 = model(sub, inp)
                 out2 = temp_ly(sub, out1)
                 out2 = th.log_softmax(out2, 1)
-                loss = ls.pairwaise_loss(out1, outp) * Lambda + F.nll_loss(out2, outp)
+                loss = ls.distance_loss(out1, outp) * Lambda + F.nll_loss(out2, outp)
 
             scaler.scale(loss).backward()
             scaler.step(opt)
@@ -50,7 +53,7 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, Lambda, labels, device 
             out1 = model(sub, inp)
             out2 = temp_ly(sub, out1)
             out2 = th.log_softmax(out2, 1)
-            loss = ls.pairwaise_loss(out1, outp) * Lambda + F.nll_loss(out2, outp)
+            loss = ls.distance_loss(out1, outp) * Lambda + F.nll_loss(out2, outp)
 
             loss.backward()
             opt.step()

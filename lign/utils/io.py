@@ -37,7 +37,7 @@ def to_iter(data):
 def is_primitve(data):
     return type(data) in (int, str, bool, float)
 
-def cal_to_lign(path):
+def cal_to_lign(path, transforms = None, train = True):
     pass
 
 def cifar_to_lign(path, transforms = None, train = True):
@@ -70,5 +70,5 @@ def cifar_to_lign(path, transforms = None, train = True):
 
     return graph
 
-def core_to_lign(path):
+def core_to_lign(path, transforms = None, train = True):
     pass

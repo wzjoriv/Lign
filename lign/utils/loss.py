@@ -25,7 +25,7 @@ def same_label(y):
     Y = y_expand.eq(y_expand.t())
     return Y
 
-def pairwaise_loss(output, labels):
+def distance_loss(output, labels):
     """
     if nodes with the same label: 
     if nodes with different label: 

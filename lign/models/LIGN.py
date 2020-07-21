@@ -6,12 +6,12 @@ from .layers import GCN
 class LIGN_cnn(nn.Module):
     def __init__(self, out_feats):
         super(LIGN_cnn, self).__init__()
-        self.gcn1 = GCN(func = sum_neighs_data, module_post = nn.Conv2d(3, 6, 5))
-        self.gcn2 = GCN(func = sum_neighs_data, module_post = nn.Conv2d(6, 16, 5))
-        self.gcn3 = GCN(func = sum_neighs_data, module_post = nn.Linear(16 * 5 * 5, 150))
-        self.gcn4 = GCN(func = sum_neighs_data, module_post = nn.Linear(150, 84))
-        self.gcn5 = GCN(func = sum_neighs_data, module_post = nn.Linear(84, out_feats))
-        self.pool = GCN(func = sum_neighs_data, module_post = nn.MaxPool2d(2, 2))
+        self.gcn1 = GCN(post_mod = nn.Conv2d(3, 6, 5),          func = sum_neighs_data)
+        self.gcn2 = GCN(post_mod = nn.Conv2d(6, 16, 5),         func = sum_neighs_data)
+        self.gcn3 = GCN(post_mod = nn.Linear(16 * 5 * 5, 150),  func = sum_neighs_data)
+        self.gcn4 = GCN(post_mod = nn.Linear(150, 84),          func = sum_neighs_data)
+        self.gcn5 = GCN(post_mod = nn.Linear(84, out_feats),    func = sum_neighs_data)
+        self.pool = GCN(post_mod = nn.MaxPool2d(2, 2))
 
     def forward(self, g, features):
         x = self.pool(F.relu(self.gcn1(g, features)))
