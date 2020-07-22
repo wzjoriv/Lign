@@ -27,13 +27,13 @@ def same_label(y):
 
 def distance_loss(output, labels):
     """
-    if nodes with the same label: 
-    if nodes with different label: 
+    if nodes with the same label: sqrt(x)/|x|
+    if nodes with different label: - sqrt(x)/|x|
     """
 
     sim = similarity_matrix(output)
     same = same_label(labels)
-    diff = same*(-1) + 1  #turns 1's to 0's and 0's to 1's 
+    diff = same*(-1) + 1  #turns 1's into 0's and 0's into 1's 
     
     same_M = (same * sim)
     diff_M = (diff * sim)

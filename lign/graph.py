@@ -257,7 +257,7 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
     def get_parent_node(self, nodes):
         nodes = io.to_iter(nodes)
-        return [self.parent[node] for node in nodes]
+        return [self.parent[self.nodes[node]] for node in nodes]
 
     def get_parent_data(self, data):
         p_data = self.parent.get_data(data, nodes=self.nodes)

@@ -15,10 +15,16 @@ def filter(data, labels, graph):
 def randomize(tensor):
     return tensor[th.randperm(len(tensor))]
 
-def norm_labels(labels, base):
-    pass
+def norm_labels(inp, labels):
 
-def unsuperv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), epochs=100, subgraph_size = 200, clustering = None):
+    out = th.zeros(len(inp), dtype=inp.type())
+
+    for i in range(1, len(labels)):
+        out |= (inp == labels[i]) * i
+
+    return out
+
+def unsuperv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), epochs=100, subgraph_size = 200, cluster = None):
     pass
 
 def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), epochs=100, subgraph_size = 200):
@@ -36,7 +42,7 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
         sub = graph.subgraph(nodes[:subgraph_size])
 
         inp = sub.get_parent_data(tag_in).to(device(0))
-        outp = sub.get_parent_data(tag_out).to(device(0))
+        outp = norm_labels(sub.get_parent_data(tag_out), labels).to(device(0))
 
         if amp_enable:
             with th.cuda.amp.autocast():
