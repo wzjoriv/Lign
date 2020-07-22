@@ -3,7 +3,7 @@ from .utils import clustering as cl
 import torch as th
 from .utils import io
 
-def metrics(model, graph, train, tag_in, tag_out, vec_size, labels, metrics = ['accuracy'], cluster = (cl.NN(), 3), device = (th.device('cpu'), None)):
+def validate(model, graph, train, tag_in, tag_out, vec_size, labels, metrics = ['accuracy'], cluster = (cl.NN(), 3), device = (th.device('cpu'), None)):
     tr_nodes, tr_labs = cl.filter_k(tag_out, labels, train, cluster[1])
     sub = train.subgraph(tr_nodes)
     inp = sub.get_parent_data(tag_in)
@@ -30,6 +30,6 @@ def metrics(model, graph, train, tag_in, tag_out, vec_size, labels, metrics = ['
 
 def accuracy(model, graph, train, tag_in, tag_out, vec_size, labels, cluster = (cl.NN(), 3), device = (th.device('cpu'), None)):
 
-    out = metrics(model, graph, train, tag_in, tag_out, vec_size, labels, metrics = 'accuracy', cluster = cluster, device = device)
+    out = validate(model, graph, train, tag_in, tag_out, vec_size, labels, metrics = 'accuracy', cluster = cluster, device = device)
 
     return out['accuracy']
