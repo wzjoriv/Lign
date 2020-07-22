@@ -3,14 +3,8 @@ from .models import layers as ly
 import torch.nn as nn
 import torch.nn.functional as F
 import torch as th
-from .utils import loss as ls
+from .utils import loss as ls, clustering as cl
 from .models import LIGN as lg
-
-def filter(data, labels, graph):
-    fils = [lambda x: x == i for i in labels]
-
-    out = graph.filter(fils, data)
-    return out
 
 def randomize(tensor):
     return tensor[th.randperm(len(tensor))]
@@ -31,7 +25,7 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
     
     labels_len = len(labels)
     temp_ly = ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len))
-    nodes = filter(tag_out, labels, graph)
+    nodes = cl.filter(tag_out, labels, graph)
     scaler = device(1)
     amp_enable = device(1) != None
 

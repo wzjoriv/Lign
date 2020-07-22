@@ -1,3 +1,4 @@
+from .utils import clustering as cl
 
-def accuracy():
+def accuracy(model, graph, cluster, labels):
     pass
