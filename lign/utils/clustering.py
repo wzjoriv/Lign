@@ -1,5 +1,22 @@
 import torch as th
 
+def filter(data, labels, graph):
+    fils = [lambda x: x == i for i in labels]
+
+    out = graph.filter(fils, data)
+    return out
+
+def filter_k(data, labels, graph, k = 3):
+    out = []
+    labs = []
+
+    for label in labels:
+        labs.extend([label] * k)
+        out.extend(graph.filter(lambda x: x == label, data)[:k])
+
+    return th.LongTensor(out), th.LongTensor(labs)
+
+
 def similarity_matrix(x, y, p = 2): #pairwise distance
 
     n = x.size(0)
@@ -13,13 +30,7 @@ def similarity_matrix(x, y, p = 2): #pairwise distance
     
     return dist
 
-def filter(data, labels, graph):
-    fils = [lambda x: x == i for i in labels]
-
-    out = graph.filter(fils, data)
-    return out
-
-class KNN():
+class NN():
 
     def __init__(self, X = None, Y = None, p = 2):
         self.train(X, Y)
@@ -40,11 +51,49 @@ class KNN():
         labels = th.argmin(dist, dim=1)
         return self.train_label[labels]
 
-class Spectral(KNN):
+class KNN(NN):
+
+    def __init__(self, X = None, Y = None, k = 3, p = 2):
+        super().__init__(X, Y, p)
+        self.k = k
+
+    def predict(self, x):
+        if self.train_pts == None:
+            raise RuntimeError("Knn wasn't trained. Need to execute self.train() first")
+        
+        dist = similarity_matrix(x, self.train_pts, self.p) ** (1/self.p)
+        votes = dist.argsort(dim=1)[:,:self.k]
+        votes = self.train_label[votes]
+        uni, count = th.unique(votes, dim=1, return_counts=True)
+        print(votes)
+        print(uni)
+        print(count)
+        max_count = count.argmax(dim=1)
+        return uni[max_count]
+
+class Spectral(NN):
 
     def __init__(self, X, Y, p = 2):
-        super.__init__(X, Y, p)
+        super().__init__(X, Y, p)
         pass
 
     def predict(self):
         pass
+
+if __name__ == '__main__':
+    a = th.Tensor([
+        [1, 1],
+        [0.88, 0.90],
+        [-1, -1],
+        [-1, -0.88]
+    ])
+
+    b = th.LongTensor([1, 1, 2, 2])
+
+    c = th.Tensor([
+        [-0.5, -0.5],
+        [0.88, 0.88]
+    ])
+
+    knn = KNN(a, b)
+    print(knn(c))
