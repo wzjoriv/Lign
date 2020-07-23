@@ -231,7 +231,7 @@ class GraphDataset(Dataset):
 
 class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e. changes made here might not be written back to parents unless data is a reference). Meant to be more efficient if only processing a few nodes from the dataset
     def __init__(self, graph_dataset, nodes):
-        super.__init__()
+        super().__init__()
 
         self.parent = graph_dataset
         self.nodes = io.to_iter(nodes)
@@ -262,7 +262,7 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
     def get_parent_data(self, data):
         p_data = self.parent.get_data(data, nodes=self.nodes)
 
-        self.dataset.set_data(data, p_data)
+        self.set_data(data, p_data)
         return p_data
 
     def get_parent_index(self, nodes=[]):
