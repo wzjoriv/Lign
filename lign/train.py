@@ -29,8 +29,6 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
     cluster = cluster[0]
 
     for i in range(epochs):
-        opt.zero_grad()
-
         ### train clustering
         sub = graph.subgraph(tr_nodes)
         inp = sub.get_parent_data(tag_in).to(device[0])
@@ -42,6 +40,8 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
         inp = sub.get_parent_data(tag_in).to(device[0])
         outp = norm_labels(cluster(model(sub, inp)), labels).to(device[0])
 
+        opt.zero_grad()
+        
         if amp_enable:
             with th.cuda.amp.autocast():
                 out1 = model(sub, inp)
@@ -71,13 +71,13 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
     amp_enable = device[1] != None
 
     for i in range(epochs):
-        opt.zero_grad()
-
         nodes = randomize(nodes)
         sub = graph.subgraph(nodes[:subgraph_size])
 
         inp = sub.get_parent_data(tag_in).to(device[0])
         outp = norm_labels(sub.get_parent_data(tag_out), labels).to(device[0])
+
+        opt.zero_grad()
 
         if amp_enable:
             with th.cuda.amp.autocast():
