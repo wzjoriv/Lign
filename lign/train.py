@@ -20,7 +20,7 @@ def norm_labels(inp, labels):
 def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), epochs=100, subgraph_size = 200, cluster = (cl.NN(), 3)):
     
     labels_len = len(labels)
-    temp_ly = ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len))
+    temp_ly = ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len)).to(device[0])
     nodes = cl.filter(tag_out, labels, graph)
     scaler = device[1]
     amp_enable = device[1] != None
@@ -33,14 +33,14 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
 
         ### train clustering
         sub = graph.subgraph(tr_nodes)
-        inp = sub.get_parent_data(tag_in)
-        cluster.train(model(sub, inp), tr_labs)
+        inp = sub.get_parent_data(tag_in).to(device[0])
+        cluster.train(model(sub, inp), tr_labs.to(device[0]))
 
 
         nodes = randomize(nodes)
         sub = graph.subgraph(nodes[:subgraph_size])
         inp = sub.get_parent_data(tag_in).to(device[0])
-        outp = norm_labels(cluster(inp), labels).to(device[0])
+        outp = norm_labels(cluster(model(sub, inp)), labels).to(device[0])
 
         if amp_enable:
             with th.cuda.amp.autocast():
@@ -65,14 +65,10 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
 def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), epochs=100, subgraph_size = 200):
     
     labels_len = len(labels)
-    temp_ly = ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len))
+    temp_ly = ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len)).to(device[0])
     nodes = cl.filter(tag_out, labels, graph)
     scaler = device[1]
     amp_enable = device[1] != None
-
-    print(labels)
-    print(graph.get_data(tag_out, nodes=nodes))
-    
 
     for i in range(epochs):
         opt.zero_grad()

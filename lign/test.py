@@ -6,10 +6,10 @@ from .utils import io
 def validate(model, graph, train, tag_in, tag_out, labels, metrics = ['accuracy'], cluster = (cl.NN(), 3), device = th.device('cpu')):
     tr_nodes, tr_labs = cl.filter_k(tag_out, labels, train, cluster[1])
     sub = train.subgraph(tr_nodes)
-    inp = sub.get_parent_data(tag_in)
+    inp = sub.get_parent_data(tag_in).to(device)
     
     cluster = cluster[0]
-    cluster.train(model(sub, inp), tr_labs)
+    cluster.train(model(sub, inp), tr_labs.to(device))
 
     ts_nodes = cl.filter(tag_out, labels, graph)
     graph = graph.subgraph(ts_nodes)
@@ -24,11 +24,12 @@ def validate(model, graph, train, tag_in, tag_out, labels, metrics = ['accuracy'
     metrics = io.to_iter(metrics)
     for metric in metrics:
         if metric == 'accuracy':
-            out[metric] = (outp_p == outp_t).sum().float().item() * 100/len(outp_p)
+            print(outp_p.eq(outp_t).sum())
+            out[metric] = outp_p.eq(outp_t).sum().item() * 100.0/outp_p.size(0)
 
     return out
 
-def accuracy(model, graph, train, tag_in, tag_out, labels, cluster = (cl.NN(), 3), device = (th.device('cpu'), None)):
+def accuracy(model, graph, train, tag_in, tag_out, labels, cluster = (cl.NN(), 3), device = th.device('cpu')):
 
     out = validate(model, graph, train, tag_in, tag_out, labels, metrics = 'accuracy', cluster = cluster, device = device)
 
