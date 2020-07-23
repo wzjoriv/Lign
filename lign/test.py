@@ -24,7 +24,8 @@ def validate(model, graph, train, tag_in, tag_out, labels, metrics = ['accuracy'
     metrics = io.to_iter(metrics)
     for metric in metrics:
         if metric == 'accuracy':
-            print(outp_p.eq(outp_t).sum())
+            print(outp_p)
+            print(outp_t)
             out[metric] = outp_p.eq(outp_t).sum().item() * 100.0/outp_p.size(0)
 
     return out
