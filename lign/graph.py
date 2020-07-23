@@ -220,7 +220,7 @@ class GraphDataset(Dataset):
         for fun in funs[1:]:
             out |= fun(self.dataset["data"][data])
 
-        return torch.nonzero(out)
+        return torch.nonzero(out, as_tuple=False)
 
     def save(self, fl=""):
         if not len(fl):

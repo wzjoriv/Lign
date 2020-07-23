@@ -10,9 +10,7 @@ def randomize(tensor):
     return tensor[th.randperm(len(tensor))]
 
 def norm_labels(inp, labels):
-
-    print(inp)
-    out = th.zeros(len(inp), dtype=inp.type())
+    out = (inp == labels[0]) * 0
 
     for i in range(1, len(labels)):
         out |= (inp == labels[i]) * i
@@ -69,6 +67,7 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
     labels_len = len(labels)
     temp_ly = ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len))
     nodes = cl.filter(tag_out, labels, graph)
+    print(nodes)
     scaler = device[1]
     amp_enable = device[1] != None
 
