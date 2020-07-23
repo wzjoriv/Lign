@@ -67,9 +67,12 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
     labels_len = len(labels)
     temp_ly = ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len))
     nodes = cl.filter(tag_out, labels, graph)
-    print(nodes)
     scaler = device[1]
     amp_enable = device[1] != None
+
+    print(labels)
+    print(graph.get_data(tag_out, nodes=nodes))
+    
 
     for i in range(epochs):
         opt.zero_grad()

@@ -2,6 +2,7 @@ import torch as th
 
 def filter(data, labels, graph):
     fils = [lambda x: x == i for i in labels]
+    print(fils)
 
     out = graph.filter(fils, data)
     return out

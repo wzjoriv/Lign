@@ -191,12 +191,12 @@ class GraphDataset(Dataset):
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
-            if(issubclass(func, nn.Module)):
+            if(issubclass(func.__class__, nn.Module)):
                 self.dataset["data"][data] = func(self.dataset["data"][data])
                 return
             nodes = range(self.dataset["count"])
 
-        if(issubclass(func, nn.Module)):
+        if(issubclass(func.__class__, nn.Module)):
             self.dataset["data"][data][nodes] = func(
                 self.dataset["data"][data][nodes])
         else:

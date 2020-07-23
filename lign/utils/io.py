@@ -62,7 +62,7 @@ def cifar_to_lign(path, transforms = None, train = True):
         graph.add(out)
     
     if(torch.is_tensor(imgs[0])):
-        imgs = torch.stack(imgs)
+        imgs = torch.stack(imgs).squeeze()
         labels = torch.LongTensor(labels)
 
     graph.set_data('x', imgs)
