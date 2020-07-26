@@ -1,7 +1,10 @@
 import torch as th
 
+def get_filter(i):
+    return lambda x: x == i
+
 def filter(data, labels, graph):
-    fils = [lambda x: x == i for i in labels]
+    fils = [get_filter(i) for i in labels]
 
     out = graph.filter(fils, data)
     return out
@@ -12,7 +15,7 @@ def filter_k(data, labels, graph, k = 3):
 
     for label in labels:
         labs.extend([label] * k)
-        out.extend(graph.filter(lambda x: x == label, data)[:k])
+        out.extend(graph.filter(get_filter(label), data)[:k])
 
     return th.LongTensor(out), th.LongTensor(labs)
 
