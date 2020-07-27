@@ -39,6 +39,6 @@ def distance_loss(output, labels):
     
     same_M = (same * sim)
     diff_M = (diff * sim)
-    loss = th.sqrt(th.sum(same_M))/th.sum(same) - th.sum(diff_M)/th.sum(diff)
+    loss = (th.sum(th.sqrt(same_M))/th.sum(same))**2 - (th.sum(th.sqrt(diff_M)**2)/th.sum(diff))**2
     
     return loss
