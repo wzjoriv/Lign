@@ -26,6 +26,12 @@ def same_label(y):
     return Y
 
 def distance_loss(output, labels):
+    """
+    prefers to separate than unite
+
+    if same: sqrt(x)
+    if diff: x
+    """
 
     sim = similarity_matrix(output)
     same = same_label(labels)
