@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 def validate(model, graph, train, tag_in, tag_out, labels, metrics = ['accuracy'], sv_img = None, cluster = (cl.NN(), 3), device = th.device('cpu')):
 
+    model.eval()
     with th.no_grad():
         tr_nodes, tr_labs = cl.filter_k(tag_out, labels, train, cluster[1])
         sub = train.subgraph(tr_nodes)

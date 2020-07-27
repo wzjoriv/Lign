@@ -24,9 +24,11 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
     amp_enable = device[1] != None
 
     if addon == None:
-        temp_ly = ly.GCN(post_mod = nn.Linear(vec_size, labels_len)).to(device[0])
+        temp_ly = ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len)).to(device[0])
     else:
         temp_ly = addon(vec_size, labels_len).to(device[0])
+
+    opt2 = th.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
     with th.no_grad():
         nodes = cl.filter(tag_out, labels, graph)
@@ -34,6 +36,7 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
 
     cluster = cluster[0]
 
+    model.train()
     for i in range(epochs):
         ### train clustering
         with th.no_grad():
@@ -48,6 +51,7 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
             outp = norm_labels(cluster(model(sub, inp)), labels).to(device[0])
 
         opt.zero_grad()
+        opt2.zero_grad()
         
         if amp_enable:
             with th.cuda.amp.autocast():
@@ -57,6 +61,7 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
 
             scaler.scale(loss).backward()
             scaler.step(opt)
+            scaler.step(opt2)
             scaler.update()
             
         else:
@@ -66,6 +71,7 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
 
             loss.backward()
             opt.step()
+            opt2.step()
 
 def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=100, addon = None, subgraph_size = 200):
     
@@ -78,9 +84,12 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
     else:
         temp_ly = addon(vec_size, labels_len).to(device[0])
 
+    opt2 = th.optim.Adam(temp_ly.parameters())
+
     with th.no_grad():
         nodes = cl.filter(tag_out, labels, graph)
 
+    model.train()
     for i in range(epochs):
         with th.no_grad():
             nodes = randomize(nodes)
@@ -90,6 +99,7 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
             outp = norm_labels(sub.get_parent_data(tag_out), labels).to(device[0])
 
         opt.zero_grad()
+        opt2.zero_grad()
 
         if amp_enable:
             with th.cuda.amp.autocast():
@@ -99,6 +109,7 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
 
             scaler.scale(loss).backward()
             scaler.step(opt)
+            scaler.step(opt2)
             scaler.update()
             
         else:
@@ -108,5 +119,6 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
 
             loss.backward()
             opt.step()
+            opt2.step()
 
 
