@@ -1,9 +1,6 @@
-# To add a new cell, type '# ##%%'
-# To add a new markdown cell, type '# #%% [markdown]'
 # #%% [markdown]
-# # LIGN
-# Graph Induced Lifelong Learning for Spatial-Temporal Data
-# 
+# # LIGN - Server - CIFAR
+# NEEDS TO RUN IN PARENT DIRECTORY
 # ----
 # 
 # ## Imports
@@ -30,8 +27,8 @@ tm_now = datetime.datetime.now
 # ### Load Dataset
 
 # #%%
-dataset = lg.graph.GraphDataset("../data/datasets/cifar100_train.lign")
-validate = lg.graph.GraphDataset("../data/datasets/cifar100_test.lign")
+dataset = lg.graph.GraphDataset("data/datasets/cifar100_train.lign")
+validate = lg.graph.GraphDataset("data/datasets/cifar100_test.lign")
 
 # #%% [markdown]
 # ### Cuda GPUs
@@ -163,7 +160,6 @@ for new_LAMBDA in np.linspace(0.001, 30.0, num=200).tolist():
         
         acc = lg.test.accuracy(model, validate, dataset, "x", "labels", LABELS[:num_labels], cluster=(utl.clustering.NN(), 5), device=device)
 
-
         accuracy.append(acc)
         log.append("Label: {}/{}\t|\tAccuracy: {}\t|\tSemisurpervised Retraining: {}\t|\tSurpervised Retraining: {}".format(num_labels, num_of_labels, round(acc, 2), retrain_semi(num_labels), retrain_superv(num_labels)))
 
@@ -181,7 +177,7 @@ for new_LAMBDA in np.linspace(0.001, 30.0, num=200).tolist():
         "log": log,
         "avg accuracy": np.mean(accuracy)
     }
-    utl.io.json(metrics, "../data/metrics/"+filename+".json")
+    utl.io.json(metrics, "data/metrics/"+filename+".json")
 
     ## Save hyperparameters
     para = {
@@ -196,7 +192,7 @@ for new_LAMBDA in np.linspace(0.001, 30.0, num=200).tolist():
         "RETRAIN_PER": RETRAIN_PER
     }
 
-    utl.io.json(para, "../data/parameters/"+filename+".json")
+    utl.io.json(para, "data/parameters/"+filename+".json")
 
     LAMBDA = 20
     DIST_VEC_SIZE = 2 # 3 was picked so the graph can be drawn in a 3d grid
@@ -215,5 +211,5 @@ for new_LAMBDA in np.linspace(0.001, 30.0, num=200).tolist():
     if AMP_ENABLE:
         check["scaler"] = scaler.state_dict()
 
-    th.save(check, "../data/models/"+filename+".pt")
+    th.save(check, "data/models/"+filename+".pt")
 
