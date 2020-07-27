@@ -30,8 +30,8 @@ tm_now = datetime.datetime.now
 # ### Load Dataset
 
 # #%%
-dataset = lg.graph.GraphDataset("data/datasets/cifar100_train.lign")
-validate = lg.graph.GraphDataset("data/datasets/cifar100_test.lign")
+dataset = lg.graph.GraphDataset("../data/datasets/cifar100_train.lign")
+validate = lg.graph.GraphDataset("../data/datasets/cifar100_test.lign")
 
 # #%% [markdown]
 # ### Cuda GPUs
@@ -161,7 +161,7 @@ for new_LAMBDA in np.linspace(0.001, 30.0, num=200).tolist():
         if retrain_superv(num_labels):
             lg.train.superv(model, opt, dataset, "x", "labels", DIST_VEC_SIZE, LABELS[:num_labels], LAMBDA, (device, scaler), epochs=EPOCHS, addon = ADDON, subgraph_size=SUBGRPAH_SIZE)
         
-        acc = lg.test.accuracy(model, validate, dataset, "x", "labels", LABELS[:num_labels], cluster=(utl.clustering.NN(), 5), sv_img='2d', device=device)
+        acc = lg.test.accuracy(model, validate, dataset, "x", "labels", LABELS[:num_labels], cluster=(utl.clustering.NN(), 5), device=device)
 
 
         accuracy.append(acc)
@@ -181,7 +181,7 @@ for new_LAMBDA in np.linspace(0.001, 30.0, num=200).tolist():
         "log": log,
         "avg accuracy": np.mean(accuracy)
     }
-    utl.io.json(metrics, "data/metrics/"+filename+".json")
+    utl.io.json(metrics, "../data/metrics/"+filename+".json")
 
     ## Save hyperparameters
     para = {
@@ -196,7 +196,7 @@ for new_LAMBDA in np.linspace(0.001, 30.0, num=200).tolist():
         "RETRAIN_PER": RETRAIN_PER
     }
 
-    utl.io.json(para, "data/parameters/"+filename+".json")
+    utl.io.json(para, "../data/parameters/"+filename+".json")
 
     LAMBDA = 20
     DIST_VEC_SIZE = 2 # 3 was picked so the graph can be drawn in a 3d grid
@@ -215,5 +215,5 @@ for new_LAMBDA in np.linspace(0.001, 30.0, num=200).tolist():
     if AMP_ENABLE:
         check["scaler"] = scaler.state_dict()
 
-    th.save(check, "data/models/"+filename+".pt")
+    th.save(check, "../data/models/"+filename+".pt")
 
