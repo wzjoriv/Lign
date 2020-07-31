@@ -26,25 +26,28 @@ def validate(model, graph, train, tag_in, tag_out, labels, metrics = ['accuracy'
         outp_p = cluster(rep_vec)
 
     ## save 2d image
-    if sv_img == '2d':
+    if sv_img != None and sv_img[0] == '2d':
 
         fig = plt.figure()
 
         tp = rep_vec.cpu().detach().numpy()
         tp2 = outp_t.cpu().detach().numpy()
-        c = plt.scatter(tp[:, 0], tp[:, 1], c=tp2, cmap=plt.get_cmap('gist_rainbow'))
+        c = plt.scatter(tp[:, 0], tp[:, 1], c=tp2, cmap=plt.get_cmap('gist_rainbow'), vmin = 0, vmax = sv_img[1])
+        plt.ylim([-1.2,1.2])
+        plt.xlim([-1.2,1.2])
 
         plt.colorbar(c).set_label("Label")
         plt.savefig("data/views-2d/Validate "+str(len(labels))+".png")
         plt.close()
 
-    elif sv_img == '3d':
+
+    elif sv_img != None and sv_img[0] == '3d':
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
         tp = rep_vec.cpu().detach().numpy()
         tp2 = outp_t.cpu().detach().numpy()
-        c = ax.scatter(tp[:, 0], tp[:, 1], tp[:, 2], c=tp2, cmap=plt.get_cmap('gist_rainbow'))
+        c = ax.scatter(tp[:, 0], tp[:, 1], tp[:, 2], c=tp2, cmap=plt.get_cmap('gist_rainbow'), vmin = 0, vmax = sv_img[1])
 
         plt.colorbar(c).set_label("Label")
         plt.savefig("data/views-3d/Validate "+str(len(labels))+".png")

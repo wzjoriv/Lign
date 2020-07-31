@@ -62,7 +62,7 @@ class GraphDataset(Dataset):
             return self.dataset["data"][data]
         else:
             if torch.is_tensor(self.dataset["data"][data]):
-                return self.dataset["data"][data][nodes]
+                return self.dataset["data"][data][ls]
             else:
                 return [self.dataset["data"][data][nd] for nd in ls]
 

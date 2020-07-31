@@ -32,22 +32,24 @@ class ADDON(nn.Module): ## tempory layer for training
     def __init__(self, in_fea, out_fea):
         super(ADDON, self).__init__()
         self.gcn1 = md.layers.GCN(nn.Linear(in_fea, out_fea))
+        self.gcn2 = md.layers.GCN(nn.Linear(out_fea, out_fea))
     
     def forward(self, g, features):
         x = self.gcn1(g, features)
+        x = self.gcn2(g, x)
         return x
 
-LAMBDA = 0.001
+LAMBDA = 100
 DIST_VEC_SIZE = 2 # 3 was picked so the graph can be drawn in a 3d grid
 INIT_NUM_LAB = 3
-LABELS = np.arange(40)
+LABELS = np.arange(8)
 SUBGRPAH_SIZE = 800
 AMP_ENABLE = True
 EPOCHS = 500
 LR = 1e-3
 RETRAIN_PER = {
     "superv": (0, 5),
-    "semi": (0, 15)
+    "semi": (0, 5)
 }
 
 np.random.shuffle(LABELS)
@@ -89,10 +91,10 @@ for num_labels in range(INIT_NUM_LAB, num_of_labels + 1):
     if retrain_superv(num_labels):
         lg.train.superv(model, opt, dataset, "x", "labels", DIST_VEC_SIZE, LABELS[:num_labels], LAMBDA, (device, scaler), epochs=EPOCHS, addon = ADDON, subgraph_size=SUBGRPAH_SIZE)
     
-    acc = lg.test.accuracy(model, validate, dataset, "x", "labels", LABELS[:num_labels], cluster=(utl.clustering.NN(), 5), sv_img = '2d', device=device)
+    acc = lg.test.accuracy(model, validate, dataset, "x", "labels", LABELS[:num_labels], cluster=(utl.clustering.NN(), 8), sv_img = ('2d', num_of_labels), device=device)
 
     accuracy.append(acc)
-    log.append("Label: {}/{}\t|\tAccuracy: {}\t|\tSemisurpervised Retraining: {}\t|\tSurpervised Retraining: {}".format(num_labels, num_of_labels, round(acc, 2), retrain_semi(num_labels), retrain_superv(num_labels)))
+    log.append("Label: {}/{}\t|\tAccuracy: {}\t|\tSemisurpervised Retraining: {}\t|\tSurpervised Retraining: {}".format(num_labels, num_of_labels, round(acc, 2), retrain_semi(num_labels) == None, retrain_superv(num_labels)))
     print(log[-1])
 
 

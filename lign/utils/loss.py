@@ -12,21 +12,33 @@ def similarity_matrix(x, p = 2): #pairwise distance
     
     return dist
 
+def vector_pairwise_diff(x):
+    n = x.size(0)
+    d = x.size(1)
+
+    y = x.unsqueeze(0).expand(n, n, d)
+    x = x.unsqueeze(1).expand(n, n, d)
+    
+    dist = (x - y).sum(2)
+    
+    return dist
+
 def same_label(y):
     s = y.size(0)
     y_expand = y.unsqueeze(0).expand(s, s)
     Y = y_expand.eq(y_expand.t())
     return Y
 
-def distance_loss(output, labels):
+def distance_loss(output, labels, Lambda = 0.01):
 
-    sim = similarity_matrix(output)
+    sim = similarity_matrix(output)**0.5
+
     same = same_label(labels)
     diff = same*(-1) + 1  #turns 1's into 0's and 0's into 1's 
     
     same_M = (same * sim)
     diff_M = (diff * sim)
-    #loss = th.sum(same_M, dim=0)/th.sum(same) - 
-    loss = (th.sum(diff_M, dim=0)/th.sum(diff))**1.5 - (th.sum(same_M, dim=0)/th.sum(same))**1.5
+
+    loss = same_M.sum(1)/same.sum(1) - diff_M.sum(1)/diff.sum(1)
     
-    return th.sum(loss)
+    return loss.sum()
