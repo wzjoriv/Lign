@@ -32,24 +32,22 @@ class ADDON(nn.Module): ## tempory layer for training
     def __init__(self, in_fea, out_fea):
         super(ADDON, self).__init__()
         self.gcn1 = md.layers.GCN(nn.Linear(in_fea, out_fea))
-        self.gcn2 = md.layers.GCN(nn.Linear(out_fea, out_fea))
     
     def forward(self, g, features):
         x = self.gcn1(g, features)
-        x = self.gcn2(g, x)
         return x
 
-LAMBDA = 100
+LAMBDA = 0
 DIST_VEC_SIZE = 2 # 3 was picked so the graph can be drawn in a 3d grid
-INIT_NUM_LAB = 3
-LABELS = np.arange(8)
-SUBGRPAH_SIZE = 800
+INIT_NUM_LAB = 10
+LABELS = np.arange(20)
+SUBGRPAH_SIZE = 100
 AMP_ENABLE = True
-EPOCHS = 500
+EPOCHS = 1000
 LR = 1e-3
 RETRAIN_PER = {
-    "superv": (0, 5),
-    "semi": (0, 5)
+    "superv": (0, 7),
+    "semi": (0, 7)
 }
 
 np.random.shuffle(LABELS)
