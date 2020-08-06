@@ -19,9 +19,7 @@ def vector_pairwise_diff(x):
     y = x.unsqueeze(0).expand(n, n, d)
     x = x.unsqueeze(1).expand(n, n, d)
     
-    dist = (x - y).sum(2)
-    
-    return dist
+    return x - y
 
 def same_label(y):
     s = y.size(0)

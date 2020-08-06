@@ -57,7 +57,7 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
             with th.cuda.amp.autocast():
                 out1 = model(sub, inp)
                 out2 = temp_ly(sub, out1)
-                loss = ls.distance_loss(out1, outp) + lossF(out2, outp) * Lambda
+                loss = ls.distance_loss(out1, outp) * Lambda + lossF(out2, outp)
 
             scaler.scale(loss).backward()
             scaler.step(opt)
@@ -67,7 +67,7 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
         else:
             out1 = model(sub, inp)
             out2 = temp_ly(sub, out1)
-            loss = ls.distance_loss(out1, outp) + lossF(out2, outp) * Lambda
+            loss = ls.distance_loss(out1, outp) * Lambda + lossF(out2, outp)
 
             loss.backward()
             opt.step()
@@ -105,7 +105,7 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
             with th.cuda.amp.autocast():
                 out1 = model(sub, inp)
                 out2 = temp_ly(sub, out1)
-                loss = ls.distance_loss(out1, outp) + lossF(out2, outp) * Lambda
+                loss = ls.distance_loss(out1, outp) * Lambda + lossF(out2, outp)
 
             scaler.scale(loss).backward()
             scaler.step(opt)
@@ -115,7 +115,7 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
         else:
             out1 = model(sub, inp)
             out2 = temp_ly(sub, out1)
-            loss = ls.distance_loss(out1, outp) + lossF(out2, outp) * Lambda
+            loss = ls.distance_loss(out1, outp) * Lambda - lossF(out2, outp)
 
             loss.backward()
             opt.step()
