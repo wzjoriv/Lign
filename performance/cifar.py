@@ -39,7 +39,7 @@ class ADDON(nn.Module): ## tempory layer for training
 
 
 LAMBDA = 1e-3
-DIST_VEC_SIZE = 3 # 3 was picked so the graph can be drawn in a 3d grid
+DIST_VEC_SIZE = 2 # 3 was picked so the graph can be drawn in a 3d grid
 INIT_NUM_LAB = 10
 LABELS = np.arange(20)
 SUBGRPAH_SIZE = 100
@@ -128,15 +128,6 @@ para = {
 }
 
 utl.io.json(para, "data/parameters/"+filename+".json")
-
-LAMBDA = 20
-DIST_VEC_SIZE = 2 # 3 was picked so the graph can be drawn in a 3d grid
-INIT_NUM_LAB = 20
-LABELS = np.arange(30)
-SUBGRPAH_SIZE = 500
-AMP_ENABLE = True
-EPOCHS = 200
-LR = 1e-3
 
 ## Save model
 check = {
