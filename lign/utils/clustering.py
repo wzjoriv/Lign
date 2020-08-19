@@ -48,7 +48,7 @@ class NN():
 
     def predict(self, x):
         if self.train_pts == None:
-            raise RuntimeError("Knn wasn't trained. Need to execute self.train() first")
+            raise RuntimeError("NN wasn't trained. Need to execute self.train() first")
         
         dist = similarity_matrix(x, self.train_pts, self.p) ** (1/self.p)
         labels = th.argmin(dist, dim=1)
@@ -56,23 +56,25 @@ class NN():
 
 class KNN(NN):
 
-    def __init__(self, X = None, Y = None, k = 3, p = 2):
+    def __init__(self, X = None, Y = None, p = 2, k = 3):
         super().__init__(X, Y, p)
         self.k = k
 
     def predict(self, x):
         if self.train_pts == None:
-            raise RuntimeError("Knn wasn't trained. Need to execute self.train() first")
+            raise RuntimeError("KNN wasn't trained. Need to execute self.train() first")
         
         dist = similarity_matrix(x, self.train_pts, self.p) ** (1/self.p)
+
         votes = dist.argsort(dim=1)[:,:self.k]
         votes = self.train_label[votes]
-        uni, count = th.unique(votes, dim=1, return_counts=True)
+
         print(votes)
-        print(uni)
-        print(count)
-        max_count = count.argmax(dim=1)
-        return uni[max_count]
+        print(th.unique(votes, dim = 1, return_counts=True))
+        
+        #max_count = count.argmax(dim=1)
+        return votes[10]
+
 
 class Spectral(NN):
 
@@ -91,7 +93,7 @@ if __name__ == '__main__':
         [-1, -0.88]
     ])
 
-    b = th.LongTensor([1, 1, 2, 2])
+    b = th.LongTensor([3, 3, 5, 5])
 
     c = th.Tensor([
         [-0.5, -0.5],

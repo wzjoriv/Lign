@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import torch as th
 from .utils import loss as ls, clustering as cl
 from .models import LIGN as lg
+from math import floor
 
 def randomize(tensor):
     return tensor[th.randperm(len(tensor))]
@@ -35,6 +36,7 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
         tr_nodes, tr_labs = cl.filter_k(tag_out, labels, graph, cluster[1])
 
     cluster = cluster[0]
+    nodes_len = len(nodes)
 
     model.train()
     for i in range(epochs):
@@ -44,34 +46,36 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
             inp = sub.get_parent_data(tag_in).to(device[0])
             cluster.train(model(sub, inp), tr_labs.to(device[0]))
 
-
             nodes = randomize(nodes)
-            sub = graph.subgraph(nodes[:subgraph_size])
-            inp = sub.get_parent_data(tag_in).to(device[0])
-            outp = norm_labels(cluster(model(sub, inp)), labels).to(device[0])
 
-        opt.zero_grad()
-        opt2.zero_grad()
-        
-        if amp_enable:
-            with th.cuda.amp.autocast():
+        for batch in range(0, nodes_len, subgraph_size):
+            with th.no_grad():
+                sub = graph.subgraph(nodes[batch:min(nodes_len, batch + subgraph_size)])
+                inp = sub.get_parent_data(tag_in).to(device[0])
+                outp = norm_labels(cluster(model(sub, inp)), labels).to(device[0])
+
+            opt.zero_grad()
+            opt2.zero_grad()
+            
+            if amp_enable:
+                with th.cuda.amp.autocast():
+                    out1 = model(sub, inp)
+                    out2 = temp_ly(sub, out1)
+                    loss = ls.distance_loss(out1, outp) * Lambda + lossF(out2, outp)
+
+                scaler.scale(loss).backward()
+                scaler.step(opt)
+                scaler.step(opt2)
+                scaler.update()
+                
+            else:
                 out1 = model(sub, inp)
                 out2 = temp_ly(sub, out1)
                 loss = ls.distance_loss(out1, outp) * Lambda + lossF(out2, outp)
 
-            scaler.scale(loss).backward()
-            scaler.step(opt)
-            scaler.step(opt2)
-            scaler.update()
-            
-        else:
-            out1 = model(sub, inp)
-            out2 = temp_ly(sub, out1)
-            loss = ls.distance_loss(out1, outp) * Lambda + lossF(out2, outp)
-
-            loss.backward()
-            opt.step()
-            opt2.step()
+                loss.backward()
+                opt.step()
+                opt2.step()
 
 def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=100, addon = None, subgraph_size = 200):
     
@@ -88,37 +92,42 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
 
     with th.no_grad():
         nodes = cl.filter(tag_out, labels, graph)
+    
+    
+    nodes_len = len(nodes)
 
     model.train()
     for i in range(epochs):
-        with th.no_grad():
-            nodes = randomize(nodes)
-            sub = graph.subgraph(nodes[:subgraph_size])
 
-            inp = sub.get_parent_data(tag_in).to(device[0])
-            outp = norm_labels(sub.get_parent_data(tag_out), labels).to(device[0])
+        nodes = randomize(nodes)
+        for batch in range(0, nodes_len, subgraph_size):
+            with th.no_grad():
+                sub = graph.subgraph(nodes[batch:min(nodes_len, batch + subgraph_size)])
 
-        opt.zero_grad()
-        opt2.zero_grad()
+                inp = sub.get_parent_data(tag_in).to(device[0])
+                outp = norm_labels(sub.get_parent_data(tag_out), labels).to(device[0])
 
-        if amp_enable:
-            with th.cuda.amp.autocast():
+            opt.zero_grad()
+            opt2.zero_grad()
+
+            if amp_enable:
+                with th.cuda.amp.autocast():
+                    out1 = model(sub, inp)
+                    out2 = temp_ly(sub, out1)
+                    loss = ls.distance_loss(out1, outp) * Lambda + lossF(out2, outp)
+
+                scaler.scale(loss).backward()
+                scaler.step(opt)
+                scaler.step(opt2)
+                scaler.update()
+                
+            else:
                 out1 = model(sub, inp)
                 out2 = temp_ly(sub, out1)
-                loss = ls.distance_loss(out1, outp) * Lambda + lossF(out2, outp)
+                loss = ls.distance_loss(out1, outp) * Lambda - lossF(out2, outp)
 
-            scaler.scale(loss).backward()
-            scaler.step(opt)
-            scaler.step(opt2)
-            scaler.update()
-            
-        else:
-            out1 = model(sub, inp)
-            out2 = temp_ly(sub, out1)
-            loss = ls.distance_loss(out1, outp) * Lambda - lossF(out2, outp)
-
-            loss.backward()
-            opt.step()
-            opt2.step()
+                loss.backward()
+                opt.step()
+                opt2.step()
 
 

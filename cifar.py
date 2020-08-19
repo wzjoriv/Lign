@@ -37,13 +37,14 @@ class ADDON(nn.Module): ## tempory layer for training
         x = self.gcn1(g, features)
         return x
 
-LAMBDA = 1
-DIST_VEC_SIZE = 2 # 3 was picked so the graph can be drawn in a 3d grid
+
+LAMBDA = 1e-3
+DIST_VEC_SIZE = 3 # 3 was picked so the graph can be drawn in a 3d grid
 INIT_NUM_LAB = 10
 LABELS = np.arange(20)
 SUBGRPAH_SIZE = 100
 AMP_ENABLE = True
-EPOCHS = 1000
+EPOCHS = 5
 LR = 1e-3
 RETRAIN_PER = {
     "superv": (0, 7),
@@ -101,3 +102,48 @@ for num_labels in range(INIT_NUM_LAB, num_of_labels + 1):
 
 
 
+
+### Save file
+time = str(tm_now()).replace(":", "-").replace(".", "").replace(" ", "_")
+filename = "LIGN_CIFAR_training_"+time
+
+## Save metrics
+metrics = {
+    "accuracy": accuracy,
+    "log": log
+}
+utl.io.json(metrics, "data/metrics/"+filename+".json")
+
+## Save hyperparameters
+para = {
+    "LAMBDA": LAMBDA,
+    "DIST_VEC_SIZE": DIST_VEC_SIZE,
+    "INIT_NUM_LAB": INIT_NUM_LAB,
+    "LABELS": LABELS.tolist(),
+    "SUBGRPAH_SIZE": SUBGRPAH_SIZE,
+    "AMP_ENABLE": AMP_ENABLE,
+    "EPOCHS": EPOCHS,
+    "LR": LR,
+    "RETRAIN_PER": RETRAIN_PER
+}
+
+utl.io.json(para, "data/parameters/"+filename+".json")
+
+LAMBDA = 20
+DIST_VEC_SIZE = 2 # 3 was picked so the graph can be drawn in a 3d grid
+INIT_NUM_LAB = 20
+LABELS = np.arange(30)
+SUBGRPAH_SIZE = 500
+AMP_ENABLE = True
+EPOCHS = 200
+LR = 1e-3
+
+## Save model
+check = {
+    "model": model.state_dict(),
+    "optimizer": opt.state_dict()
+}
+if AMP_ENABLE:
+    check["scaler"] = scaler.state_dict()
+
+th.save(check, "data/models/"+filename+".pt")
