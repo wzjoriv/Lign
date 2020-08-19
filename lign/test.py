@@ -33,8 +33,8 @@ def validate(model, graph, train, tag_in, tag_out, labels, metrics = ['accuracy'
         tp = rep_vec.cpu().detach().numpy()
         tp2 = outp_t.cpu().detach().numpy()
         c = plt.scatter(tp[:, 0], tp[:, 1], c=tp2, cmap=plt.get_cmap('gist_rainbow'), vmin = 0, vmax = sv_img[1])
-        plt.ylim([-1.2,1.2])
-        plt.xlim([-1.2,1.2])
+        #plt.ylim([-1.2,1.2])
+        #plt.xlim([-1.2,1.2])
 
         plt.colorbar(c).set_label("Label")
         plt.savefig("data/views-2d/Validate "+str(len(labels))+".png")
