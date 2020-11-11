@@ -19,6 +19,7 @@ from .utils import io
     
 """
 
+
 class GraphDataset(Dataset):
     def __init__(self, fl="", workers=1):
         self.dataset = None
@@ -238,9 +239,10 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
     def add_parent_node(self, nodes):
         nodes = io.to_iter(nodes)
-        
+
         mutual_data = set(self.dataset["data"].keys())
-        mutual_data = mutual_data.intersection(self.parent.dataset["data"].keys())
+        mutual_data = mutual_data.intersection(
+            self.parent.dataset["data"].keys())
 
         for node in nodes:
             mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
