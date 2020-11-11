@@ -2,7 +2,6 @@ from .train import norm_labels
 from .utils import clustering as cl
 import torch as th
 from .utils import io
-
 import matplotlib.pyplot as plt
 
 
@@ -34,34 +33,26 @@ def validate(model, graph, train, tag_in, tag_out, labels, metrics=['accuracy'],
         rep_vec = model(graph, inp)
         outp_p = cluster(rep_vec)
 
-    # save 2d image
-    if sv_img != None and sv_img[0] == '2d':
+    if sv_img:  # save 2d image
 
         fig = plt.figure()
-
         tp = rep_vec.cpu().detach().numpy()
         tp2 = outp_t.cpu().detach().numpy()
-        c = plt.scatter(tp[:, 0], tp[:, 1], c=tp2, cmap=plt.get_cmap(
-            'gist_rainbow'), vmin=0, vmax=sv_img[1])
-        # plt.ylim([-1.2,1.2])
-        # plt.xlim([-1.2,1.2])
+
+        if sv_img[0] == '3d':
+            ax = fig.add_subplot(111, projection='3d')
+
+            c = ax.scatter(tp[:, 0], tp[:, 1], tp[:, 2], c=tp2, cmap=plt.get_cmap(
+                'gist_rainbow'), vmin=0, vmax=sv_img[1])
+
+        else:  # save 3d image
+            c = plt.scatter(tp[:, 0], tp[:, 1], c=tp2, cmap=plt.get_cmap(
+                'gist_rainbow'), vmin=0, vmax=sv_img[1])
+            # plt.ylim([-1.2,1.2])
+            # plt.xlim([-1.2,1.2])
 
         plt.colorbar(c).set_label("Label")
-        plt.savefig("data/views-2d/Validate "+str(len(labels))+".png")
-        plt.close()
-
-    # save 3d image
-    elif sv_img != None and sv_img[0] == '3d':
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-
-        tp = rep_vec.cpu().detach().numpy()
-        tp2 = outp_t.cpu().detach().numpy()
-        c = ax.scatter(tp[:, 0], tp[:, 1], tp[:, 2], c=tp2, cmap=plt.get_cmap(
-            'gist_rainbow'), vmin=0, vmax=sv_img[1])
-
-        plt.colorbar(c).set_label("Label")
-        plt.savefig("data/views-3d/Validate "+str(len(labels))+".png")
+        plt.savefig("data/views/Validate "+str(len(labels))+".png")
         plt.close()
 
     out = {}
