@@ -24,10 +24,7 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
     scaler = device[1]
     amp_enable = device[1] != None
 
-    if addon == None:
-        temp_ly = ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len)).to(device[0])
-    else:
-        temp_ly = addon(vec_size, labels_len).to(device[0])
+    temp_ly = addon(vec_size, labels_len).to(device[0]) if addon else ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len)).to(device[0])
 
     opt2 = th.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
@@ -83,10 +80,7 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
     scaler = device[1]
     amp_enable = device[1] != None
 
-    if addon == None:
-        temp_ly = ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len)).to(device[0])
-    else:
-        temp_ly = addon(vec_size, labels_len).to(device[0])
+    temp_ly = addon(vec_size, labels_len).to(device[0]) if addon else ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len)).to(device[0])
 
     opt2 = th.optim.Adam(temp_ly.parameters())
 

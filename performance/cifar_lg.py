@@ -105,7 +105,7 @@ for num_labels in range(INIT_NUM_LAB, num_of_labels + 1):
 
 ### Save file
 time = str(tm_now()).replace(":", "-").replace(".", "").replace(" ", "_")
-filename = "LIGN_CIFAR_training_"+time
+filename = "LIGN_CIFAR_performance_"+time
 
 ## Save metrics
 metrics = {
