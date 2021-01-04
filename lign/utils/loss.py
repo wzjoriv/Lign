@@ -38,6 +38,6 @@ def distance_loss(output, labels, Lambda = 0.01):
     same_M = (same * sim)
     diff_M = (diff * sim)
 
-    loss = same_M.sum(1)/same.sum(1) - diff_M.sum(1)/diff.sum(1)
+    loss = - same_M.sum(dim = 1)/same.sum(dim = 1) + diff_M.sum(dim = 1)/diff.sum(dim = 1)
     
-    return loss.sum()
+    return loss.sum() / len(labels)
