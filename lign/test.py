@@ -1,7 +1,7 @@
-from .train import norm_labels
-from .utils import clustering as cl
+from lign.train import norm_labels
+from lign.utils import clustering as cl
 import torch as th
-from .utils import io
+from lign.utils import io
 
 import matplotlib.pyplot as plt
 

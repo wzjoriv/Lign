@@ -1,10 +1,10 @@
 
-from .models import layers as ly
+from lign.models import layers as ly
 import torch.nn as nn
 import torch.nn.functional as F
 import torch as th
-from .utils import loss as ls, clustering as cl
-from .models import LIGN as lg
+from lign.utils import loss as ls, clustering as cl
+from lign.models import LIGN as lg
 from math import floor
 
 def randomize(tensor):

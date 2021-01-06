@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 import os.path
-from .utils import io
+from lign.utils import io
 
 """
     node = {
@@ -163,9 +163,9 @@ class GraphDataset(Dataset):
                 for indx, node in enumerate(nodes):
                     self.dataset["data"][data][node] = out[indx]
 
-        self.reset_temp() if reset_buffer else print("Temporaty buffer was not reset")
+        self.reset_temp() if reset_buffer else print("Temporary buffer was not reset")
 
-    # pushes its data to nodes that it points to into nodes's temp
+    # pushes its data to nodes that it points to into nodes' temp
     def push(self, func=None, data='x', nodes=[], reset_buffer=True):
         nodes = io.to_iter(nodes)
 
@@ -185,7 +185,7 @@ class GraphDataset(Dataset):
             for indx, node in enumerate(nodes):
                 self.dataset["data"][data][node] = out[indx]
 
-        self.reset_temp() if reset_buffer else print("Temporaty buffer was not reset")
+        self.reset_temp() if reset_buffer else print("Temporary buffer was not reset")
 
     def apply(self, func, data, nodes=[]):
         nodes = io.to_iter(nodes)

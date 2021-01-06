@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch as th
 import torch.nn.functional as F
-from .layers import GCN
+from lign.models.layers import GCN
 
 class LIGN_cnn(nn.Module):
     def __init__(self, out_feats):
