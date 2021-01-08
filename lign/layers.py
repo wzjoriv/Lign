@@ -21,14 +21,3 @@ class GCN(nn.Module):
         g.apply(self.post_mod, ".hidden")
 
         return g.pop_data(".hidden")
-
-class G_LSTM(nn.Module):
-    def __init__(self):
-        super(G_LSTM, self).__init__()
-
-    def forward(self, g, data):
-        g.set_data(".hidden", data)
-
-        #cool
-
-        return g.pop_data(".hidden")

@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 import os.path
-from lign.utils import io
+from .utils import io
 
 """
     node = {

@@ -1,8 +1,8 @@
 from torchvision import datasets
 import torch
-from lign.graph import GraphDataset
 
 def mnist_to_lign(path, transforms = None, train = True):
+    from lign.graph import GraphDataset
 
     dataset =  datasets.MNIST(path, train=train)
     graph = GraphDataset()
@@ -32,6 +32,7 @@ def mnist_to_lign(path, transforms = None, train = True):
     return graph
 
 def cifar_to_lign(path, transforms = None, train = True):
+    from lign.graph import GraphDataset
 
     dataset =  datasets.CIFAR100(path, train=train)
     graph = GraphDataset()

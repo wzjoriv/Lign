@@ -1,8 +1,7 @@
-
-from lign.models import layers as ly
+import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
-import torch as th
+from lign import layers as ly
 from lign.utils import loss as ls, clustering as cl
 from lign.models import LIGN as lg
 from math import floor
