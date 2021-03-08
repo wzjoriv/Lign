@@ -1,10 +1,14 @@
+from math import floor
+
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
+
 from lign import layers as ly
-from lign.utils import loss as ls, clustering as cl
 from lign.models import LIGN as lg
-from math import floor
+from lign.utils import clustering as cl
+from lign.utils import loss as ls
+
 
 def randomize(tensor):
     return tensor[th.randperm(len(tensor))]
@@ -17,7 +21,7 @@ def norm_labels(inp, labels):
 
     return out
 
-def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=100, addon = None, subgraph_size = 200, cluster = (cl.NN(), 3)):
+""" def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=100, addon = None, subgraph_size = 200, cluster = (cl.NN(), 3)):
     
     labels_len = len(labels)
     scaler = device[1]
@@ -74,7 +78,7 @@ def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0
 
                 loss.backward()
                 opt.step()
-                opt2.step()
+                opt2.step() """
 
 def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=100, addon = None, subgraph_size = 200):
     
