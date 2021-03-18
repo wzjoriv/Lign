@@ -1,8 +1,10 @@
+import os.path
+
 import torch
 from torch import nn
-from torch.utils.data import Dataset, DataLoader
-import os.path
-from .utils import io
+from torch.utils.data import Dataset
+
+from lign.utils import io
 
 """
     node = {

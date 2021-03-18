@@ -36,8 +36,10 @@ def similarity_matrix(x, y, p = 2): #pairwise distance
 class NN():
 
     def __init__(self, X = None, Y = None, p = 2):
-        self.train(X, Y)
         self.p = p
+        self.train_pts = None
+        self.train_label = None
+        self.train(X, Y)
 
     def train(self, X, Y):
         self.train_pts = X

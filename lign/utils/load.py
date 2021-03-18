@@ -1,5 +1,5 @@
-from torchvision import datasets
 import torch
+from torchvision import datasets
 
 def mnist_to_lign(path, transforms = None, train = True):
     from lign.graph import GraphDataset

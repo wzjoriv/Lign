@@ -80,27 +80,62 @@ def norm_labels(inp, labels):
                 opt.step()
                 opt2.step() """
 
-def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=100, addon = None, subgraph_size = 200):
+def superv(model, opt, graph, tag_in, tag_out, labels, addon, Lambda = 0.0001, device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=100, subgraph_size = 200):
     
-    labels_len = len(labels)
     scaler = device[1]
     amp_enable = device[1] != None
 
-    if addon == None:
-        temp_ly = ly.GCN(func = lg.sum_neighs_data, post_mod = nn.Linear(vec_size, labels_len)).to(device[0])
-    else:
-        temp_ly = addon(vec_size, labels_len).to(device[0])
+    temp_ly = addon.to(device[0])
 
-    opt2 = th.optim.Adam(temp_ly.parameters())
+    opt_full = th.optim.Adam([ # optimizer for the full network before surgery
+        {'params': model.parameters()},
+        {'params': temp_ly.parameters(), 'lr': 1e-3}
+    ], lr=1e-2)
 
-    with th.no_grad():
+    with th.no_grad(): # get nodes that are part of the current label subset
         nodes = cl.filter(tag_out, labels, graph)
-    
     
     nodes_len = len(nodes)
 
+    # training
+    ## train full network
     model.train()
     for i in range(epochs):
+
+        opt_full.zero_grad()
+
+        nodes = randomize(nodes)
+        for batch in range(0, nodes_len, subgraph_size):
+            with th.no_grad():
+                sub = graph.subgraph(nodes[batch:min(nodes_len, batch + subgraph_size)])
+
+                inp = sub.get_parent_data(tag_in).to(device[0])
+                outp = norm_labels(sub.get_parent_data(tag_out), labels).to(device[0])
+
+            opt_full.zero_grad()
+
+            if amp_enable:
+                with th.cuda.amp.autocast():
+                    out1 = model(sub, inp)
+                    out2 = temp_ly(sub, out1)
+                    loss = lossF(out2, outp)
+
+                scaler.scale(loss).backward()
+                scaler.step(opt_full)
+                scaler.update()
+                
+            else:
+                out1 = model(sub, inp)
+                out2 = temp_ly(sub, out1)
+                loss = lossF(out2, outp)
+
+                loss.backward()
+                opt_full.step()
+    
+    ## train base network
+    for i in range(epochs//10):
+        
+        opt_full.zero_grad()
 
         nodes = randomize(nodes)
         for batch in range(0, nodes_len, subgraph_size):
@@ -111,26 +146,21 @@ def superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001
                 outp = norm_labels(sub.get_parent_data(tag_out), labels).to(device[0])
 
             opt.zero_grad()
-            opt2.zero_grad()
 
             if amp_enable:
                 with th.cuda.amp.autocast():
                     out1 = model(sub, inp)
-                    out2 = temp_ly(sub, out1)
-                    loss = ls.distance_loss(out1, outp) * Lambda + lossF(out2, outp)
+                    loss = ls.distance_loss(out1, outp) * Lambda
 
                 scaler.scale(loss).backward()
                 scaler.step(opt)
-                scaler.step(opt2)
                 scaler.update()
                 
             else:
                 out1 = model(sub, inp)
-                out2 = temp_ly(sub, out1)
-                loss = ls.distance_loss(out1, outp) * Lambda - lossF(out2, outp)
+                loss = ls.distance_loss(out1, outp) * Lambda
 
                 loss.backward()
                 opt.step()
-                opt2.step()
 
 

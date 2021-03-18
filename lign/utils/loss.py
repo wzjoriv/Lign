@@ -1,4 +1,5 @@
 import torch as th
+
 from .clustering import similarity_matrix as sm
 
 def similarity_matrix(x, p = 2): #pairwise distance
@@ -22,7 +23,7 @@ def vector_pairwise_diff(x):
     
     return x - y
 
-def same_label(y):
+def same_label(y): # return matric of nodes that have same label
     s = y.size(0)
     y_expand = y.unsqueeze(0).expand(s, s)
     Y = y_expand.eq(y_expand.t())
@@ -30,14 +31,15 @@ def same_label(y):
 
 def distance_loss(output, labels, Lambda = 0.01):
 
+    ln = len(labels)
     sim = similarity_matrix(output)
 
-    same = same_label(labels)
-    diff = same*(-1) + 1  #turns 1's into 0's and 0's into 1's 
+    same = same_label(labels) # remove diagonal
+    #diff = same*(-1) + 1  #turns 1's into 0's and 0's into 1's 
     
     same_M = (same * sim)
-    diff_M = (diff * sim)
+    #diff_M = (diff * sim)
 
-    loss = - same_M.sum(dim = 1)/same.sum(dim = 1) + diff_M.sum(dim = 1)/diff.sum(dim = 1)
+    loss = - same_M.sum(dim = 1)/same.sum(dim = 1)
     
-    return loss.sum() / len(labels)
+    return loss.sum() / ln

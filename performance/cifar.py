@@ -1,14 +1,14 @@
+import datetime
+
 import lign as lg
 import lign.utils as utl
-
+import numpy as np
 import torch as th
-import torchvision as tv
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision as tv
 from torch.cuda.amp import GradScaler
 
-import numpy as np
-import datetime
 tm_now = datetime.datetime.now
 
 dataset = lg.graph.GraphDataset("data/datasets/cifar100_train.lign")
@@ -32,7 +32,7 @@ class ADDON(nn.Module): ## tempory layer for training
         self.gcn1 = lg.layers.GCN(nn.Linear(in_fea, out_fea))
     
     def forward(self, g, features):
-        x = self.gcn1(g, features)
+        x = self.gcn1(g, features)                                
         return x
 
 
