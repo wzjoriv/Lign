@@ -132,35 +132,35 @@ def superv(model, opt, graph, tag_in, tag_out, labels, addon, Lambda = 0.0001, d
                 loss.backward()
                 opt_full.step()
     
-    ## train base network
-    for i in range(epochs//10):
+    # ## train base network
+    # for i in range(epochs * lambda):
         
-        opt_full.zero_grad()
+    #     opt_full.zero_grad()-
 
-        nodes = randomize(nodes)
-        for batch in range(0, nodes_len, subgraph_size):
-            with th.no_grad():
-                sub = graph.subgraph(nodes[batch:min(nodes_len, batch + subgraph_size)])
+    #     nodes = randomize(nodes)
+    #     for batch in range(0, nodes_len, subgraph_size):
+    #         with th.no_grad():
+    #             sub = graph.subgraph(nodes[batch:min(nodes_len, batch + subgraph_size)])
 
-                inp = sub.get_parent_data(tag_in).to(device[0])
-                outp = norm_labels(sub.get_parent_data(tag_out), labels).to(device[0])
+    #             inp = sub.get_parent_data(tag_in).to(device[0])
+    #             outp = norm_labels(sub.get_parent_data(tag_out), labels).to(device[0])
 
-            opt.zero_grad()
+    #         opt.zero_grad()
 
-            if amp_enable:
-                with th.cuda.amp.autocast():
-                    out1 = model(sub, inp)
-                    loss = ls.distance_loss(out1, outp) * Lambda
+    #         if amp_enable:
+    #             with th.cuda.amp.autocast():
+    #                 out1 = model(sub, inp)
+    #                 loss = ls.distance_loss(out1, outp) * Lambda
 
-                scaler.scale(loss).backward()
-                scaler.step(opt)
-                scaler.update()
+    #             scaler.scale(loss).backward()
+    #             scaler.step(opt)
+    #             scaler.update()
                 
-            else:
-                out1 = model(sub, inp)
-                loss = ls.distance_loss(out1, outp) * Lambda
+    #         else:
+    #             out1 = model(sub, inp)
+    #             loss = ls.distance_loss(out1, outp) * Lambda
 
-                loss.backward()
-                opt.step()
+    #             loss.backward()
+    #             opt.step()
 
 
