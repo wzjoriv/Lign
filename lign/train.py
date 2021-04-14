@@ -1,5 +1,3 @@
-from math import floor
-
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
@@ -21,7 +19,7 @@ def norm_labels(inp, labels):
 
     return out
 
-""" def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=100, addon = None, subgraph_size = 200, cluster = (cl.NN(), 3)):
+""" def semi_superv(model, opt, graph, tag_in, tag_out, vec_size, labels, Lambda = 0.0001, device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=100, addon = None, subgraph_size = 200, cluster = (cl.NN(), 5)):
     
     labels_len = len(labels)
     scaler = device[1]
@@ -80,17 +78,10 @@ def norm_labels(inp, labels):
                 opt.step()
                 opt2.step() """
 
-def superv(model, opt, graph, tag_in, tag_out, labels, addon, Lambda = 0.0001, device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=100, subgraph_size = 200):
+def superv(base, classifier, opt, graph, tag_in, tag_out, labels, device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=100, subgraph_size = 200):
     
     scaler = device[1]
     amp_enable = device[1] != None
-
-    temp_ly = addon.to(device[0])
-
-    opt_full = th.optim.Adam([ # optimizer for the full network before surgery
-        {'params': model.parameters()},
-        {'params': temp_ly.parameters(), 'lr': 1e-3}
-    ], lr=1e-2)
 
     with th.no_grad(): # get nodes that are part of the current label subset
         nodes = cl.filter(tag_out, labels, graph)
@@ -98,11 +89,10 @@ def superv(model, opt, graph, tag_in, tag_out, labels, addon, Lambda = 0.0001, d
     nodes_len = len(nodes)
 
     # training
-    ## train full network
-    model.train()
+    base.train()
     for i in range(epochs):
 
-        opt_full.zero_grad()
+        opt.zero_grad()
 
         nodes = randomize(nodes)
         for batch in range(0, nodes_len, subgraph_size):
@@ -112,30 +102,30 @@ def superv(model, opt, graph, tag_in, tag_out, labels, addon, Lambda = 0.0001, d
                 inp = sub.get_parent_data(tag_in).to(device[0])
                 outp = norm_labels(sub.get_parent_data(tag_out), labels).to(device[0])
 
-            opt_full.zero_grad()
+            opt.zero_grad()
 
             if amp_enable:
                 with th.cuda.amp.autocast():
-                    out1 = model(sub, inp)
-                    out2 = temp_ly(sub, out1)
+                    out1 = base(sub, inp)
+                    out2 = classifier(sub, out1)
                     loss = lossF(out2, outp)
 
                 scaler.scale(loss).backward()
-                scaler.step(opt_full)
+                scaler.step(opt)
                 scaler.update()
                 
             else:
-                out1 = model(sub, inp)
-                out2 = temp_ly(sub, out1)
+                out1 = base(sub, inp)
+                out2 = classifier(sub, out1)
                 loss = lossF(out2, outp)
 
                 loss.backward()
-                opt_full.step()
+                opt.step()
     
     # ## train base network
     # for i in range(epochs * lambda):
         
-    #     opt_full.zero_grad()-
+    #     opt.zero_grad()-
 
     #     nodes = randomize(nodes)
     #     for batch in range(0, nodes_len, subgraph_size):

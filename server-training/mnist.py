@@ -1,5 +1,4 @@
 # # LIGN - MNIST
-# Graph Induced Lifelong Learning for Spatial-Temporal Data
 # 
 # ----
 # 
@@ -40,20 +39,8 @@ else:
     device = th.device("cpu")
 
 
-# ### Functions and NNs
-
-class ADDON(nn.Module): ## tempory layer for training
-    def __init__(self, in_fea, out_fea, device = 'cuda'):
-        super(ADDON, self).__init__()
-        self.addon = lg.layers.ADDON(in_fea, out_fea, device=device)
-    
-    def forward(self, g, features):
-        x = F.log_softmax(self.addon(g, features), dim=1)
-        return x
-
-
 # ### Hyperparameters
-# * LAMBDA: regulates how much the model relies on difference between the nodes vs the features that lead to their label when calculating pairwise loss
+# * LAMBDA: regulates how much the model relies on difference between the nodes vs the features that lead to their label 
 # * DIST_VEC_SIZE: size of vector representing the mapping of the nodes by the model
 # * INIT_NUM_LAB: number of labels used to training the model initially in the supervised method to learn pairwise mapping
 # * LABELS: list of all the labels that model comes across. Labels can be appended at any time. The order of labels is initially randomized
@@ -84,8 +71,6 @@ np.random.shuffle(LABELS)
 # ### LIGN
 # 
 # [L]ifelong Learning [I]nduced by [G]raph [N]eural Networks Model (LIGN)
-
-
 
 class LIGN_MNIST(nn.Module):
     def __init__(self, out_feats):
@@ -118,7 +103,18 @@ class LIGN_MNIST(nn.Module):
 
         return self.drop2(x)
 
-model = LIGN_MNIST(DIST_VEC_SIZE).to(device)
+
+class ADDON(nn.Module): ## tempory layer for training
+    def __init__(self, in_fea, out_fea, device = 'cuda'):
+        super(ADDON, self).__init__()
+        self.addon = lg.layers.ADDON(in_fea, out_fea, device=device) #
+    
+    def forward(self, g, features):
+        x = F.log_softmax(self.addon(g, features), dim=1)
+        return x
+
+model = LIGN_MNIST(DIST_VEC_SIZE).to(device) # base
+addon = ADDON(DIST_VEC_SIZE, INIT_NUM_LAB, device).to(device) # classifier
 
 
 # ----
@@ -132,7 +128,6 @@ log = []
 num_of_labels = len(LABELS)
 opt = th.optim.Adam(model.parameters(), lr=LR)
 scaler = GradScaler() if AMP_ENABLE else None
-addon = ADDON(DIST_VEC_SIZE, INIT_NUM_LAB, device).to(device)
 
 retrain_superv = lambda x: (x + RETRAIN_PER["superv"][0])%RETRAIN_PER["superv"][1] == 0
 
@@ -150,13 +145,13 @@ print(log[-1])
 lg.train.superv(model, opt, dataset, "x", "labels", LABELS[:INIT_NUM_LAB], addon, LAMBDA, (device, scaler), epochs=EPOCHS, subgraph_size=SUBGRPAH_SIZE)
 
 for num_labels in range(INIT_NUM_LAB, num_of_labels + 1):
-    """if retrain_semi(num_labels):
-        lg.train.semi_superv(model, opt, dataset, "x", "labels", DIST_VEC_SIZE, LABELS[:num_labels], LAMBDA, (device, scaler), addon = ADDON, subgraph_size=SUBGRPAH_SIZE, epochs=EPOCHS, cluster=(utl.clustering.NN(), 5))"""
-
+  
     if retrain_superv(num_labels):
+        acc = lg.test.accuracy(model, validate, dataset, "x", "labels", LABELS[:num_labels], cluster=(utl.clustering.NN(), 5), device=device)
+
     	accuracy.append(acc)
-	    log.append("Label: {}/{} -- Accuracy: {}% -- Surpervised Retraining: {}".format(num_labels, num_of_labels, round(acc, 2), False))
-	    print(log[-1])
+        log.append("Label: {}/{} -- Accuracy: {}% -- Surpervised Retraining: {}".format(num_labels, num_of_labels, round(acc, 2), False))
+        print(log[-1])
 
         addon.addon.update_size(num_labels)
         EPOCHS -= int(EPOCHS*0.05)

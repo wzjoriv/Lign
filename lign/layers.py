@@ -2,7 +2,7 @@ import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 
-#gcn layer in network
+# gcn layer in network
 class GCN(nn.Module):
     def __init__(self, post_mod, func = None, pre_mod = None):
         super(GCN, self).__init__()
@@ -23,6 +23,7 @@ class GCN(nn.Module):
 
         return g.pop_data(".hidden")
 
+# dynamic Linear Layer
 class ADDON(nn.Module):
     def __init__(self, in_fea, out_fea, base = None, device = 'cuda'):
         super(ADDON, self).__init__()
@@ -38,7 +39,7 @@ class ADDON(nn.Module):
         x = F.linear(x, self.weight)
         return x
     
-    def update_size(self, size):
+    def update_size(self, size): #slow; doesn't matter much since perform infrequenly
         if size <= self.out_fea:
             print("New size needs to be bigger than current output size")
         else:

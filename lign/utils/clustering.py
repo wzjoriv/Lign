@@ -20,7 +20,7 @@ def filter_k(data, labels, graph, k = 3):
     return th.LongTensor(out), th.LongTensor(labs)
 
 
-def similarity_matrix(x, y, p = 2): #pairwise distance
+def similarity_matrix(x, y, p = 2): #pairwise distance of 2 different matrixes
 
     n = x.size(0)
     m = y.size(0)
