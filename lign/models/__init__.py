@@ -1,1 +1,1 @@
-from . import LIGN, R_LIGN
+from . import LIGN

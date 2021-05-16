@@ -1,4 +1,3 @@
-from lign.graph import SubGraph
 import torch
 from torchvision import datasets
 
@@ -95,9 +94,9 @@ def cora_to_lign(path, train = True, split = 0.8):
     graph.add(n) # add n empty nodes
 
     marker = [1, 1433] # where data is seperated in the csv
-    unq_labels = cora_cont[marker + 1].unique()
+    unq_labels = cora_cont[marker[0] + 1].unique()
 
-    labels = onehot_encoding(cora_cont[marker + 1], unq_labels) # onehot encoding
+    labels = onehot_encoding(cora_cont[marker[0] + 1], unq_labels) # onehot encoding
 
     graph.set_data("id", torch.tensor(cora_cont[0].values))
     graph.set_data("x", torch.tensor(cora_cont.loc[:, marker[0]:marker[1]].values))
@@ -107,16 +106,15 @@ def cora_to_lign(path, train = True, split = 0.8):
     parents = edge_parents.groups.keys()
 
     for key in parents:
-        p_node = graph.filter(lambda x: x == key, "id")[0]
+        p_node = graph.filter(lambda x: x == key, "id")
 
         childrens = edge_parents.get_group(key)[1].values
-        c_nodes = list(cora_cont.iloc[cora_cont[0].isin(childrens)].index.values)
+        c_nodes = list(cora_cont.loc[cora_cont[0].isin(childrens)].index.values)
         graph.add_edge(p_node, c_nodes)
 
     n = len(cora_cont[0])
     split = int(n * split)
-    subnodes = list(range(split)) if train else list(range(split, n)) # training or training nodes
+    subnodes_train = list(range(split))  # training nodes
+    subnodes_test = list(range(split, n)) # testing nodes
 
-    subgraph = graph.subgraph(nodes=subnodes)
-
-    return graph, subgraph
+    return graph, graph.subgraph(nodes=subnodes_train), graph.subgraph(nodes=subnodes_test)
