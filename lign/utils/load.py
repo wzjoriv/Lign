@@ -98,8 +98,6 @@ def cora_to_lign(path, train = True, split = 0.8):
 
     labels = onehot_encoding(cora_cont[marker[1] + 1].values, unq_labels) # onehot encoding
 
-    print(labels[:5])
-
     graph.set_data("id", torch.tensor(cora_cont[0].values))
     graph.set_data("x", torch.tensor(cora_cont.loc[:, marker[0]:marker[1]].values))
     graph.set_data("labels", torch.LongTensor(labels))
