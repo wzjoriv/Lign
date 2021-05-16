@@ -262,17 +262,20 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
         mutual_data = mutual_data.intersection(self.parent.dataset["data"].keys())
 
         for node in nodes:
-            mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
-            edges = [self.nodes.index(ed) for ed in mutual_edges]
+            # mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
+            # edges = [self.nodes.index(ed) for ed in mutual_edges]
 
             out = {"data": {},
-                   "edges": set(edges)}
+                   #"edges": set(edges)}
+                   "edges": set()}
 
             for mut in mutual_data:
                 out["data"][mut] = self.parent.get_data(mut, nodes=node)[0]
 
             self.add(out)
             self.nodes.append(node)
+
+        self.get_parent_edges()
 
     def get_parent_node(self, nodes):
         nodes = io.to_iter(nodes)
@@ -283,6 +286,16 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
         self.set_data(data, p_data)
         return p_data
+
+    def get_parent_edges(self):
+        edges = []
+        for node in self.nodes:
+            mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
+            edges.append([self.nodes.index(ed) for ed in mutual_edges])
+
+        self.dataset["edges"] = edges
+
+        return edges
 
     def get_parent_index(self, nodes=[]):
         nodes = io.to_iter(nodes)
