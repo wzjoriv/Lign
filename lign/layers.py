@@ -24,9 +24,9 @@ class GCN(nn.Module):
         return g.pop_data(".hidden")
 
 # dynamic Linear Layer
-class ADDON(nn.Module):
+class DyLinear(nn.Module):
     def __init__(self, in_fea, out_fea, base = None, device = 'cuda'):
-        super(ADDON, self).__init__()
+        super(DyLinear, self).__init__()
         self.base = base
         self.device = device
         self.in_fea = in_fea
