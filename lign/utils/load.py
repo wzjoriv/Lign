@@ -9,12 +9,12 @@ class DatasetNotFound(Exception):
     def __init__(self, dataset, location):
         super().__init__("Dataset(" + dataset + ") not found at location: " + location)
 
-def onehot_encoding(data, labels):
-    labels = (data) * 0 # onehot encoding
+def onehot_encoding(data, labels): # onehot encoding
+    final = (data == labels[0]) * 0
     for lab in range(1, len(labels)):
-        labels |= (data == labels[lab]) * lab
-
-    return labels
+        final |= (data == labels[lab]) * lab
+    
+    return final
 
 def mnist_to_lign(path, transforms = None, train = True):
     from lign.graph import GraphDataset
@@ -94,13 +94,15 @@ def cora_to_lign(path, train = True, split = 0.8):
     graph.add(n) # add n empty nodes
 
     marker = [1, 1433] # where data is seperated in the csv
-    unq_labels = cora_cont[marker[0] + 1].unique()
+    unq_labels = list(cora_cont[marker[1] + 1].unique())
 
-    labels = onehot_encoding(cora_cont[marker[0] + 1], unq_labels) # onehot encoding
+    labels = onehot_encoding(cora_cont[marker[1] + 1].values, unq_labels) # onehot encoding
+
+    print(labels[:5])
 
     graph.set_data("id", torch.tensor(cora_cont[0].values))
     graph.set_data("x", torch.tensor(cora_cont.loc[:, marker[0]:marker[1]].values))
-    graph.set_data("labels", torch.LongTensor(labels.values))
+    graph.set_data("labels", torch.LongTensor(labels))
 
     edge_parents = cora_cite.groupby(0)
     parents = edge_parents.groups.keys()
