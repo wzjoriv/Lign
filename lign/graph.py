@@ -21,6 +21,11 @@ from lign.utils import io
     
 """
 
+class LignFileNotFound(Exception):
+
+    def __init__(self, location):
+        super().__init__(".lign file not found at location: " + location)
+
 class GraphDataset(Dataset):
     def __init__(self, fl="", workers=1):
         self.dataset = None
@@ -41,7 +46,7 @@ class GraphDataset(Dataset):
 
         if "count" not in self.dataset and "data" not in self.dataset and \
                 "edges" not in self.dataset and "__temp__" not in self.dataset:
-            raise FileNotFoundError
+            raise LignFileNotFound(fl)
 
     def __len__(self):
         return self.dataset["count"]
@@ -121,7 +126,19 @@ class GraphDataset(Dataset):
     def pop_data(self, data):
         return self.dataset["data"].pop(data, None)
 
-    def add(self, nodes):
+    def add(self, nodes=None):
+
+        if not nodes:
+            nodes = {
+                "data": {},
+                "edges": set()
+            }
+        elif type(nodes) is int:
+            nodes = [{
+                "data": {},
+                "edges": set()
+            } for i in range(nodes)]
+
         nodes = io.to_iter(nodes)
         for nd in nodes:
             nd["edges"] = nd["edges"]

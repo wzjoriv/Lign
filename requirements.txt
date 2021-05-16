@@ -2,4 +2,9 @@ torch
 torchvision
 numpy
 matplotlib
+pandas
+json
+pickle
+collections
+os
 ./lign
