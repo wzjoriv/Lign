@@ -5,3 +5,4 @@ data/
 .vscode/
 *.pyc
 __pycache__
+main.ipynb
