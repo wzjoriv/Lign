@@ -1,1 +1,1 @@
-from . import LIGN
+from . import MNIST, CIFAR, CORA
