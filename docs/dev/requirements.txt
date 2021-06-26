@@ -3,3 +3,6 @@ torchvision
 numpy
 matplotlib
 pandas
+setuptools
+os
+sphinx
