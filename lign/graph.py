@@ -31,16 +31,12 @@ class GraphDataset(Dataset):
         self.dataset = None
         self.workers = workers
 
-        self.__files__ = {}
-
         if not len(fl):
             fl = os.path.join(os.path.dirname(__file__),
                               "utils", "defaults", "graph.lign")
-            self.__files__["file"] = os.path.join("data", "graph.lign")
-            self.__files__["folder"] = os.path.dirname(self.__files__["file"])
+            self._file_ = os.path.join("data", "graph.lign")
         else:
-            self.__files__["file"] = fl
-            self.__files__["folder"] = os.path.dirname(self.__files__["file"])
+            self._file_ = fl
 
         self.dataset = io.unpickle(fl)
 
@@ -52,6 +48,12 @@ class GraphDataset(Dataset):
         return self.dataset["count"]
 
     def __getitem__(self, indx):
+
+        if indx < 0:
+            if -indx > len(self):
+                raise ValueError("absolute value of index should not exceed dataset length")
+            indx = len(self) + indx
+
         node = {
             "data": {}
         }
@@ -243,7 +245,7 @@ class GraphDataset(Dataset):
 
     def save(self, fl=""):
         if not len(fl):
-            fl = self.__files__["file"]
+            fl = self._file_
 
         io.pickle(self.dataset, fl)
 
@@ -255,7 +257,11 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
         self.parent = graph_dataset
         self.nodes = io.to_iter(nodes)
 
-    def add_parent_node(self, nodes):
+    def peek_parent_node(self, nodes):
+        nodes = io.to_iter(nodes)
+        return [self.parent[self.nodes[node]] for node in nodes]
+
+    def get_parent_node(self, nodes):
         nodes = io.to_iter(nodes)
         
         mutual_data = set(self.dataset["data"].keys())
@@ -277,15 +283,19 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
         self.get_parent_edges()
 
-    def get_parent_node(self, nodes):
-        nodes = io.to_iter(nodes)
-        return [self.parent[self.nodes[node]] for node in nodes]
+        return self.peek_parent_node(nodes)
+
+    def peek_parent_data(self, data):
+        return self.parent.get_data(data, nodes=self.nodes)
 
     def get_parent_data(self, data):
-        p_data = self.parent.get_data(data, nodes=self.nodes)
+        p_data = self.peek_parent_data(data)
 
         self.set_data(data, p_data)
         return p_data
+
+    def peek_parent_edges(self):
+        return [self.parent.get_edge(node) for node in self.nodes]
 
     def get_parent_edges(self):
         edges = []
@@ -305,27 +315,3 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
         return [self.nodes[i] for i in nodes]
 
-
-"""
-formats cheat sheet:
-    (format[, folder/file1, folder/file2])                  ## size of data type in format must be the same as the number of directories/files
-
-    syntax:
-        - = addition entries in the data field
-        (NAME) = give data the name NAME in the data field
-        [##] = optional
-            csv: [column1, column2, 3, [0_9]]               ##  Indicate index or column name to retrieve; multiple columns are merges as one
-
-    data type:
-        imgs = images folder                                ### Heavy lign graph suggested for large images
-        csv = csv file
-        imgs_url = file of list of images url                ### Heavy lign graph suggested
-
-    example:
-        format = ('imgs(x)-csv(label)[column2]', 'data/', 'labels.txt')
-"""
-
-
-def data_to_dataset(format, out_path):
-    pass
-    return out_path
