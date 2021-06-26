@@ -4,39 +4,28 @@ from torchvision import datasets
 import pandas as pd
 import os
 
+from .function import onehot_encoding
+
 class DatasetNotFound(Exception):
 
     def __init__(self, dataset, location):
         super().__init__("Dataset(" + dataset + ") not found at location: " + location)
 
-def onehot_encoding(data, labels): # onehot encoding
-    final = (data == labels[0]) * 0
-    for lab in range(1, len(labels)):
-        final |= (data == labels[lab]) * lab
-    
-    return final
-
-def mnist_to_lign(path, transforms = None, train = True):
+def mnist_to_lign(path, transforms = None, split = 0.8):
     from lign.graph import GraphDataset
 
-    dataset =  datasets.MNIST(path, train=train)
+    dataset =  datasets.MNIST(path, train=True) + datasets.MNIST(path, train=False)
     graph = GraphDataset()
+
+    graph.add(len(dataset)) # add n_{train} and n_{validate} nodes
 
     digits = []
     labels = []
-    graph.add(len(dataset)) # add n nodes
     for img, lab in dataset:
-        """out = {
-                "data": {},
-                "edges": set()
-            }"""
-
         if transforms:
             img = transforms(img)
-
         digits.append(img)
         labels.append(lab)
-        #graph.add(out)
     
     if(torch.is_tensor(digits[0])):
         digits = torch.stack(digits)
@@ -44,42 +33,43 @@ def mnist_to_lign(path, transforms = None, train = True):
 
     graph.set_data('x', digits)
     graph.set_data('labels', labels)
+    
+    n = len(graph)
+    split = int(n * split)
+    subnodes_train = list(range(split))  # training nodes
+    subnodes_test = list(range(split, n)) # testing nodes
 
-    return graph
+    return graph, graph.subgraph(nodes=subnodes_train), graph.subgraph(nodes=subnodes_test)
 
-def cifar_to_lign(path, transforms = None, train = True):
+def cifar_to_lign(path, transforms = None, split = 0.8):
     from lign.graph import GraphDataset
 
-    dataset =  datasets.CIFAR100(path, train=train)
+    dataset =  datasets.CIFAR100(path, train=True) + datasets.CIFAR100(path, train=False)
     graph = GraphDataset()
-
+    
+    graph.add(len(dataset))
+    
     imgs = []
     labels = []
-    
-    graph.add(len(dataset)) # add n nodes
     for img, lab in dataset:
-        """out = {
-                "data": {},
-                "edges": set()
-            }"""
-
         if transforms:
             img = transforms(img)
 
         imgs.append(img)
         labels.append(lab)
-        #graph.add(out)
     
     if(torch.is_tensor(imgs[0])):
         imgs = torch.stack(imgs)
         labels = torch.LongTensor(labels)
 
-    graph.set_data('x', imgs)
-    graph.set_data('labels', labels)
+    n = len(graph)
+    split = int(n * split)
+    subnodes_train = list(range(split))  # training nodes
+    subnodes_test = list(range(split, n)) # testing nodes
 
-    return graph
+    return graph, graph.subgraph(nodes=subnodes_train), graph.subgraph(nodes=subnodes_test)
 
-def cora_to_lign(path, train = True, split = 0.8):
+def cora_to_lign(path, split = 0.8):
     from lign.graph import GraphDataset
     graph = GraphDataset()
 
@@ -118,3 +108,28 @@ def cora_to_lign(path, train = True, split = 0.8):
     subnodes_test = list(range(split, n)) # testing nodes
 
     return graph, graph.subgraph(nodes=subnodes_train), graph.subgraph(nodes=subnodes_test)
+
+
+def dataset_to_lign(format, **locations):
+    """
+    formats cheat sheet:
+        (format[, folder/file1, folder/file2])                  ## size of data type in format must be the same as the number of directories/files
+
+        syntax:
+            - = addition entries in the data field
+            (NAME) = give data the name NAME in the data field
+            [##] = optional
+                csv: [column1, column2, 3, [0_9]]               ##  Indicate index or column name to retrieve; multiple columns are merges as one
+
+        data type:
+            imgs = images folder                                ### Heavy lign graph suggested for large images
+            csv = csv file
+            imgs_url = file of list of images url                ### Heavy lign graph suggested
+
+        example:
+            format = (imgs(x)[data_[0_9]*.png], csv(label)[column2])'
+            'data/', 'labels.txt'
+    """
+
+    pass
+    return 'hey'
