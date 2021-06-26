@@ -1,18 +1,20 @@
-import datetime
 
 import lign as lg
+import lign.models as md
 import lign.utils as utl
-import numpy as np
+
 import torch as th
+import torchvision as tv
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision as tv
 from torch.cuda.amp import GradScaler
 
+import numpy as np
+import datetime
 tm_now = datetime.datetime.now
 
-dataset = lg.graph.GraphDataset("data/datasets/cifar100_train.lign")
-validate = lg.graph.GraphDataset("data/datasets/cifar100_test.lign")
+dataset = lg.graph.GraphDataset("../data/datasets/cifar100_train.lign")
+validate = lg.graph.GraphDataset("../data/datasets/cifar100_test.lign")
 
 if th.cuda.is_available():
     device = th.device("cuda")
@@ -32,17 +34,17 @@ class ADDON(nn.Module): ## tempory layer for training
         self.gcn1 = lg.layers.GCN(nn.Linear(in_fea, out_fea))
     
     def forward(self, g, features):
-        x = self.gcn1(g, features)                                
+        x = self.gcn1(g, features)
         return x
 
 
 LAMBDA = 1e-3
-DIST_VEC_SIZE = 2 # 3 was picked so the graph can be drawn in a 3d grid
-INIT_NUM_LAB = 10
-LABELS = np.arange(20)
-SUBGRPAH_SIZE = 100
+DIST_VEC_SIZE = 80 # 3 was picked so the graph can be drawn in a 3d grid
+INIT_NUM_LAB = 40
+LABELS = np.arange(100)
+SUBGRPAH_SIZE = 500
 AMP_ENABLE = True
-EPOCHS = 5
+EPOCHS = 10
 LR = 1e-3
 RETRAIN_PER = {
     "superv": (0, 7),
@@ -92,7 +94,7 @@ for num_labels in range(INIT_NUM_LAB, num_of_labels + 1):
     if retrain_superv(num_labels):
         lg.train.superv(model, opt, dataset, "x", "labels", DIST_VEC_SIZE, LABELS[:num_labels], LAMBDA, (device, scaler), epochs=EPOCHS, addon = ADDON, subgraph_size=SUBGRPAH_SIZE)
     
-    acc = lg.test.accuracy(model, validate, dataset, "x", "labels", LABELS[:num_labels], cluster=(utl.clustering.NN(), 8), sv_img = ('2d', num_of_labels), device=device)
+    acc = lg.test.accuracy(model, validate, dataset, "x", "labels", LABELS[:num_labels], cluster=(utl.clustering.NN(), 8), device=device)
 
     accuracy.append(acc)
     log.append("Label: {}/{}\t|\tAccuracy: {}\t|\tSemisurpervised Retraining: {}\t|\t Surpervised Retraining: {}".format(num_labels, num_of_labels, round(acc, 2), retrain_semi(num_labels) == None, retrain_superv(num_labels)))
@@ -110,7 +112,7 @@ metrics = {
     "accuracy": accuracy,
     "log": log
 }
-utl.io.json(metrics, "data/metrics/"+filename+".json")
+utl.io.json(metrics, "../data/metrics/"+filename+".json")
 
 ## Save hyperparameters
 para = {
