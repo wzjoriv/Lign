@@ -1,1 +1,1 @@
-
+from . import MNIST, CIFAR, CORA

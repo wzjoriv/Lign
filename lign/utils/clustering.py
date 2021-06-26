@@ -1,10 +1,12 @@
 import torch as th
 
-def get_filter(i):
+from .function import similarity_matrix
+
+def __get_filter(i):
     return lambda x: x == i
 
 def filter(data, labels, graph):
-    fils = [get_filter(i) for i in labels]
+    fils = [__get_filter(i) for i in labels]
 
     out = graph.filter(fils, data)
     return out
@@ -15,29 +17,17 @@ def filter_k(data, labels, graph, k = 3):
 
     for label in labels:
         labs.extend([label] * k)
-        out.extend(graph.filter(get_filter(label), data)[:k])
+        out.extend(graph.filter(__get_filter(label), data)[:k])
 
     return th.LongTensor(out), th.LongTensor(labs)
-
-
-def similarity_matrix(x, y, p = 2): #pairwise distance
-
-    n = x.size(0)
-    m = y.size(0)
-    d = x.size(1)
-
-    x = x.unsqueeze(1).expand(n, m, d)
-    y = y.unsqueeze(0).expand(n, m, d)
-    
-    dist = th.pow(x - y, p).sum(2)
-    
-    return dist
 
 class NN():
 
     def __init__(self, X = None, Y = None, p = 2):
-        self.train(X, Y)
         self.p = p
+        self.train_pts = None
+        self.train_label = None
+        self.train(X, Y)
 
     def train(self, X, Y):
         self.train_pts = X
@@ -48,7 +38,7 @@ class NN():
 
     def predict(self, x):
         if self.train_pts == None:
-            raise RuntimeError("Knn wasn't trained. Need to execute self.train() first")
+            raise RuntimeError("NN wasn't trained. Need to execute NN.train() first")
         
         dist = similarity_matrix(x, self.train_pts, self.p) ** (1/self.p)
         labels = th.argmin(dist, dim=1)
@@ -56,23 +46,25 @@ class NN():
 
 class KNN(NN):
 
-    def __init__(self, X = None, Y = None, k = 3, p = 2):
+    def __init__(self, X = None, Y = None, p = 2, k = 3):
         super().__init__(X, Y, p)
         self.k = k
 
     def predict(self, x):
         if self.train_pts == None:
-            raise RuntimeError("Knn wasn't trained. Need to execute self.train() first")
+            raise RuntimeError("KNN wasn't trained. Need to execute self.train() first")
         
         dist = similarity_matrix(x, self.train_pts, self.p) ** (1/self.p)
+
         votes = dist.argsort(dim=1)[:,:self.k]
         votes = self.train_label[votes]
-        uni, count = th.unique(votes, dim=1, return_counts=True)
+
         print(votes)
-        print(uni)
-        print(count)
-        max_count = count.argmax(dim=1)
-        return uni[max_count]
+        print(th.unique(votes, dim = 1, return_counts=True))
+        
+        #max_count = count.argmax(dim=1)
+        return votes[10]
+
 
 class Spectral(NN):
 
@@ -91,7 +83,7 @@ if __name__ == '__main__':
         [-1, -0.88]
     ])
 
-    b = th.LongTensor([1, 1, 2, 2])
+    b = th.LongTensor([3, 3, 5, 5])
 
     c = th.Tensor([
         [-0.5, -0.5],

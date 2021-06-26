@@ -1,8 +1,10 @@
+import os.path
+
 import torch
 from torch import nn
-from torch.utils.data import Dataset, DataLoader
-import os.path
-from .utils import io
+from torch.utils.data import Dataset
+
+from lign.utils import io
 
 """
     node = {
@@ -19,32 +21,39 @@ from .utils import io
     
 """
 
+class LignFileNotFound(Exception):
+
+    def __init__(self, location):
+        super().__init__(".lign file not found at location: " + location)
+
 class GraphDataset(Dataset):
     def __init__(self, fl="", workers=1):
         self.dataset = None
         self.workers = workers
 
-        self.__files__ = {}
-
         if not len(fl):
             fl = os.path.join(os.path.dirname(__file__),
                               "utils", "defaults", "graph.lign")
-            self.__files__["file"] = os.path.join("data", "graph.lign")
-            self.__files__["folder"] = os.path.dirname(self.__files__["file"])
+            self._file_ = os.path.join("data", "graph.lign")
         else:
-            self.__files__["file"] = fl
-            self.__files__["folder"] = os.path.dirname(self.__files__["file"])
+            self._file_ = fl
 
         self.dataset = io.unpickle(fl)
 
         if "count" not in self.dataset and "data" not in self.dataset and \
                 "edges" not in self.dataset and "__temp__" not in self.dataset:
-            raise FileNotFoundError
+            raise LignFileNotFound(fl)
 
     def __len__(self):
         return self.dataset["count"]
 
     def __getitem__(self, indx):
+
+        if indx < 0:
+            if -indx > len(self):
+                raise ValueError("absolute value of index should not exceed dataset length")
+            indx = len(self) + indx
+
         node = {
             "data": {}
         }
@@ -119,7 +128,19 @@ class GraphDataset(Dataset):
     def pop_data(self, data):
         return self.dataset["data"].pop(data, None)
 
-    def add(self, nodes):
+    def add(self, nodes=None):
+
+        if not nodes:
+            nodes = {
+                "data": {},
+                "edges": set()
+            }
+        elif type(nodes) is int:
+            nodes = [{
+                "data": {},
+                "edges": set()
+            } for i in range(nodes)]
+
         nodes = io.to_iter(nodes)
         for nd in nodes:
             nd["edges"] = nd["edges"]
@@ -163,9 +184,9 @@ class GraphDataset(Dataset):
                 for indx, node in enumerate(nodes):
                     self.dataset["data"][data][node] = out[indx]
 
-        self.reset_temp() if reset_buffer else print("Temporaty buffer was not reset")
+        self.reset_temp() if reset_buffer else print("Temporary buffer was not reset")
 
-    # pushes its data to nodes that it points to into nodes's temp
+    # pushes its data to nodes that it points to into nodes' temp
     def push(self, func=None, data='x', nodes=[], reset_buffer=True):
         nodes = io.to_iter(nodes)
 
@@ -185,7 +206,7 @@ class GraphDataset(Dataset):
             for indx, node in enumerate(nodes):
                 self.dataset["data"][data][node] = out[indx]
 
-        self.reset_temp() if reset_buffer else print("Temporaty buffer was not reset")
+        self.reset_temp() if reset_buffer else print("Temporary buffer was not reset")
 
     def apply(self, func, data, nodes=[]):
         nodes = io.to_iter(nodes)
@@ -224,7 +245,7 @@ class GraphDataset(Dataset):
 
     def save(self, fl=""):
         if not len(fl):
-            fl = self.__files__["file"]
+            fl = self._file_
 
         io.pickle(self.dataset, fl)
 
@@ -236,18 +257,23 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
         self.parent = graph_dataset
         self.nodes = io.to_iter(nodes)
 
-    def add_parent_node(self, nodes):
+    def peek_parent_node(self, nodes):
+        nodes = io.to_iter(nodes)
+        return [self.parent[self.nodes[node]] for node in nodes]
+
+    def get_parent_node(self, nodes):
         nodes = io.to_iter(nodes)
         
         mutual_data = set(self.dataset["data"].keys())
         mutual_data = mutual_data.intersection(self.parent.dataset["data"].keys())
 
         for node in nodes:
-            mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
-            edges = [self.nodes.index(ed) for ed in mutual_edges]
+            # mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
+            # edges = [self.nodes.index(ed) for ed in mutual_edges]
 
             out = {"data": {},
-                   "edges": set(edges)}
+                   #"edges": set(edges)}
+                   "edges": set()}
 
             for mut in mutual_data:
                 out["data"][mut] = self.parent.get_data(mut, nodes=node)[0]
@@ -255,15 +281,31 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
             self.add(out)
             self.nodes.append(node)
 
-    def get_parent_node(self, nodes):
-        nodes = io.to_iter(nodes)
-        return [self.parent[self.nodes[node]] for node in nodes]
+        self.get_parent_edges()
+
+        return self.peek_parent_node(nodes)
+
+    def peek_parent_data(self, data):
+        return self.parent.get_data(data, nodes=self.nodes)
 
     def get_parent_data(self, data):
-        p_data = self.parent.get_data(data, nodes=self.nodes)
+        p_data = self.peek_parent_data(data)
 
         self.set_data(data, p_data)
         return p_data
+
+    def peek_parent_edges(self):
+        return [self.parent.get_edge(node) for node in self.nodes]
+
+    def get_parent_edges(self):
+        edges = []
+        for node in self.nodes:
+            mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
+            edges.append([self.nodes.index(ed) for ed in mutual_edges])
+
+        self.dataset["edges"] = edges
+
+        return edges
 
     def get_parent_index(self, nodes=[]):
         nodes = io.to_iter(nodes)
@@ -273,27 +315,3 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
         return [self.nodes[i] for i in nodes]
 
-
-"""
-formats cheat sheet:
-    (format[, folder/file1, folder/file2])                  ## size of data type in format must be the same as the number of directories/files
-
-    syntax:
-        - = addition entries in the data field
-        (NAME) = give data the name NAME in the data field
-        [##] = optional
-            csv: [column1, column2, 3, [0_9]]               ##  Indicate index or column name to retrieve; multiple columns are merges as one
-
-    data type:
-        imgs = images folder                                ### Heavy lign graph suggested for large images
-        csv = csv file
-        imgs_url = file of list of images url                ### Heavy lign graph suggested
-
-    example:
-        format = ('imgs(x)-csv(label)[column2]', 'data/', 'labels.txt')
-"""
-
-
-def data_to_dataset(format, out_path):
-    pass
-    return out_path
