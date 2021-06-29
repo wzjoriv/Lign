@@ -72,7 +72,7 @@ _For more details, please read the [developer documentation](docs/dev)_
 4. Install package
 
    ```sh
-   pip install .
+   pip install . --upgrade
    ```
 
 ## Usage
