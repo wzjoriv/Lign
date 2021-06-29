@@ -15,6 +15,28 @@ def similarity_matrix(x, y=None, p = 2): #pairwise distance of vectors
     
     return dist
 
+def get_equals_filter(i):
+    return lambda x: x == i
+
+def filter_tags(data, tags, graph):
+    fils = [get_equals_filter(i) for i in tags]
+
+    out = graph.filter(fils, data)
+    return out
+
+def filter_k_from_tags(data, tags, graph, k = 3):
+    out = []
+    labs = []
+
+    for tag in tags:
+        labs.extend([tag] * k)
+        out.extend(graph.filter(get_equals_filter(tag), data)[:k])
+
+    return th.LongTensor(out), th.LongTensor(labs)
+
+def randomize_tensor(tensor):
+    return tensor[th.randperm(len(tensor))]
+
 def same_label(y): # return matrix of nodes that have same label
     s = y.size(0)
     y_expand = y.unsqueeze(0).expand(s, s)
@@ -33,18 +55,3 @@ def sum_neighs_data(neighs):
     for neigh in neighs[1:]:
         out = out + neigh
     return out
-
-""" def distance_loss(output, labels, Lambda=0.01):
-
-    ln = len(labels)
-    sim = similarity_matrix(output)
-
-    same = same_label(labels)  # remove diagonal
-    #diff = same*(-1) + 1  #turns 1's into 0's and 0's into 1's
-
-    same_M = (same * sim)
-    #diff_M = (diff * sim)
-
-    loss = - same_M.sum(dim=1)/same.sum(dim=1)
-
-    return loss.sum() / ln """

@@ -1,6 +1,8 @@
-from lign.utils import clustering as cl
+
 import torch as th
+from lign.utils import clustering as cl
 from lign.utils import io
+from lign.utils import function as fn
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,14 +11,14 @@ def g_validate(model, graph, train, tag_in, tag_out, labels, metrics = ['accurac
 
     model.eval()
     with th.no_grad():
-        tr_nodes, tr_labs = cl.filter_k(tag_out, labels, train, cluster[1])
+        tr_nodes, tr_labs = fn.filter_k_from_tags(tag_out, labels, train, cluster[1])
         sub = train.subgraph(tr_nodes)
         inp = sub.get_parent_data(tag_in).to(device)
         
         cluster = cluster[0]
         cluster.train(model(sub, inp), tr_labs.to(device))
 
-        ts_nodes = cl.filter(tag_out, labels, graph)
+        ts_nodes = fn.filter_tags(tag_out, labels, graph)
         graph = graph.subgraph(ts_nodes)
 
         inp = graph.get_parent_data(tag_in).to(device)
@@ -90,14 +92,14 @@ def validate(model, graph, train, tag_in, tag_out, labels, metrics = ['accuracy'
 
     model.eval()
     with th.no_grad():
-        tr_nodes, tr_labs = cl.filter_k(tag_out, labels, train, cluster[1])
+        tr_nodes, tr_labs = fn.filter_k_from_tags(tag_out, labels, train, cluster[1])
         sub = train.subgraph(tr_nodes)
         inp = sub.get_parent_data(tag_in).to(device)
         
         cluster = cluster[0]
         cluster.train(model(sub, inp), tr_labs.to(device))
 
-        ts_nodes = cl.filter(tag_out, labels, graph)
+        ts_nodes = fn.filter_tags(tag_out, labels, graph)
         graph = graph.subgraph(ts_nodes)
 
         inp = graph.get_parent_data(tag_in).to(device)
