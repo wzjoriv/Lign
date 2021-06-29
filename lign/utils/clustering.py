@@ -1,25 +1,6 @@
 import torch as th
 
-from .function import similarity_matrix
-
-def __get_filter(i):
-    return lambda x: x == i
-
-def filter(data, labels, graph):
-    fils = [__get_filter(i) for i in labels]
-
-    out = graph.filter(fils, data)
-    return out
-
-def filter_k(data, labels, graph, k = 3):
-    out = []
-    labs = []
-
-    for label in labels:
-        labs.extend([label] * k)
-        out.extend(graph.filter(__get_filter(label), data)[:k])
-
-    return th.LongTensor(out), th.LongTensor(labs)
+from lign.utils.function import similarity_matrix
 
 class NN():
 

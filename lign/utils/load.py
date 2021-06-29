@@ -4,7 +4,7 @@ from torchvision import datasets
 import pandas as pd
 import os
 
-from .function import onehot_encoding
+from lign.utils.function import onehot_encoding
 
 class DatasetNotFound(Exception):
 
@@ -39,7 +39,14 @@ def mnist_to_lign(path, transforms = None, split = 0.8):
     subnodes_train = list(range(split))  # training nodes
     subnodes_test = list(range(split, n)) # testing nodes
 
-    return graph, graph.subgraph(nodes=subnodes_train), graph.subgraph(nodes=subnodes_test)
+
+    graph_train = graph.subgraph(nodes=subnodes_train)
+    graph_test = graph.subgraph(nodes=subnodes_test)
+
+    graph_train.get_all_parent_data()
+    graph_test.get_all_parent_data()
+
+    return graph, graph_train, graph_test
 
 def cifar_to_lign(path, transforms = None, split = 0.8):
     from lign.graph import GraphDataset
@@ -67,7 +74,13 @@ def cifar_to_lign(path, transforms = None, split = 0.8):
     subnodes_train = list(range(split))  # training nodes
     subnodes_test = list(range(split, n)) # testing nodes
 
-    return graph, graph.subgraph(nodes=subnodes_train), graph.subgraph(nodes=subnodes_test)
+    graph_train = graph.subgraph(nodes=subnodes_train)
+    graph_test = graph.subgraph(nodes=subnodes_test)
+
+    graph_train.get_all_parent_data()
+    graph_test.get_all_parent_data()
+
+    return graph, graph_train, graph_test
 
 def cora_to_lign(path, split = 0.8):
     from lign.graph import GraphDataset
@@ -107,7 +120,13 @@ def cora_to_lign(path, split = 0.8):
     subnodes_train = list(range(split))  # training nodes
     subnodes_test = list(range(split, n)) # testing nodes
 
-    return graph, graph.subgraph(nodes=subnodes_train), graph.subgraph(nodes=subnodes_test)
+    graph_train = graph.subgraph(nodes=subnodes_train)
+    graph_test = graph.subgraph(nodes=subnodes_test)
+
+    graph_train.get_all_parent_data()
+    graph_test.get_all_parent_data()
+
+    return graph, graph_train, graph_test
 
 
 def dataset_to_lign(format, **locations):

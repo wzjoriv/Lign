@@ -294,6 +294,13 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
         self.set_data(data, p_data)
         return p_data
 
+    def get_all_parent_data(self):
+
+        all = self.parent.dataset["data"].keys()
+
+        for data in all:
+            self.get_parent_data(data)
+
     def peek_parent_edges(self):
         return [self.parent.get_edge(node) for node in self.nodes]
 
