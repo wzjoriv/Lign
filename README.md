@@ -1,6 +1,6 @@
 # LIGN
 
-[![Logo of the tool](docs/imgs/logo.png "Logo by Josue N Rivera")][repo-url]
+[![LIGN logo](docs/imgs/logo.png "LIGN logo")][repo-url]
 
 A deep learning framework for implementing lifelong learning on vectorized and graph data
 
@@ -72,7 +72,7 @@ _For more details, please read the [developer documentation](docs/dev)_
 4. Install package
 
    ```sh
-   pip install .
+   pip install . --upgrade
    ```
 
 ## Usage
@@ -115,7 +115,7 @@ Distributed under the Mozilla Public License Version 2.0. See [LICENSE](LICENSE)
 [issues-shield]: https://img.shields.io/github/issues/JosueCom/LIGN.svg?style=for-the-badge
 [issues-url]: https://github.com/JosueCom/LIGN/issues
 [license-shield]: https://img.shields.io/github/license/JosueCom/LIGN.svg?style=for-the-badge
-[license-url]: https://github.com/JosueCom/LIGN/blob/master/LICENSE.txt
+[license-url]: https://github.com/JosueCom/LIGN/blob/master/LICENSE
 [product-screenshot]: images/screenshot.png
 [docs-url]: https://github.com/JosueCom/LIGN/tree/master/docs
 [examples-url]: https://github.com/JosueCom/LIGN/tree/master/docs/examples

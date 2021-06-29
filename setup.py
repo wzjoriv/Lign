@@ -3,17 +3,17 @@ try:
 except ImportError:
     from distutils.core import setup
 
-long_description = ""
+long_description = ''
 with open("README.md", "r") as f:
     long_description = f.read()
 
 install_requires = []
 with open("requirements.txt", "r") as f:
-    install_requires = f.read().replace(' ', '').splitlines()
+    install_requires = [i for i in f.read().replace(' ', '').splitlines() if i[0] != '#']
 
 setup(name='lign',
       version='0.1.0',
-      description='A deep learning framework for implementing lifelong learning on vectorized and graph data',
+      description='A deep learning framework for implementing lifelong learning on vector and graph data',
       long_description=long_description,
       license="Mozilla Public License Version 2.0",
       author='Josue N Rivera',
