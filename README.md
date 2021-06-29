@@ -2,7 +2,7 @@
 
 [![LIGN logo](docs/imgs/logo.png "LIGN logo")][repo-url]
 
-A deep learning framework for implementing lifelong learning on vectorized and graph data
+A deep learning framework for implementing lifelong learning on vector and graph data
 
 [View Docs][docs-url]
 ·
