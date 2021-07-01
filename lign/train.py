@@ -23,7 +23,7 @@ def superv(models, graphs, labels, opt, tags = ('x', 'label'), device = (th.devi
     amp_enable = device[1] != None
 
     with th.no_grad(): # get nodes that are part of the current label subset
-        nodes = fn.filter_tags(tag_out, labels, graph)
+        nodes = fn.filter_tags(tag_out, labels, t_graph)
     
     nodes_len = len(nodes)
 
