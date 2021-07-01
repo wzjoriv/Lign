@@ -155,53 +155,76 @@ class GraphDataset(Dataset):
         return subgraph
 
     # pulls others' data from nodes that it points to into it's temp
-    def pull(self, nodes=[], func=None, data='x', reset_buffer=True):
+    def pull(self, func=None, data=None, nodes=[], reset_buffer=True):
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
-            self.push(nodes, func, data, reset_buffer)
+            self.push(func = func, data = data, nodes = nodes, reset_buffer = reset_buffer)
         else:
             nodes = set(nodes)
-            lis = range(self.dataset["count"])
+            lis = range(len(self))
 
             for node in lis:
-                nd = self.__getitem__(node)
+                nd = self[node]
                 tw = nodes.intersection(nd["edges"])
 
                 for el in tw:
                     self.dataset["__temp__"][el].append(nd)
 
             if func:
-                out = []
-                for node in nodes:
-                    out.append(func(self.dataset["__temp__"][node][data]))
+                if data:
+                    for node in nodes:
+                        out = [self.dataset["__temp__"][node][i]["data"][data] for i in range(len(self.dataset["__temp__"][node]))]
+                        out = func(out)
+                        self.dataset["data"][data][node] = out
+                else:
+                    out = [func(self.dataset["__temp__"][node]) for node in nodes]
+                    data_keys = out[0]["data"].keys()
 
-                for indx, node in enumerate(nodes):
-                    self.dataset["data"][data][node] = out[indx]
+                    for indx, node in enumerate(nodes):
+                        for key in data_keys:
+                            self.dataset["data"][key][node] = out[indx]["data"][key]
 
-        self.reset_temp() if reset_buffer else print("Temporary buffer was not reset")
+                        self.add_edge(node, out[indx]["edges"])
+
+        if reset_buffer:
+            self.reset_temp()
+        else: 
+            raise UserWarning("Temporary buffer was not reset")
 
     # pushes its data to nodes that it points to into nodes' temp
-    def push(self, func=None, data='x', nodes=[], reset_buffer=True):
+    def push(self, func=None, data=None, nodes=[], reset_buffer=True):
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
-            nodes = range(self.dataset["count"])
+            nodes = range(len(self))
 
         for node in nodes:
-            nd = self.__getitem__(node)
+            nd = self[node]
             for edge in nd["edges"]:
                 self.dataset["__temp__"][edge].append(nd)
 
         if func:
-            out = []
-            for node in nodes:
-                out.append(func(self.dataset["__temp__"][node][data]))
+            if data:
+                for node in nodes:
+                    out = [self.dataset["__temp__"][node][i]["data"][data] for i in range(len(self.dataset["__temp__"][node]))]
+                    out = func(out)
+                    self.dataset["data"][data][node] = out
+            else:
+                out = [func(self.dataset["__temp__"][node]) for node in nodes]
+                data_keys = out[0]["data"].keys()
 
-            for indx, node in enumerate(nodes):
-                self.dataset["data"][data][node] = out[indx]
+                for indx, node in enumerate(nodes):
+                    for key in data_keys:
+                        self.dataset["data"][key][node] = out[indx]["data"][key]
 
-        self.reset_temp() if reset_buffer else print("Temporary buffer was not reset")
+                    self.add_edge(node, out[indx]["edges"])
+
+
+        if reset_buffer:
+            self.reset_temp()
+        else: 
+            raise UserWarning("Temporary buffer was not reset")
 
     def apply(self, func, data, nodes=[]):
         nodes = io.to_iter(nodes)
@@ -213,18 +236,16 @@ class GraphDataset(Dataset):
             nodes = range(self.dataset["count"])
 
         if(issubclass(func.__class__, nn.Module)):
-            self.dataset["data"][data][nodes] = func(
-                self.dataset["data"][data][nodes])
+            self.dataset["data"][data][nodes] = func(self.dataset["data"][data][nodes])
         else:
-            for indx, node in enumerate(nodes):
-                self.dataset["data"][data][node] = func(
-                    self.dataset["data"][data][indx])
+            for node in nodes:
+                self.dataset["data"][data][node] = func(self.dataset["data"][data][node])
 
     def reset_temp(self, nodes=[]):  # clear collected data from other nodes
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
-            nodes = range(self.dataset["count"])
+            nodes = range(len(self))
 
         self.dataset["__temp__"] = [[] for i in nodes]
 
@@ -252,6 +273,8 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
         self.parent = graph_dataset
         self.nodes = io.to_iter(nodes)
 
+        self.add(len(self.nodes))
+
         if get_data:
             self.get_all_parent_data()
         
@@ -262,7 +285,7 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
         nodes = io.to_iter(nodes)
         return [self.parent[self.nodes[node]] for node in nodes]
 
-    def get_parent_node(self, nodes, get_edges=False):
+    def get_parent_node(self, nodes, get_data = False, get_edges=False):
         nodes = io.to_iter(nodes)
         
         mutual_data = set(self.dataset["data"].keys())
@@ -278,6 +301,9 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
             self.add(out)
             self.nodes.append(node)
+
+        if get_data:
+            self.get_all_parent_data()
 
         if get_edges:
             self.get_all_parent_edges()
@@ -304,21 +330,26 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
         return [self.parent.get_edge(node) for node in self.nodes]
 
     def get_parent_edges(self, node):
+        nodes = io.to_iter(nodes)
 
-        mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
-        edges = [self.nodes.index(ed) for ed in mutual_edges]
+        edges = []
 
-        self.dataset["edges"][node] = edges
+        for node in nodes:
+            mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
+            edge = [self.nodes.index(ed) for ed in mutual_edges]
+            edges.append(edge)
+
+            self.dataset["edges"][node] = edge
 
         return edges
 
     def get_all_parent_edges(self):
-        for node in self.nodes:
-            self.get_parent_edges(node)
 
-        return self.dataset["edges"]
+        edges = self.get_parent_edges(self.nodes)
 
-    def get_parent_index(self, nodes=[]):
+        return edges
+
+    def peek_parent_index(self, nodes=[]):
         nodes = io.to_iter(nodes)
 
         if len(nodes) == len(self.nodes) or not len(nodes):

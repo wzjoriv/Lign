@@ -15,8 +15,8 @@ class GCN(nn.Module):
 
         g.apply(self.discovery, ".hidden")
 
-        if self.agregation:
-            g.push(agregation = self.agregation, data = ".hidden")
+        if self.aggregation:
+            g.push(aggregation = self.aggregation, data = ".hidden")
         
         if self.inclusion:
             g.apply(self.inclusion, ".hidden")
