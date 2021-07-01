@@ -329,7 +329,7 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
     def get_all_parent_data(self):
 
-        all = self.parent.dataset["data"].keys()
+        all = self.parent.get_properties()
 
         for data in all:
             self.get_parent_data(data)
