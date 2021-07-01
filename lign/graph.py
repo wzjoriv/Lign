@@ -46,7 +46,7 @@ class GraphDataset(Dataset):
 
         if indx < 0:
             if -indx > len(self):
-                raise ValueError("absolute value of index should not exceed dataset length")
+                raise IndexError("absolute value of index should not exceed dataset length")
             indx = len(self) + indx
 
         node = {
@@ -59,6 +59,9 @@ class GraphDataset(Dataset):
         node["edges"] = self.dataset["edges"][indx]
 
         return node
+
+    def get_properties(self):
+        return io.to_iter(self.dataset["data"].keys())
 
     def get_data(self, data, nodes=[]):
         ls = io.to_iter(nodes)
@@ -93,6 +96,9 @@ class GraphDataset(Dataset):
         self.dataset["edges"][node].difference_update(edges)
 
     def __add_data__(self, data, obj):
+        if not data in self.dataset["data"].keys():
+            raise ValueError("{} is not one of the properties of the graph dataset".format(data))
+
         if torch.is_tensor(obj):
             if data not in self.dataset["data"]:
                 self.dataset["data"][data] = obj.unsqueeze(0)
@@ -138,8 +144,7 @@ class GraphDataset(Dataset):
 
         nodes = io.to_iter(nodes)
         for nd in nodes:
-            nd["edges"] = nd["edges"]
-            nd["edges"].add(self.dataset["count"])
+            nd["edges"].add(len(self))
 
             for key in nd["data"].keys():
                 self.__add_data__(key, nd["data"][key])
@@ -233,7 +238,7 @@ class GraphDataset(Dataset):
             if(issubclass(func.__class__, nn.Module)):
                 self.dataset["data"][data] = func(self.dataset["data"][data])
                 return
-            nodes = range(self.dataset["count"])
+            nodes = range(len(self))
 
         if(issubclass(func.__class__, nn.Module)):
             self.dataset["data"][data][nodes] = func(self.dataset["data"][data][nodes])
@@ -249,12 +254,15 @@ class GraphDataset(Dataset):
 
         self.dataset["__temp__"] = [[] for i in nodes]
 
-    def filter(self, funcs, data):  # returns nodes' index that pass at least one of the filters
-        funs = io.to_iter(funcs)
+    def filter(self, filters, data):  # returns nodes' index that pass at least one of the filters
+        filters = io.to_iter(filters)
 
-        out = funs[0](self.dataset["data"][data])
+        if not len(filters):
+            raise ValueError("filters must at least have one filter")
 
-        for fun in funs[1:]:
+        out = filters[0](self.dataset["data"][data])
+
+        for fun in filters[1:]:
             out |= fun(self.dataset["data"][data])
 
         return torch.nonzero(out, as_tuple=False).squeeze()
