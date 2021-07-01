@@ -39,12 +39,8 @@ def mnist_to_lign(path, transforms = None, split = 0.8):
     subnodes_train = list(range(split))  # training nodes
     subnodes_test = list(range(split, n)) # testing nodes
 
-
-    graph_train = graph.subgraph(nodes=subnodes_train)
-    graph_test = graph.subgraph(nodes=subnodes_test)
-
-    graph_train.get_all_parent_data()
-    graph_test.get_all_parent_data()
+    graph_train = graph.subgraph(nodes=subnodes_train, get_data=True, get_edges=True)
+    graph_test = graph.subgraph(nodes=subnodes_test, get_data=True, get_edges=True)
 
     return graph, graph_train, graph_test
 
@@ -74,11 +70,8 @@ def cifar_to_lign(path, transforms = None, split = 0.8):
     subnodes_train = list(range(split))  # training nodes
     subnodes_test = list(range(split, n)) # testing nodes
 
-    graph_train = graph.subgraph(nodes=subnodes_train)
-    graph_test = graph.subgraph(nodes=subnodes_test)
-
-    graph_train.get_all_parent_data()
-    graph_test.get_all_parent_data()
+    graph_train = graph.subgraph(nodes=subnodes_train, get_data=True, get_edges=True)
+    graph_test = graph.subgraph(nodes=subnodes_test, get_data=True, get_edges=True)
 
     return graph, graph_train, graph_test
 
@@ -120,11 +113,8 @@ def cora_to_lign(path, split = 0.8):
     subnodes_train = list(range(split))  # training nodes
     subnodes_test = list(range(split, n)) # testing nodes
 
-    graph_train = graph.subgraph(nodes=subnodes_train)
-    graph_test = graph.subgraph(nodes=subnodes_test)
-
-    graph_train.get_all_parent_data()
-    graph_test.get_all_parent_data()
+    graph_train = graph.subgraph(nodes=subnodes_train, get_data=True, get_edges=True)
+    graph_test = graph.subgraph(nodes=subnodes_test, get_data=True, get_edges=True)
 
     return graph, graph_train, graph_test
 

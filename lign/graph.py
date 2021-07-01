@@ -149,9 +149,9 @@ class GraphDataset(Dataset):
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
 
-    def subgraph(self, nodes):  # returns isolated graph
+    def subgraph(self, nodes, get_data= False, get_edges = False):  # returns isolated graph
         nodes = io.to_iter(nodes)
-        subgraph = SubGraph(self, nodes)
+        subgraph = SubGraph(self, nodes, get_data, get_edges)
         return subgraph
 
     # pulls others' data from nodes that it points to into it's temp
@@ -246,28 +246,31 @@ class GraphDataset(Dataset):
 
 
 class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e. changes made here might not be written back to parents unless data is a reference). Meant to be more efficient if only processing a few nodes from the dataset
-    def __init__(self, graph_dataset, nodes):
+    def __init__(self, graph_dataset, nodes, get_data= False, get_edges = False):
         super().__init__()
 
         self.parent = graph_dataset
         self.nodes = io.to_iter(nodes)
 
+        if get_data:
+            self.get_all_parent_data()
+        
+        if get_edges:
+            self.get_all_parent_edges()
+
     def peek_parent_node(self, nodes):
         nodes = io.to_iter(nodes)
         return [self.parent[self.nodes[node]] for node in nodes]
 
-    def get_parent_node(self, nodes):
+    def get_parent_node(self, nodes, get_edges=False):
         nodes = io.to_iter(nodes)
         
         mutual_data = set(self.dataset["data"].keys())
         mutual_data = mutual_data.intersection(self.parent.dataset["data"].keys())
 
         for node in nodes:
-            # mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
-            # edges = [self.nodes.index(ed) for ed in mutual_edges]
 
             out = {"data": {},
-                   #"edges": set(edges)}
                    "edges": set()}
 
             for mut in mutual_data:
@@ -276,7 +279,8 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
             self.add(out)
             self.nodes.append(node)
 
-        self.get_parent_edges()
+        if get_edges:
+            self.get_all_parent_edges()
 
         return self.peek_parent_node(nodes)
 
@@ -299,15 +303,20 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
     def peek_parent_edges(self):
         return [self.parent.get_edge(node) for node in self.nodes]
 
-    def get_parent_edges(self):
-        edges = []
-        for node in self.nodes:
-            mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
-            edges.append([self.nodes.index(ed) for ed in mutual_edges])
+    def get_parent_edges(self, node):
 
-        self.dataset["edges"] = edges
+        mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
+        edges = [self.nodes.index(ed) for ed in mutual_edges]
+
+        self.dataset["edges"][node] = edges
 
         return edges
+
+    def get_all_parent_edges(self):
+        for node in self.nodes:
+            self.get_parent_edges(node)
+
+        return self.dataset["edges"]
 
     def get_parent_index(self, nodes=[]):
         nodes = io.to_iter(nodes)
