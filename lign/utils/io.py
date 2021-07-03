@@ -1,7 +1,6 @@
 import json as jn
 import os
 import pickle as pk
-from collections.abc import Iterable
 
 def unpickle(fl):
     with open(fl, 'rb') as f:
@@ -34,3 +33,6 @@ def to_iter(data):
 
 def is_primitve(data):
     return type(data) in (int, str, bool, float)
+
+def view_graph(graph, method="tsna"):
+    pass

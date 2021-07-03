@@ -2,7 +2,7 @@
 import torch as th
 from lign.utils import clustering as cl
 from lign.utils import io
-from lign.utils import function as fn
+from lign.utils import functions as fn
 
 import matplotlib.pyplot as plt
 import numpy as np

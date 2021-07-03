@@ -1,6 +1,6 @@
 import torch as th
 
-from lign.utils.function import similarity_matrix
+from lign.utils.functions import similarity_matrix
 
 class NN():
 

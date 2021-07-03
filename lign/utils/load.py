@@ -4,7 +4,7 @@ from torchvision import datasets
 import pandas as pd
 import os
 
-from lign.utils.function import onehot_encoding
+from lign.utils.functions import onehot_encoding
 
 class DatasetNotFound(Exception):
 
