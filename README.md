@@ -61,11 +61,9 @@ _For more details, please read the [developer documentation](docs/dev)_
    cd LIGN
    ```
 
-3. Install prerequisites
+3. Install prerequisites. 
 
-   ```sh
-   conda install --file docs/dev/requirements.txt
-   ```
+   _It is recommended to install [PyTorch](https://pytorch.org) via the official site first for optimal performance_
 
    ```sh
    pip install -r docs/dev/requirements.txt
