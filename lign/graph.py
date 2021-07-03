@@ -337,7 +337,7 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
     def peek_parent_edges(self):
         return [self.parent.get_edge(node) for node in self.nodes]
 
-    def get_parent_edges(self, node):
+    def get_parent_edges(self, nodes):
         nodes = io.to_iter(nodes)
 
         edges = []
