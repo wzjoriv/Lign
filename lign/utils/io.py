@@ -33,6 +33,3 @@ def to_iter(data):
 
 def is_primitve(data):
     return type(data) in (int, str, bool, float)
-
-def view_graph(graph, method="tsna"):
-    pass
