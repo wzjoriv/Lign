@@ -6,7 +6,7 @@ A deep learning framework for implementing lifelong learning on vector and graph
 
 [View Docs][docs-url]
 ·
-[View Exmaples][examples-url]
+[View Examples][examples-url]
 ·
 [Report Bugs][bugs-url]
 ·
