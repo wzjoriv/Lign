@@ -27,8 +27,8 @@ class Base(nn.Module):  ## base, feature extractor
 class Classifier(nn.Module): ## temporality layer for training
     def __init__(self, in_fea, out_fea, device = 'cuda'):
         super(Classifier, self).__init__()
-        self.addon = layers.DyLinear(in_fea, out_fea, device=device) # dynamic linear dense layer
+        self.DyLinear = layers.DyLinear(in_fea, out_fea, device=device) # dynamic linear dense layer
     
-    def forward(self, g, features):
-        x = F.log_softmax(self.addon(g, features), dim=1)
+    def forward(self, features):
+        x = F.log_softmax(self.DyLinear(features), dim=1)
         return x

@@ -25,17 +25,14 @@ class GCN(nn.Module):
 
 # dynamic Linear Layer
 class DyLinear(nn.Module):
-    def __init__(self, in_fea, out_fea, base = None, device = 'cuda'):
+    def __init__(self, in_fea, out_fea, device = 'cuda'):
         super(DyLinear, self).__init__()
-        self.base = base
         self.device = device
         self.in_fea = in_fea
         self.out_fea = out_fea
         self.weight = nn.Parameter(th.randn(out_fea, in_fea)).to(self.device)
     
-    def forward(self, g, x):
-        if self.base:
-            x = self.base(g, x)
+    def forward(self, x):
         x = F.linear(x, self.weight)
         return x
     
