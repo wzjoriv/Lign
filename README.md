@@ -64,6 +64,10 @@ _For more details, please read the [developer documentation](docs/dev)_
 3. Install prerequisites
 
    ```sh
+   conda install --file docs/dev/requirements.txt
+   ```
+
+   ```sh
    pip install -r docs/dev/requirements.txt
    ```
 
