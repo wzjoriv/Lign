@@ -129,7 +129,7 @@ class GraphDataset(Dataset):
     def pop_data(self, data):
         return self.dataset["data"].pop(data, None)
 
-    def add(self, nodes=None):
+    def add(self, nodes=None, add_self=True):
 
         if not nodes:
             nodes = {
@@ -144,7 +144,11 @@ class GraphDataset(Dataset):
 
         nodes = io.to_iter(nodes)
         for nd in nodes:
-            nd["edges"].add(len(self))
+            if add_self:
+                nd["edges"].add(len(self))
+
+            if len(nd["data"].keys()) != len(self.dataset["data"].keys()):
+                raise LookupError("The the data in the node is not the smae as in the dataset. Node:\n\t{}\nDataset data:\n\t{}".format(nd, self.dataset.keys()))
 
             for key in nd["data"].keys():
                 self.__add_data__(key, nd["data"][key])
