@@ -22,14 +22,13 @@ def mnist_to_lign(path, transforms = None, split = 0.8):
     digits = []
     labels = []
     for img, lab in dataset:
-        if transforms:
-            img = transforms(img)
         digits.append(img)
         labels.append(lab)
     
-    if(torch.is_tensor(digits[0])):
-        digits = torch.stack(digits)
-        labels = torch.LongTensor(labels)
+    digits = torch.stack(digits)
+    if transforms:
+        digits = transforms(digits)
+    labels = torch.LongTensor(labels)
 
     graph.set_data('x', digits)
     graph.set_data('labels', labels)
@@ -55,15 +54,13 @@ def cifar_to_lign(path, transforms = None, split = 0.8):
     imgs = []
     labels = []
     for img, lab in dataset:
-        if transforms:
-            img = transforms(img)
-
         imgs.append(img)
         labels.append(lab)
     
-    if(torch.is_tensor(imgs[0])):
-        imgs = torch.stack(imgs)
-        labels = torch.LongTensor(labels)
+    imgs = torch.stack(imgs)
+    if transforms:
+        imgs = transforms(imgs)
+    labels = torch.LongTensor(labels)
 
     n = len(graph)
     split = int(n * split)
