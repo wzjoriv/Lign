@@ -76,8 +76,6 @@ class KMeans(NN):
             for lab in range(self.k):
                 select = labels == lab
                 self.train_pts[lab] = th.mean(X[select], dim=0)
-        
-        return labels
 
 class Spectral(KNN):
 

@@ -3,20 +3,48 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from lign.utils import functions as fn
+from lign.utils.clustering import KMeans, KNN
 
 def semi_superv(
             models, graphs, labels, opt, 
-            tags = ('x', 'label'), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+            tags = ('x', 'label'), k = 5, cluster = KNN(), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
         ):
     
-    pass
+    graph, t_graph = graphs
+    tag_in, tag_out = tags
+
+    nodes = fn.filter_tags(tag_out, labels, t_graph)
+
+    cluster = cluster.train(t_graph.peek_parent_data(tag_in))
+
+    data = cluster(graph.get_data(tag_in))
+    graph.set_data('_p_label_', data)
+
+    superv(models, graphs, labels, opt, 
+            tags = (tag_in, '_p_label_'), device = device, lossF = LossF, epochs = epochs, subgraph_size = subgraph_size)
+
+    graph.pop_data('_p_label_')
 
 def unsuperv(
             models, graphs, labels, opt, 
-            tags = ('x', 'label'), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+            tags = ('x', 'label'), cluster = KMeans(), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
         ):
-    
-    pass
+
+    graph, t_graph = graphs
+    tag_in, tag_out = tags
+
+    nodes = fn.filter_tags(tag_out, labels, t_graph)
+
+    cluster.k = len(labels)
+    cluster = cluster.train(t_graph.peek_parent_data(tag_in))
+
+    data = cluster(graph.get_data(tag_in))
+    graph.set_data('_p_label_', data)
+
+    superv(models, graphs, labels, opt, 
+            tags = (tag_in, '_p_label_'), device = device, lossF = LossF, epochs = epochs, subgraph_size = subgraph_size)
+
+    graph.pop_data('_p_label_')
 
 def superv(
             models, graphs, labels, opt, 
@@ -33,8 +61,7 @@ def superv(
     is_base_gcn = fn.has_gcn(base)
     is_classifier_gcn = fn.has_gcn(classifier)
 
-    with th.no_grad(): # get nodes that are part of the current label subset
-        nodes = fn.filter_tags(tag_out, labels, t_graph)
+    nodes = t_graph.peek_parent_index(fn.filter_tags(tag_out, labels, t_graph))
     
     nodes_len = len(nodes)
 
