@@ -6,15 +6,14 @@ import os
 
 from lign.utils.functions import onehot_encoding
 
-class DatasetNotFound(Exception):
-
-    def __init__(self, dataset, location):
-        super().__init__("Dataset(" + dataset + ") not found at location: " + location)
-
 def mnist_to_lign(path, transforms = None, split = 0.8):
     from lign.graph import GraphDataset
 
-    dataset =  datasets.MNIST(path, train=True) + datasets.MNIST(path, train=False)
+    try:
+        dataset =  datasets.MNIST(path, train=True) + datasets.MNIST(path, train=False)
+    except:
+        raise FileNotFoundError(f"Error loading MNIST from location: {path}")
+
     graph = GraphDataset()
 
     graph.add(len(dataset)) # add n_{train} and n_{validate} nodes
@@ -46,7 +45,11 @@ def mnist_to_lign(path, transforms = None, split = 0.8):
 def cifar_to_lign(path, transforms = None, split = 0.8):
     from lign.graph import GraphDataset
 
-    dataset =  datasets.CIFAR100(path, train=True) + datasets.CIFAR100(path, train=False)
+    try:
+        dataset =  datasets.CIFAR100(path, train=True) + datasets.CIFAR100(path, train=False)
+    except:
+        raise FileNotFoundError(f"Error loading CIFAR from location: {path}")
+
     graph = GraphDataset()
     
     graph.add(len(dataset))
@@ -80,7 +83,7 @@ def cora_to_lign(path, split = 0.8):
         cora_cont =  pd.read_csv(os.path.join(path, "cora.content"), sep="\t", header=None)
         cora_cite =  pd.read_csv(os.path.join(path, "cora.cites"), sep="\t", header=None)
     except:
-        raise DatasetNotFound("CORA", path)
+        raise FileNotFoundError(f"Error loading CORA from location: {path}")
     
     
     n = len(cora_cont[0])

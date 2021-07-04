@@ -38,7 +38,7 @@ class DyLinear(nn.Module):
     
     def update_size(self, size): #slow; doesn't matter much since perform infrequenly
         if size <= self.out_fea:
-            raise RuntimeWarning("New size needs to be bigger than current output size")
+            raise RuntimeWarning(f"New size ({size}) needs to be bigger than current output size ({self.out_fea})")
         else:
             with th.no_grad():
                 self.weight = nn.Parameter(th.cat((self.weight, th.randn(size - self.out_fea, self.in_fea).to(self.device)), 0)).to(self.device)

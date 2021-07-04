@@ -18,7 +18,7 @@ class NN():
     def predict(self, x):
         if type(self.train_pts) == type(None) or type(self.train_label) == type(None):
             name = self.__class__.__name__
-            raise RuntimeError("{} wasn't trained. Need to execute {}.train() first".format(name, name))
+            raise RuntimeError(f"{name} wasn't trained. Need to execute {name}.train() first")
         
         dist = distance_matrix(x, self.train_pts, self.p) ** (1/self.p)
         labels = th.argmin(dist, dim=1)
@@ -33,7 +33,7 @@ class KNN(NN):
     def predict(self, x):
         if type(self.train_pts) == type(None) or type(self.train_label) == type(None):
             name = self.__class__.__name__
-            raise RuntimeError("{} wasn't trained. Need to execute {}.train() first".format(name, name))
+            raise RuntimeError(f"{name} wasn't trained. Need to execute {name}.train() first")
         
         dist = distance_matrix(x, self.train_pts, self.p) ** (1/self.p)
 
@@ -81,5 +81,5 @@ class Spectral(KNN):
 
     def __init__(self, X = None, k=2, n_iters = 10, p = 2):
         name = self.__class__.__name__
-        raise NotImplementedError("{} hasn't been implemnted yet.".format(name))
+        raise NotImplementedError(f"{name} hasn't been implemented yet.")
 
