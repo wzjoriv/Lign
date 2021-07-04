@@ -17,7 +17,8 @@ class NN():
 
     def predict(self, x):
         if type(self.train_pts) == type(None) or type(self.train_label) == type(None):
-            raise RuntimeError("NN wasn't trained. Need to execute NN.train() first")
+            name = self.__class__.__name__
+            raise RuntimeError("{} wasn't trained. Need to execute {}.train() first".format(name, name))
         
         dist = similarity_matrix(x, self.train_pts, self.p) ** (1/self.p)
         labels = th.argmin(dist, dim=1)
@@ -31,7 +32,8 @@ class KNN(NN):
 
     def predict(self, x):
         if type(self.train_pts) == type(None) or type(self.train_label) == type(None):
-            raise RuntimeError("KNN wasn't trained. Need to execute self.train() first")
+            name = self.__class__.__name__
+            raise RuntimeError("{} wasn't trained. Need to execute {}.train() first".format(name, name))
         
         dist = similarity_matrix(x, self.train_pts, self.p) ** (1/self.p)
 
@@ -67,25 +69,18 @@ class KMeans(NN):
 
         self.train_pts = randomize_tensor(X)[:self.k]
         self.train_label = th.LongTensor(range(self.k))
-        
+
         for i in range(self.n_iters):
             labels = self.predict(X)
 
             for lab in range(self.k):
                 select = labels == lab
                 self.train_pts[lab] = th.mean(X[select], dim=0)
-
+        
         return labels
 
-class Spectral(NN):
+class Spectral(KNN):
 
-    def __init__(self, X, Y, p = 2):
-        super().__init__(X, Y, p)
-        raise NotImplementedError("Spectral Clustering not yet implemented")
-
-    def train(self, X, Y):
-        raise NotImplementedError("Spectral Clustering not yet implemented")
-
-    def predict(self):
-        raise NotImplementedError("Spectral Clustering not yet implemented")
+    def __init__(self, X = None, k=2, n_iters = 10, p = 2)
+        raise NotImplementedError("{} hasn't been implemnted yet.".format(name))
 
