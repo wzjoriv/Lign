@@ -3,8 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from lign.utils import functions as fn
-from lign.layers import has_gcn
-
 
 def semi_superv(
             models, graphs, labels, opt, 
@@ -32,8 +30,8 @@ def superv(
     scaler = device[1]
     amp_enable = device[1] != None
 
-    is_base_gcn = has_gcn(base)
-    is_classifier_gcn = has_gcn(classifier)
+    is_base_gcn = fn.has_gcn(base)
+    is_classifier_gcn = fn.has_gcn(classifier)
 
     with th.no_grad(): # get nodes that are part of the current label subset
         nodes = fn.filter_tags(tag_out, labels, t_graph)
