@@ -1,6 +1,6 @@
 import torch as th
 
-from lign.utils.functions import similarity_matrix, randomize_tensor
+from lign.utils.functions import distance_matrix, randomize_tensor
 
 class NN():
 
@@ -20,7 +20,7 @@ class NN():
             name = self.__class__.__name__
             raise RuntimeError("{} wasn't trained. Need to execute {}.train() first".format(name, name))
         
-        dist = similarity_matrix(x, self.train_pts, self.p) ** (1/self.p)
+        dist = distance_matrix(x, self.train_pts, self.p) ** (1/self.p)
         labels = th.argmin(dist, dim=1)
         return self.train_label[labels]
 
@@ -35,7 +35,7 @@ class KNN(NN):
             name = self.__class__.__name__
             raise RuntimeError("{} wasn't trained. Need to execute {}.train() first".format(name, name))
         
-        dist = similarity_matrix(x, self.train_pts, self.p) ** (1/self.p)
+        dist = distance_matrix(x, self.train_pts, self.p) ** (1/self.p)
 
         knn = dist.topk(self.k, largest=False)
         votes = self.train_label[knn.indices]
