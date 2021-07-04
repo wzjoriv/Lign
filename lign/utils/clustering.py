@@ -79,6 +79,7 @@ class KMeans(NN):
 
 class Spectral(KNN):
 
-    def __init__(self, X = None, k=2, n_iters = 10, p = 2)
+    def __init__(self, X = None, k=2, n_iters = 10, p = 2):
+        name = self.__class__.__name__
         raise NotImplementedError("{} hasn't been implemnted yet.".format(name))
 
