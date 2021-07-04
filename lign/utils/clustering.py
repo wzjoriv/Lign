@@ -1,13 +1,11 @@
 import torch as th
 
-from lign.utils.functions import similarity_matrix
+from lign.utils.functions import similarity_matrix, randomize_tensor
 
 class NN():
 
     def __init__(self, X = None, Y = None, p = 2):
         self.p = p
-        self.train_pts = None
-        self.train_label = None
         self.train(X, Y)
 
     def train(self, X, Y):
@@ -18,7 +16,7 @@ class NN():
         return self.predict(x)
 
     def predict(self, x):
-        if self.train_pts == None:
+        if type(self.train_pts) == type(None) or type(self.train_label) == type(None):
             raise RuntimeError("NN wasn't trained. Need to execute NN.train() first")
         
         dist = similarity_matrix(x, self.train_pts, self.p) ** (1/self.p)
@@ -32,7 +30,7 @@ class KNN(NN):
         self.k = k
 
     def predict(self, x):
-        if self.train_pts == None:
+        if type(self.train_pts) == type(None) or type(self.train_label) == type(None):
             raise RuntimeError("KNN wasn't trained. Need to execute self.train() first")
         
         dist = similarity_matrix(x, self.train_pts, self.p) ** (1/self.p)
@@ -53,6 +51,31 @@ class KNN(NN):
 
         return winner
 
+
+class KMeans(NN):
+
+    def __init__(self, X = None, k=2, n_iters = 10, p = 2):
+
+        self.k = k
+        self.n_iters = n_iters
+        self.p = p
+
+        if type(X) != type(None):
+            self.train(X)
+
+    def train(self, X):
+
+        self.train_pts = randomize_tensor(X)[:self.k]
+        self.train_label = th.LongTensor(range(self.k))
+        
+        for i in range(self.n_iters):
+            labels = self.predict(X)
+
+            for lab in range(self.k):
+                select = labels == lab
+                self.train_pts[lab] = th.mean(X[select], dim=0)
+
+        return labels
 
 class Spectral(NN):
 
