@@ -1,7 +1,6 @@
 import json as jn
 import os
 import pickle as pk
-from collections.abc import Iterable
 
 def unpickle(fl):
     with open(fl, 'rb') as f:

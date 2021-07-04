@@ -1,8 +1,19 @@
 import torch as th
+from lign.layers import GCN
+
+def is_gcn(module):
+    return issubclass(module.__class__, GCN)
+
+def has_gcn(network):
+    for module in network.modules():
+        if is_gcn(module):
+            return True
+    
+    return False
 
 def similarity_matrix(x, y=None, p = 2): #pairwise distance of vectors
-
-    y = y if y else x
+    
+    y = x if type(y) == type(None) else y
 
     n = x.size(0)
     m = y.size(0)

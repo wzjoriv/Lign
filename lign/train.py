@@ -2,18 +2,26 @@ import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 
-from lign.utils import function as fn
+from lign.utils import functions as fn
 
-
-def semi_superv(models, graphs, labels, opt, tags = ('x', 'label'), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200):
+def semi_superv(
+            models, graphs, labels, opt, 
+            tags = ('x', 'label'), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+        ):
     
     pass
 
-def unsuperv(models, graphs, labels, opt, tags = ('x', 'label'), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200):
+def unsuperv(
+            models, graphs, labels, opt, 
+            tags = ('x', 'label'), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+        ):
     
     pass
 
-def superv(models, graphs, labels, opt, tags = ('x', 'label'), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200):
+def superv(
+            models, graphs, labels, opt, 
+            tags = ('x', 'label'), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+        ):
     
     base, classifier = models
     graph, t_graph = graphs
@@ -22,8 +30,11 @@ def superv(models, graphs, labels, opt, tags = ('x', 'label'), device = (th.devi
     scaler = device[1]
     amp_enable = device[1] != None
 
+    is_base_gcn = fn.has_gcn(base)
+    is_classifier_gcn = fn.has_gcn(classifier)
+
     with th.no_grad(): # get nodes that are part of the current label subset
-        nodes = fn.filter_tags(tag_out, labels, graph)
+        nodes = fn.filter_tags(tag_out, labels, t_graph)
     
     nodes_len = len(nodes)
 
@@ -46,8 +57,8 @@ def superv(models, graphs, labels, opt, tags = ('x', 'label'), device = (th.devi
 
             if amp_enable:
                 with th.cuda.amp.autocast():
-                    out = base(sub, inp)
-                    out = classifier(sub, out)
+                    out = base(sub, inp) if is_base_gcn else base(inp)
+                    out = classifier(sub, out) if is_classifier_gcn else classifier(out)
                     loss = lossF(out, outp)
 
                 scaler.scale(loss).backward()
@@ -55,8 +66,8 @@ def superv(models, graphs, labels, opt, tags = ('x', 'label'), device = (th.devi
                 scaler.update()
                 
             else:
-                out = base(sub, inp)
-                out = classifier(sub, out)
+                out = base(sub, inp) if is_base_gcn else base(inp)
+                out = classifier(sub, out) if is_classifier_gcn else classifier(out)
                 loss = lossF(out, outp)
 
                 loss.backward()

@@ -1,1 +1,1 @@
-from . import loss, load, io, clustering
+from . import functions, load, io, clustering

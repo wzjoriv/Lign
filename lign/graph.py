@@ -21,11 +21,6 @@ from lign.utils import io
     
 """
 
-class LignFileNotFound(Exception):
-
-    def __init__(self, location):
-        super().__init__(".lign file not found at location: " + location)
-
 class GraphDataset(Dataset):
     def __init__(self, fl="", workers=1):
         self.dataset = None
@@ -42,7 +37,7 @@ class GraphDataset(Dataset):
 
         if "count" not in self.dataset and "data" not in self.dataset and \
                 "edges" not in self.dataset and "__temp__" not in self.dataset:
-            raise LignFileNotFound(fl)
+            raise FileNotFoundError(".lign file not found at location: " + self._file_)
 
     def __len__(self):
         return self.dataset["count"]
@@ -51,7 +46,7 @@ class GraphDataset(Dataset):
 
         if indx < 0:
             if -indx > len(self):
-                raise ValueError("absolute value of index should not exceed dataset length")
+                raise IndexError("absolute value of index should not exceed dataset length")
             indx = len(self) + indx
 
         node = {
@@ -64,6 +59,9 @@ class GraphDataset(Dataset):
         node["edges"] = self.dataset["edges"][indx]
 
         return node
+
+    def get_properties(self):
+        return io.to_iter(self.dataset["data"].keys())
 
     def get_data(self, data, nodes=[]):
         ls = io.to_iter(nodes)
@@ -98,6 +96,9 @@ class GraphDataset(Dataset):
         self.dataset["edges"][node].difference_update(edges)
 
     def __add_data__(self, data, obj):
+        if not data in self.dataset["data"].keys():
+            raise ValueError("{} is not one of the properties of the graph dataset".format(data))
+
         if torch.is_tensor(obj):
             if data not in self.dataset["data"]:
                 self.dataset["data"][data] = obj.unsqueeze(0)
@@ -128,7 +129,7 @@ class GraphDataset(Dataset):
     def pop_data(self, data):
         return self.dataset["data"].pop(data, None)
 
-    def add(self, nodes=None):
+    def add(self, nodes=None, add_self=True):
 
         if not nodes:
             nodes = {
@@ -143,8 +144,11 @@ class GraphDataset(Dataset):
 
         nodes = io.to_iter(nodes)
         for nd in nodes:
-            nd["edges"] = nd["edges"]
-            nd["edges"].add(self.dataset["count"])
+            if add_self:
+                nd["edges"].add(len(self))
+
+            if len(nd["data"].keys()) != len(self.dataset["data"].keys()):
+                raise LookupError("The the data in the node is not the smae as in the dataset. Node:\n\t{}\nDataset data:\n\t{}".format(nd, self.dataset.keys()))
 
             for key in nd["data"].keys():
                 self.__add_data__(key, nd["data"][key])
@@ -154,59 +158,82 @@ class GraphDataset(Dataset):
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
 
-    def subgraph(self, nodes):  # returns isolated graph
+    def subgraph(self, nodes, get_data= False, get_edges = False):  # returns isolated graph
         nodes = io.to_iter(nodes)
-        subgraph = SubGraph(self, nodes)
+        subgraph = SubGraph(self, nodes, get_data, get_edges)
         return subgraph
 
     # pulls others' data from nodes that it points to into it's temp
-    def pull(self, nodes=[], func=None, data='x', reset_buffer=True):
+    def pull(self, func=None, data=None, nodes=[], reset_buffer=True):
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
-            self.push(nodes, func, data, reset_buffer)
+            self.push(func = func, data = data, nodes = nodes, reset_buffer = reset_buffer)
         else:
             nodes = set(nodes)
-            lis = range(self.dataset["count"])
+            lis = range(len(self))
 
             for node in lis:
-                nd = self.__getitem__(node)
+                nd = self[node]
                 tw = nodes.intersection(nd["edges"])
 
                 for el in tw:
                     self.dataset["__temp__"][el].append(nd)
 
             if func:
-                out = []
-                for node in nodes:
-                    out.append(func(self.dataset["__temp__"][node][data]))
+                if data:
+                    for node in nodes:
+                        out = [self.dataset["__temp__"][node][i]["data"][data] for i in range(len(self.dataset["__temp__"][node]))]
+                        out = func(out)
+                        self.dataset["data"][data][node] = out
+                else:
+                    out = [func(self.dataset["__temp__"][node]) for node in nodes]
+                    data_keys = out[0]["data"].keys()
 
-                for indx, node in enumerate(nodes):
-                    self.dataset["data"][data][node] = out[indx]
+                    for indx, node in enumerate(nodes):
+                        for key in data_keys:
+                            self.dataset["data"][key][node] = out[indx]["data"][key]
 
-        self.reset_temp() if reset_buffer else print("Temporary buffer was not reset")
+                        self.add_edge(node, out[indx]["edges"])
+
+        if reset_buffer:
+            self.reset_temp()
+        else: 
+            raise UserWarning("Temporary buffer was not reset")
 
     # pushes its data to nodes that it points to into nodes' temp
-    def push(self, func=None, data='x', nodes=[], reset_buffer=True):
+    def push(self, func=None, data=None, nodes=[], reset_buffer=True):
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
-            nodes = range(self.dataset["count"])
+            nodes = range(len(self))
 
         for node in nodes:
-            nd = self.__getitem__(node)
+            nd = self[node]
             for edge in nd["edges"]:
                 self.dataset["__temp__"][edge].append(nd)
 
         if func:
-            out = []
-            for node in nodes:
-                out.append(func(self.dataset["__temp__"][node][data]))
+            if data:
+                for node in nodes:
+                    out = [self.dataset["__temp__"][node][i]["data"][data] for i in range(len(self.dataset["__temp__"][node]))]
+                    out = func(out)
+                    self.dataset["data"][data][node] = out
+            else:
+                out = [func(self.dataset["__temp__"][node]) for node in nodes]
+                data_keys = out[0]["data"].keys()
 
-            for indx, node in enumerate(nodes):
-                self.dataset["data"][data][node] = out[indx]
+                for indx, node in enumerate(nodes):
+                    for key in data_keys:
+                        self.dataset["data"][key][node] = out[indx]["data"][key]
 
-        self.reset_temp() if reset_buffer else print("Temporary buffer was not reset")
+                    self.add_edge(node, out[indx]["edges"])
+
+
+        if reset_buffer:
+            self.reset_temp()
+        else: 
+            raise UserWarning("Temporary buffer was not reset")
 
     def apply(self, func, data, nodes=[]):
         nodes = io.to_iter(nodes)
@@ -215,30 +242,31 @@ class GraphDataset(Dataset):
             if(issubclass(func.__class__, nn.Module)):
                 self.dataset["data"][data] = func(self.dataset["data"][data])
                 return
-            nodes = range(self.dataset["count"])
+            nodes = range(len(self))
 
         if(issubclass(func.__class__, nn.Module)):
-            self.dataset["data"][data][nodes] = func(
-                self.dataset["data"][data][nodes])
+            self.dataset["data"][data][nodes] = func(self.dataset["data"][data][nodes])
         else:
-            for indx, node in enumerate(nodes):
-                self.dataset["data"][data][node] = func(
-                    self.dataset["data"][data][indx])
+            for node in nodes:
+                self.dataset["data"][data][node] = func(self.dataset["data"][data][node])
 
     def reset_temp(self, nodes=[]):  # clear collected data from other nodes
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
-            nodes = range(self.dataset["count"])
+            nodes = range(len(self))
 
         self.dataset["__temp__"] = [[] for i in nodes]
 
-    def filter(self, funcs, data):  # returns nodes' index that pass at least one of the filters
-        funs = io.to_iter(funcs)
+    def filter(self, filters, data):  # returns nodes' index that pass at least one of the filters
+        filters = io.to_iter(filters)
 
-        out = funs[0](self.dataset["data"][data])
+        if not len(filters):
+            raise ValueError("filters must at least have one filter")
 
-        for fun in funs[1:]:
+        out = filters[0](self.dataset["data"][data])
+
+        for fun in filters[1:]:
             out |= fun(self.dataset["data"][data])
 
         return torch.nonzero(out, as_tuple=False).squeeze()
@@ -251,28 +279,33 @@ class GraphDataset(Dataset):
 
 
 class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e. changes made here might not be written back to parents unless data is a reference). Meant to be more efficient if only processing a few nodes from the dataset
-    def __init__(self, graph_dataset, nodes):
+    def __init__(self, graph_dataset, nodes, get_data= False, get_edges = False):
         super().__init__()
 
         self.parent = graph_dataset
         self.nodes = io.to_iter(nodes)
 
+        self.add(len(self.nodes))
+
+        if get_data:
+            self.get_all_parent_data()
+        
+        if get_edges:
+            self.get_all_parent_edges()
+
     def peek_parent_node(self, nodes):
         nodes = io.to_iter(nodes)
         return [self.parent[self.nodes[node]] for node in nodes]
 
-    def get_parent_node(self, nodes):
+    def get_parent_node(self, nodes, get_data = False, get_edges=False):
         nodes = io.to_iter(nodes)
         
         mutual_data = set(self.dataset["data"].keys())
         mutual_data = mutual_data.intersection(self.parent.dataset["data"].keys())
 
         for node in nodes:
-            # mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
-            # edges = [self.nodes.index(ed) for ed in mutual_edges]
 
             out = {"data": {},
-                   #"edges": set(edges)}
                    "edges": set()}
 
             for mut in mutual_data:
@@ -281,7 +314,11 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
             self.add(out)
             self.nodes.append(node)
 
-        self.get_parent_edges()
+        if get_data:
+            self.get_all_parent_data()
+
+        if get_edges:
+            self.get_all_parent_edges()
 
         return self.peek_parent_node(nodes)
 
@@ -296,7 +333,7 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
     def get_all_parent_data(self):
 
-        all = self.parent.dataset["data"].keys()
+        all = self.parent.get_properties()
 
         for data in all:
             self.get_parent_data(data)
@@ -304,17 +341,27 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
     def peek_parent_edges(self):
         return [self.parent.get_edge(node) for node in self.nodes]
 
-    def get_parent_edges(self):
-        edges = []
-        for node in self.nodes:
-            mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
-            edges.append([self.nodes.index(ed) for ed in mutual_edges])
+    def get_parent_edges(self, nodes):
+        nodes = io.to_iter(nodes)
 
-        self.dataset["edges"] = edges
+        edges = []
+
+        for node in nodes:
+            mutual_edges = self.parent.get_edge(node).intersection(self.nodes)
+            edge = [self.nodes.index(ed) for ed in mutual_edges]
+            edges.append(edge)
+
+            self.dataset["edges"][node] = edge
 
         return edges
 
-    def get_parent_index(self, nodes=[]):
+    def get_all_parent_edges(self):
+
+        edges = self.get_parent_edges(self.nodes)
+
+        return edges
+
+    def peek_parent_index(self, nodes=[]):
         nodes = io.to_iter(nodes)
 
         if len(nodes) == len(self.nodes) or not len(nodes):

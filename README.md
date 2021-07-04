@@ -6,7 +6,7 @@ A deep learning framework for implementing lifelong learning on vector and graph
 
 [View Docs][docs-url]
 ·
-[View Exmaples][examples-url]
+[View Examples][examples-url]
 ·
 [Report Bugs][bugs-url]
 ·
@@ -27,7 +27,7 @@ A deep learning framework for implementing lifelong learning on vector and graph
   - [Getting Started](#getting-started)
     - [Installation](#installation)
   - [Usage](#usage)
-  - [Roadmap](#roadmap)
+  - [Future](#future)
   - [Citation](#citation)
   - [Contributing](#contributing)
   - [License](#license)
@@ -35,11 +35,9 @@ A deep learning framework for implementing lifelong learning on vector and graph
 
 ## About The Project
 
-LIGN is a pytorch deep learning framework developed for continual lifelong learning, graph convolutional networks (GCN) and graph-based machine learning
+LIGN is a deep learning framework developed for implementing continual lifelong learning, graph convolutional networks (GCN) and graph-based machine learning. It was build as a component of my master thesis.
 
 ### Built With
-
-LIGN is built on top of PyTorch with a focus on lifelong learning and graph-based machine learning
 
 - [PyTorch](https://pytorch.org)
 
@@ -63,7 +61,9 @@ _For more details, please read the [developer documentation](docs/dev)_
    cd LIGN
    ```
 
-3. Install prerequisites
+3. Install prerequisites. 
+
+   _It is recommended to install [PyTorch](https://pytorch.org) via the official site first for optimal performance_
 
    ```sh
    pip install -r docs/dev/requirements.txt
@@ -81,8 +81,7 @@ Use this space to show useful examples of how a project can be used. Additional 
 
 _Please refer to the [documentation](docs/examples) for other examples_
 
-<!-- ROADMAP -->
-## Roadmap
+## Future
 
 See the [open issues][issues-url] for a list of proposed features (and known issues).
 
@@ -104,8 +103,6 @@ Distributed under the Mozilla Public License Version 2.0. See [LICENSE](LICENSE)
 
 [@josuecom_](https://github.com/JosueCom)
 
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/JosueCom/LIGN.svg?style=for-the-badge
 [contributors-url]: https://github.com/JosueCom/LIGN/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/JosueCom/LIGN.svg?style=for-the-badge
