@@ -12,8 +12,8 @@ def has_gcn(network):
     return False
 
 def similarity_matrix(x, y=None, p = 2): #pairwise distance of vectors
-
-    y = y if y else x
+    
+    y = x if type(y) == type(None) else y
 
     n = x.size(0)
     m = y.size(0)

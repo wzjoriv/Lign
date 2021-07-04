@@ -37,39 +37,32 @@ class KNN(NN):
         
         dist = similarity_matrix(x, self.train_pts, self.p) ** (1/self.p)
 
-        votes = dist.argsort(dim=1)[:,:self.k]
-        votes = self.train_label[votes]
+        knn = dist.topk(self.k, largest=False)
+        votes = self.train_label[knn.indices]
 
-        print(votes)
-        print(th.unique(votes, dim = 1, return_counts=True))
-        
-        #max_count = count.argmax(dim=1)
-        return votes[10]
+        winner = th.zeros(votes.size(0), dtype = self.train_label.dtype)
+        count = th.zeros(votes.size(0), dtype = votes.dtype) - 1
+
+        unique_labels = self.train_label.unique()
+
+        for lab in unique_labels:
+            vote_count = (votes == lab).sum(1)
+            who = vote_count >= count
+            winner[who] = lab
+            count[who] = vote_count[who]
+
+        return winner
 
 
 class Spectral(NN):
 
     def __init__(self, X, Y, p = 2):
         super().__init__(X, Y, p)
-        pass
+        raise NotImplementedError("Spectral Clustering not yet implemented")
+
+    def train(self, X, Y):
+        raise NotImplementedError("Spectral Clustering not yet implemented")
 
     def predict(self):
-        pass
+        raise NotImplementedError("Spectral Clustering not yet implemented")
 
-if __name__ == '__main__':
-    a = th.Tensor([
-        [1, 1],
-        [0.88, 0.90],
-        [-1, -1],
-        [-1, -0.88]
-    ])
-
-    b = th.LongTensor([3, 3, 5, 5])
-
-    c = th.Tensor([
-        [-0.5, -0.5],
-        [0.88, 0.88]
-    ])
-
-    knn = KNN(a, b)
-    print(knn(c))
