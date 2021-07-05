@@ -78,7 +78,7 @@ def superv(
                 sub = graph.subgraph(nodes[batch:min(nodes_len, batch + subgraph_size)])
 
                 inp = sub.get_parent_data(tag_in).to(device[0])
-                outp = fn.onehot_encoding(sub.get_parent_data(tag_out), labels).to(device[0])
+                outp = fn.onehot_encode(sub.get_parent_data(tag_out), labels).to(device[0])
 
             opt.zero_grad()
 

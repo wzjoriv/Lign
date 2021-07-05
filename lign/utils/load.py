@@ -4,7 +4,7 @@ from torchvision import datasets
 import pandas as pd
 import os
 
-from lign.utils.functions import onehot_encoding
+from lign.utils.functions import onehot_encode
 
 class DatasetNotFound(Exception):
 
@@ -89,7 +89,7 @@ def cora_to_lign(path, split = 0.8):
     marker = [1, 1433] # where data is seperated in the csv
     unq_labels = list(cora_cont[marker[1] + 1].unique())
 
-    labels = onehot_encoding(cora_cont[marker[1] + 1].values, unq_labels) # onehot encoding
+    labels = onehot_encode(cora_cont[marker[1] + 1].values, unq_labels) # onehot encoding
 
     graph.set_data("id", torch.tensor(cora_cont[0].values))
     graph.set_data("x", torch.tensor(cora_cont.loc[:, marker[0]:marker[1]].values))
