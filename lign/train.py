@@ -6,53 +6,50 @@ from lign.utils import functions as fn
 from lign.utils.clustering import KMeans, KNN
 
 def unsuperv(
-            models, graphs, labels, opt, 
+            models, graph, labels, opt, 
             tags = ('x', 'label'), cluster = KMeans(), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
         ):
 
-    graph, t_graph = graphs
     tag_in, tag_out = tags
 
-    nodes = t_graph.peek_parent_index(fn.filter_tags(tag_out, labels, t_graph))
+    nodes = graph.peek_parent_index(fn.filter_tags(tag_out, labels, graph))
 
     cluster.k = len(labels)
-    cluster = cluster.train(t_graph.peek_parent_data(tag_in)[nodes])
+    cluster = cluster.train(graph.peek_parent_data(tag_in)[nodes])
 
     data = cluster(graph.get_data(tag_in))
     graph.set_data('_p_label_', data)
 
-    superv(models, graphs, labels, opt, 
+    superv(models, graph, labels, opt, 
             tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, subgraph_size = subgraph_size)
 
     graph.pop_data('_p_label_')
 
 def semi_superv(
-            models, graphs, labels, opt, 
+            models, graph, labels, opt, 
             tags = ('x', 'label'), k = 5, cluster = KNN(), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
         ):
-    
-    graph, t_graph = graphs
+
     tag_in, tag_out = tags
 
-    nodes = t_graph.peek_parent_index(fn.filter_tags(tag_out, labels, t_graph))
+    nodes = fn.filter_tags(tag_out, labels, graph)
 
-    cluster = cluster.train(t_graph.peek_parent_data(tag_in)[nodes])
+    cluster = cluster.train(graph.get_data(tag_in)[nodes])
 
     data = cluster(graph.get_data(tag_in))
     graph.set_data('_p_label_', data)
 
-    superv(models, (graph, t_graph), labels, opt, 
+    superv(models, graph, labels, opt, 
             tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, subgraph_size = subgraph_size)
 
     graph.pop_data('_p_label_')
 
 def superv(
-            models, graphs, labels, opt, 
+            models, graph, labels, opt, 
             tags = ('x', 'label'), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
         ):
     
     base, classifier = models
-    _, t_graph = graphs
     tag_in, tag_out = tags
 
     scaler = device[1]
@@ -61,7 +58,7 @@ def superv(
     is_base_gcn = fn.has_gcn(base)
     is_classifier_gcn = fn.has_gcn(classifier)
 
-    nodes = fn.filter_tags(tag_out, labels, t_graph)
+    nodes = fn.filter_tags(tag_out, labels, graph)
     
     nodes_len = len(nodes)
 
@@ -76,18 +73,18 @@ def superv(
         for batch in range(0, nodes_len, subgraph_size):
             with th.no_grad():
                 b_nodes = nodes[batch:min(nodes_len, batch + subgraph_size)]
-                sub = t_graph.subgraph(b_nodes)
+                sub = graph.subgraph(b_nodes)
 
-                inp = t_graph.get_data(tag_in).to(device[0]) if is_base_gcn else sub.get_parent_data(tag_in).to(device[0])
+                inp = graph.get_data(tag_in).to(device[0]) if is_base_gcn else sub.get_parent_data(tag_in).to(device[0])
                 outp = fn.onehot_encode(sub.get_parent_data(tag_out), labels).to(device[0])
 
             opt.zero_grad()
 
             if amp_enable:
                 with th.cuda.amp.autocast():
-                    out = base(t_graph, inp) if is_base_gcn else base(inp)
+                    out = base(graph, inp) if is_base_gcn else base(inp)
                     if is_base_gcn:
-                        out = classifier(t_graph, out)[b_nodes] if is_classifier_gcn else classifier(out[b_nodes])
+                        out = classifier(graph, out)[b_nodes] if is_classifier_gcn else classifier(out[b_nodes])
                     else:
                         out = classifier(out)
                     loss = lossF(out, outp)
@@ -97,9 +94,9 @@ def superv(
                 scaler.update()
                 
             else:
-                out = base(t_graph, inp) if is_base_gcn else base(inp)
+                out = base(graph, inp) if is_base_gcn else base(inp)
                 if is_base_gcn:
-                    out = classifier(t_graph, out)[b_nodes] if is_classifier_gcn else classifier(out[b_nodes])
+                    out = classifier(graph, out)[b_nodes] if is_classifier_gcn else classifier(out[b_nodes])
                 else:
                     out = classifier(out)
                 loss = lossF(out, outp)
