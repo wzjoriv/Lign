@@ -41,7 +41,7 @@ def semi_superv(
     data = cluster(graph.get_data(tag_in))
     graph.set_data('_p_label_', data)
 
-    superv(models, graphs, labels, opt, 
+    superv(models, (graph, t_graph), labels, opt, 
             tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, subgraph_size = subgraph_size)
 
     graph.pop_data('_p_label_')
@@ -52,7 +52,7 @@ def superv(
         ):
     
     base, classifier = models
-    graph, t_graph = graphs
+    _, t_graph = graphs
     tag_in, tag_out = tags
 
     scaler = device[1]
@@ -61,7 +61,7 @@ def superv(
     is_base_gcn = fn.has_gcn(base)
     is_classifier_gcn = fn.has_gcn(classifier)
 
-    nodes = t_graph.peek_parent_index(fn.filter_tags(tag_out, labels, t_graph))
+    nodes = fn.filter_tags(tag_out, labels, t_graph)
     
     nodes_len = len(nodes)
 
@@ -75,17 +75,21 @@ def superv(
         nodes = fn.randomize_tensor(nodes)
         for batch in range(0, nodes_len, subgraph_size):
             with th.no_grad():
-                sub = graph.subgraph(nodes[batch:min(nodes_len, batch + subgraph_size)])
+                b_nodes = nodes[batch:min(nodes_len, batch + subgraph_size)]
+                sub = t_graph.subgraph(b_nodes)
 
-                inp = sub.get_parent_data(tag_in).to(device[0])
+                inp = t_graph.get_data(tag_in).to(device[0]) if is_base_gcn else sub.get_parent_data(tag_in).to(device[0])
                 outp = fn.onehot_encode(sub.get_parent_data(tag_out), labels).to(device[0])
 
             opt.zero_grad()
 
             if amp_enable:
                 with th.cuda.amp.autocast():
-                    out = base(sub, inp) if is_base_gcn else base(inp)
-                    out = classifier(sub, out) if is_classifier_gcn else classifier(out)
+                    out = base(t_graph, inp) if is_base_gcn else base(inp)
+                    if is_base_gcn:
+                        out = classifier(t_graph, out)[b_nodes] if is_classifier_gcn else classifier(out[b_nodes])
+                    else:
+                        out = classifier(out)
                     loss = lossF(out, outp)
 
                 scaler.scale(loss).backward()
@@ -93,8 +97,11 @@ def superv(
                 scaler.update()
                 
             else:
-                out = base(sub, inp) if is_base_gcn else base(inp)
-                out = classifier(sub, out) if is_classifier_gcn else classifier(out)
+                out = base(t_graph, inp) if is_base_gcn else base(inp)
+                if is_base_gcn:
+                    out = classifier(t_graph, out)[b_nodes] if is_classifier_gcn else classifier(out[b_nodes])
+                else:
+                    out = classifier(out)
                 loss = lossF(out, outp)
 
                 loss.backward()
