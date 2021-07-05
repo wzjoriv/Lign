@@ -11,17 +11,17 @@ class GCN(nn.Module):
         self.inclusion = inclusion
 
     def forward(self, g, data):
-        g.set_data(".hidden", data)
+        g.set_data("_hidden_", data)
 
-        g.apply(self.discovery, ".hidden")
+        g.apply(self.discovery, "_hidden_")
 
         if self.aggregation:
-            g.push(aggregation = self.aggregation, data = ".hidden")
+            g.push(aggregation = self.aggregation, data = "_hidden_")
         
         if self.inclusion:
-            g.apply(self.inclusion, ".hidden")
+            g.apply(self.inclusion, "._hidden_")
 
-        return g.pop_data(".hidden")
+        return g.pop_data("_hidden_")
 
 # dynamic Linear Layer
 class DyLinear(nn.Module):
@@ -38,7 +38,7 @@ class DyLinear(nn.Module):
     
     def update_size(self, size): #slow; doesn't matter much since perform infrequenly
         if size <= self.out_fea:
-            raise RuntimeWarning("New size needs to be bigger than current output size")
+            raise RuntimeError("New size needs to be bigger than current output size")
         else:
             with th.no_grad():
                 self.weight = nn.Parameter(th.cat((self.weight, th.randn(size - self.out_fea, self.in_fea).to(self.device)), 0)).to(self.device)
