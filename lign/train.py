@@ -22,7 +22,7 @@ def unsuperv(
     graph.set_data('_p_label_', data)
 
     superv(models, graphs, labels, opt, 
-            tags = (tag_in, '_p_label_'), device = device, lossF = LossF, epochs = epochs, subgraph_size = subgraph_size)
+            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, subgraph_size = subgraph_size)
 
     graph.pop_data('_p_label_')
 
@@ -42,7 +42,7 @@ def semi_superv(
     graph.set_data('_p_label_', data)
 
     superv(models, graphs, labels, opt, 
-            tags = (tag_in, '_p_label_'), device = device, lossF = LossF, epochs = epochs, subgraph_size = subgraph_size)
+            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, subgraph_size = subgraph_size)
 
     graph.pop_data('_p_label_')
 
