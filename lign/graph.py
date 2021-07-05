@@ -21,6 +21,7 @@ from lign.utils import io
     
 """
 
+
 class GraphDataset(Dataset):
     def __init__(self, fl="", workers=1):
         self.dataset = None
@@ -37,7 +38,8 @@ class GraphDataset(Dataset):
 
         if "count" not in self.dataset and "data" not in self.dataset and \
                 "edges" not in self.dataset and "__temp__" not in self.dataset:
-            raise FileNotFoundError(".lign file not found at location: " + self._file_)
+            raise FileNotFoundError(
+                ".lign file not found at location: " + self._file_)
 
     def __len__(self):
         return self.dataset["count"]
@@ -46,7 +48,8 @@ class GraphDataset(Dataset):
 
         if indx < 0:
             if -indx > len(self):
-                raise IndexError("absolute value of index should not exceed dataset length")
+                raise IndexError(
+                    "absolute value of index should not exceed dataset length")
             indx = len(self) + indx
 
         node = {
@@ -97,7 +100,8 @@ class GraphDataset(Dataset):
 
     def __add_data__(self, data, obj):
         if not data in self.dataset["data"].keys():
-            raise ValueError("{} is not one of the properties of the graph dataset".format(data))
+            raise ValueError(
+                "{} is not one of the properties of the graph dataset".format(data))
 
         if torch.is_tensor(obj):
             if data not in self.dataset["data"]:
@@ -148,7 +152,8 @@ class GraphDataset(Dataset):
                 nd["edges"].add(len(self))
 
             if len(nd["data"].keys()) != len(self.dataset["data"].keys()):
-                raise LookupError("The the data in the node is not the smae as in the dataset. Node:\n\t{}\nDataset data:\n\t{}".format(nd, self.dataset.keys()))
+                raise LookupError("The the data in the node is not the smae as in the dataset. Node:\n\t{}\nDataset data:\n\t{}".format(
+                    nd, self.dataset.keys()))
 
             for key in nd["data"].keys():
                 self.__add_data__(key, nd["data"][key])
@@ -158,7 +163,7 @@ class GraphDataset(Dataset):
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
 
-    def subgraph(self, nodes, get_data= False, get_edges = False):  # returns isolated graph
+    def subgraph(self, nodes, get_data=False, get_edges=False):  # returns isolated graph
         nodes = io.to_iter(nodes)
         subgraph = SubGraph(self, nodes, get_data, get_edges)
         return subgraph
@@ -168,7 +173,8 @@ class GraphDataset(Dataset):
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
-            self.push(func = func, data = data, nodes = nodes, reset_buffer = reset_buffer)
+            self.push(func=func, data=data, nodes=nodes,
+                      reset_buffer=reset_buffer)
         else:
             nodes = set(nodes)
             lis = range(len(self))
@@ -183,11 +189,13 @@ class GraphDataset(Dataset):
             if func:
                 if data:
                     for node in nodes:
-                        out = [self.dataset["__temp__"][node][i]["data"][data] for i in range(len(self.dataset["__temp__"][node]))]
+                        out = [self.dataset["__temp__"][node][i]["data"][data]
+                               for i in range(len(self.dataset["__temp__"][node]))]
                         out = func(out)
                         self.dataset["data"][data][node] = out
                 else:
-                    out = [func(self.dataset["__temp__"][node]) for node in nodes]
+                    out = [func(self.dataset["__temp__"][node])
+                           for node in nodes]
                     data_keys = out[0]["data"].keys()
 
                     for indx, node in enumerate(nodes):
@@ -198,7 +206,7 @@ class GraphDataset(Dataset):
 
         if reset_buffer:
             self.reset_temp()
-        else: 
+        else:
             raise UserWarning("Temporary buffer was not reset")
 
     # pushes its data to nodes that it points to into nodes' temp
@@ -216,7 +224,8 @@ class GraphDataset(Dataset):
         if func:
             if data:
                 for node in nodes:
-                    out = [self.dataset["__temp__"][node][i]["data"][data] for i in range(len(self.dataset["__temp__"][node]))]
+                    out = [self.dataset["__temp__"][node][i]["data"][data]
+                           for i in range(len(self.dataset["__temp__"][node]))]
                     out = func(out)
                     self.dataset["data"][data][node] = out
             else:
@@ -229,10 +238,9 @@ class GraphDataset(Dataset):
 
                     self.add_edge(node, out[indx]["edges"])
 
-
         if reset_buffer:
             self.reset_temp()
-        else: 
+        else:
             raise UserWarning("Temporary buffer was not reset")
 
     def apply(self, func, data, nodes=[]):
@@ -245,10 +253,12 @@ class GraphDataset(Dataset):
             nodes = range(len(self))
 
         if(issubclass(func.__class__, nn.Module)):
-            self.dataset["data"][data][nodes] = func(self.dataset["data"][data][nodes])
+            self.dataset["data"][data][nodes] = func(
+                self.dataset["data"][data][nodes])
         else:
             for node in nodes:
-                self.dataset["data"][data][node] = func(self.dataset["data"][data][node])
+                self.dataset["data"][data][node] = func(
+                    self.dataset["data"][data][node])
 
     def reset_temp(self, nodes=[]):  # clear collected data from other nodes
         nodes = io.to_iter(nodes)
@@ -279,7 +289,7 @@ class GraphDataset(Dataset):
 
 
 class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e. changes made here might not be written back to parents unless data is a reference). Meant to be more efficient if only processing a few nodes from the dataset
-    def __init__(self, graph_dataset, nodes, get_data= False, get_edges = False):
+    def __init__(self, graph_dataset, nodes, get_data=False, get_edges=False):
         super().__init__()
 
         self.parent = graph_dataset
@@ -289,7 +299,7 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
         if get_data:
             self.get_all_parent_data()
-        
+
         if get_edges:
             self.get_all_parent_edges()
 
@@ -297,11 +307,16 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
         nodes = io.to_iter(nodes)
         return [self.parent[self.nodes[node]] for node in nodes]
 
-    def get_parent_node(self, nodes, get_data = False, get_edges=False):
+    def get_parent_node(self, nodes, get_data=False, get_edges=False):
         nodes = io.to_iter(nodes)
-        
+
         mutual_data = set(self.dataset["data"].keys())
-        mutual_data = mutual_data.intersection(self.parent.dataset["data"].keys())
+        mutual_data = mutual_data.intersection(
+            self.parent.dataset["data"].keys())
+
+        if len(mutual_data) != len(self.get_properties()):
+            raise ValueError(
+                f"Parent graph and sub graph do not have the same properties: \nSubgraph:\n\t{self.get_properties()}\nMutual data:\n\t{mutual_data}")
 
         for node in nodes:
 
@@ -368,4 +383,3 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
             return self.nodes
 
         return [self.nodes[i] for i in nodes]
-
