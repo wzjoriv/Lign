@@ -65,7 +65,7 @@ def superv(
     # training
     base.train()
     classifier.train()
-    for i in range(epochs):
+    for _ in range(epochs):
 
         opt.zero_grad()
 

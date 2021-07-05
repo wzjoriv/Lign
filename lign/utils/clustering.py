@@ -26,9 +26,13 @@ class NN():
 
 class KNN(NN):
 
-    def __init__(self, X = None, Y = None, p = 2, k = 3):
+    def __init__(self, X = None, Y = None, k = 3, p = 2):
         super().__init__(X, Y, p)
         self.k = k
+    
+    def train(self, X, Y):
+        super().train(X, Y)
+        self.unique_labels = self.train_label.unique()
 
     def predict(self, x):
         if type(self.train_pts) == type(None) or type(self.train_label) == type(None):
@@ -43,9 +47,7 @@ class KNN(NN):
         winner = th.zeros(votes.size(0), dtype = self.train_label.dtype)
         count = th.zeros(votes.size(0), dtype = votes.dtype) - 1
 
-        unique_labels = self.train_label.unique()
-
-        for lab in unique_labels:
+        for lab in self.unique_labels:
             vote_count = (votes == lab).sum(1)
             who = vote_count >= count
             winner[who] = lab
@@ -70,7 +72,7 @@ class KMeans(NN):
         self.train_pts = randomize_tensor(X)[:self.k]
         self.train_label = th.LongTensor(range(self.k))
 
-        for i in range(self.n_iters):
+        for _ in range(self.n_iters):
             labels = self.predict(X)
 
             for lab in range(self.k):

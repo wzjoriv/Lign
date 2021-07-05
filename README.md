@@ -61,7 +61,7 @@ _For more details, please read the [developer documentation](docs/dev)_
    cd LIGN
    ```
 
-3. Install prerequisites. 
+3. Install prerequisites
 
    _It is recommended to install [PyTorch](https://pytorch.org) via the official site first for optimal performance_
 
