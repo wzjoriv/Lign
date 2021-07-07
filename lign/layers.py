@@ -41,4 +41,5 @@ class DyLinear(nn.Module):
             raise RuntimeError("New size needs to be bigger than current output size")
         else:
             with th.no_grad():
+                self.out_fea = size
                 self.weight = nn.Parameter(th.cat((self.weight, th.randn(size - self.out_fea, self.in_fea).to(self.device)), 0)).to(self.device)
