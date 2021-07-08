@@ -54,7 +54,7 @@ def same_label(y): # return matrix of nodes that have same label
     Y = y_expand.eq(y_expand.t())
     return Y
 
-def onehot_encoding(data, labels): # onehot encoding
+def onehot_encode(data, labels): # onehot encoding
     final = (data == labels[0]) * 0
     for lab in range(1, len(labels)):
         final |= (data == labels[lab]) * lab
