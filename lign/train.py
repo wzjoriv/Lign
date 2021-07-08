@@ -7,7 +7,8 @@ from lign.utils.clustering import KMeans, KNN
 
 def unsuperv(
             models, graph, labels, opt, 
-            tags = ('x', 'label'), cluster = KMeans(), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+            tags = ('x', 'label'), cluster = KMeans(), device = (th.device('cpu'), None), 
+            lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
         ):
 
     tag_in, tag_out = tags
@@ -27,7 +28,8 @@ def unsuperv(
 
 def semi_superv(
             models, graph, labels, opt, 
-            tags = ('x', 'label'), k = 5, cluster = KNN(), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+            tags = ('x', 'label'), k = 5, cluster = KNN(), device = (th.device('cpu'), None), 
+            lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
         ):
 
     tag_in, tag_out = tags
@@ -46,7 +48,8 @@ def semi_superv(
 
 def superv(
             models, graph, labels, opt, 
-            tags = ('x', 'label'), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+            tags = ('x', 'label'), device = (th.device('cpu'), None), 
+            lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
         ):
     
     base, classifier = models

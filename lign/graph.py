@@ -1,11 +1,14 @@
 import os.path
 import warnings
+from typing import TypeVar, List, Dict
 
 import torch
 from torch import nn
 from torch.utils.data import Dataset
 
 from lign.utils import io
+
+T_Node = TypeVar('T_Node')
 
 """
     node = {
@@ -24,7 +27,11 @@ from lign.utils import io
 
 
 class GraphDataset(Dataset):
-    def __init__(self, fl="", workers=1):
+
+    datasets: dict[str, ]
+
+    def __init__(self, fl="", workers=1) -> None:
+
         self.dataset = None
         self.workers = workers
 
@@ -41,10 +48,10 @@ class GraphDataset(Dataset):
                 "edges" not in self.dataset and "__temp__" not in self.dataset:
             raise FileNotFoundError(f".lign file not found at location: {self._file_}")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.dataset["count"]
 
-    def __getitem__(self, indx):
+    def __getitem__(self, indx:int) -> T_Node:
 
         if indx < 0:
             if -indx > len(self):
@@ -63,7 +70,7 @@ class GraphDataset(Dataset):
 
         return node
 
-    def get_properties(self):
+    def get_properties(self) -> List[str]:
         return io.to_iter(self.dataset["data"].keys())
 
     def get_data(self, data, nodes=[]):
