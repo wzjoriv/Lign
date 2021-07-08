@@ -245,7 +245,7 @@ class GraphDataset(Dataset):
         if reset_buffer:
             self.reset_temp()
         else:
-            raise UserWarning("Temporary buffer was not reset")
+            warnings.warn("Temporary buffer was not reset")
 
     def apply(self, func, data, nodes=[]):
         nodes = io.to_iter(nodes)
@@ -334,9 +334,9 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
             for mut in mutual_data:
                 out["data"][mut] = self.parent.get_data(mut, nodes=node)[0]
 
-            self.add(out)
-            self.i_nodes.append(len(self) - 1)
+            self.i_nodes.append(len(self))
             self.p_nodes.append(node)
+            self.add(out)
 
         if get_data:
             self.get_all_parent_data()
