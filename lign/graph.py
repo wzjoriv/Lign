@@ -8,7 +8,7 @@ from torch.utils.data import Dataset
 
 from lign.utils import io
 
-T_Node = TypeVar('T_Node')
+T_Node = TypeVar('Node')
 
 """
     node = {
