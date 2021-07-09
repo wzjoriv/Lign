@@ -1,11 +1,13 @@
 
 try:
-    from typing import Any, Dict, List, TypedDict
+    from typing import TypeVar, Dict, List, TypedDict
 except Exception:
-    from typing import Any, Dict, List
+    from typing import TypeVar, Dict, List
     from typing_extensions import TypedDict
 
+T = TypeVar('T')
+
 Node = TypedDict('Node', {
-    'data': Dict[str, Any], 
+    'data': Dict[str, T], 
     'edges': List[int]
     })
