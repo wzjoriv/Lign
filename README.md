@@ -69,6 +69,11 @@ _For more details, please read the [developer documentation](docs/dev)_
    pip install -r docs/dev/requirements.txt
    ```
 
+   ```sh
+   conda env create -f docs/dev/environment.yml -n LIGN
+   conda activate LIGN
+   ```
+
 4. Install package
 
    ```sh
