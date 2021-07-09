@@ -12,10 +12,10 @@ def unsuperv(
 
     tag_in, tag_out = tags
 
-    nodes = graph.peek_parent_index(fn.filter_tags(tag_out, labels, graph))
+    nodes = fn.filter_tags(tag_out, labels, graph)
 
     cluster.k = len(labels)
-    cluster = cluster.train(graph.peek_parent_data(tag_in)[nodes])
+    cluster.train(graph.get_data(tag_in)[nodes])
 
     data = cluster(graph.get_data(tag_in))
     graph.set_data('_p_label_', data)
@@ -34,7 +34,7 @@ def semi_superv(
 
     nodes = fn.filter_tags(tag_out, labels, graph)
 
-    cluster = cluster.train(graph.get_data(tag_in)[nodes])
+    cluster.train(graph.get_data(tag_in)[nodes])
 
     data = cluster(graph.get_data(tag_in))
     graph.set_data('_p_label_', data)
