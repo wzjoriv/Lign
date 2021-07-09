@@ -40,10 +40,15 @@ _For more details, please read the [development documentation](docs/dev)_
    pip install -r docs/dev/requirements.txt
    ```
 
+   ```sh
+   conda env create -f docs/dev/environment.yml -n LIGN
+   conda activate LIGN
+   ```
+
 4. Install package
 
    ```sh
-   pip install .
+   pip install . --upgrade
    ```
 
 ### Making Changes
@@ -81,8 +86,10 @@ When contributing any change, please insert and fill the following template in t
 
 ```text
 Changes: 
-    - [file1.rm] - [made change 1 and 2]
-    - [sub/folder/file2.py] - [made another change here]
+    - [file1.rm, file3.rm] 
+        - [made change 1 and 2]
+    - [sub/folder/file2.py] 
+        - [made another change here]
 
 Reason:
     - [I made change 1 and 2 to make an example]
