@@ -1,14 +1,12 @@
 import os.path
 import warnings
-from typing import TypeVar, List, Dict
 
 import torch
 from torch import nn
 from torch.utils.data import Dataset
 
 from lign.utils import io
-
-T_Node = TypeVar('Node')
+from lign.utils.types import Node
 
 """
     node = {
@@ -46,12 +44,13 @@ class GraphDataset(Dataset):
 
         if "count" not in self.dataset and "data" not in self.dataset and \
                 "edges" not in self.dataset and "__temp__" not in self.dataset:
-            raise FileNotFoundError(f".lign file not found at location: {self._file_}")
+            raise FileNotFoundError(
+                f".lign file not found at location: {self._file_}")
 
     def __len__(self) -> int:
         return self.dataset["count"]
 
-    def __getitem__(self, indx:int) -> T_Node:
+    def __getitem__(self, indx: int) -> T_Node:
 
         if indx < 0:
             if -indx > len(self):
@@ -94,7 +93,7 @@ class GraphDataset(Dataset):
                 for indx, nd in enumerate(ls):
                     self.dataset["data"][data][nd] = features[indx]
 
-    def add_edge(self, node, edges):
+    def add_edge(self, node: Node, edges):
         edges = io.to_iter(edges)
         self.dataset["edges"][node].update(edges)
 
@@ -174,7 +173,7 @@ class GraphDataset(Dataset):
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
 
-    def subgraph(self, nodes, get_data=False, get_edges=False):  # returns isolated graph
+    def subgraph(self, nodes, get_data=False, get_edges=False) -> SubGraph:  # returns isolated graph
         nodes = io.to_iter(nodes)
         subgraph = SubGraph(self, nodes, get_data, get_edges)
         return subgraph
@@ -368,7 +367,7 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
         for data in all_v:
             self.get_parent_data(data)
-    
+
     def peek_parent_edges(self):
         return [self.parent.get_edge(node) for node in self.p_nodes]
 
