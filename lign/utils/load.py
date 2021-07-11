@@ -102,7 +102,7 @@ def cora_to_lign(path, split = 0.8):
     parents = edge_parents.groups.keys()
 
     for key in parents:
-        p_node = graph.filter(lambda x: x == key, "id")
+        p_node = graph.filter(lambda x: x == key, "id")[0]
 
         childrens = edge_parents.get_group(key)[1].values
         c_nodes = list(cora_cont.loc[cora_cont[0].isin(childrens)].index.values)
@@ -131,14 +131,14 @@ def dataset_to_lign(format, **locations):
                 csv: [column1, column2, 3, [0_9]]               ##  Indicate index or column name to retrieve; multiple columns are merges as one
 
         data type:
-            imgs = images folder                                ### Heavy lign graph suggested for large images
+            imgs = images folder
+            tensor
             csv = csv file
-            imgs_url = file of list of images url                ### Heavy lign graph suggested
+            imgs_url = file of list of images url
 
         example:
-            format = (imgs(x)[data_[0_9]*.png], csv(label)[column2])'
+            format = "(imgs('x')['data_[0_9]*.png'], csv('label')['file.csv/column2'])"
             'data/', 'labels.txt'
     """
-
-    pass
+    
     return 'hey'

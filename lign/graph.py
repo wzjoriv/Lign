@@ -1,14 +1,14 @@
+from __future__ import annotations
 import os.path
 import warnings
-from typing import List, Union, Callable
-from __future__ import annotations
+from typing import Callable, Union, Optional
 
 import torch
 from torch import nn
 from torch.utils.data import Dataset
 
 from lign.utils import io
-from lign.utils.types import Node, Tensor, T
+from lign.utils.types import Tensor, T
 
 """
     node = {
@@ -25,10 +25,28 @@ from lign.utils.types import Node, Tensor, T
     
 """
 
+def node(data: dict = {}, edges: Union[set, tuple, list] = set()) -> Node:
+    return Node(data, edges)
+
+class Node():
+    def __init__(self, data: dict = {}, edges: Union[set, tuple, list] = set()) -> None:
+
+        self.data = data
+        self.edges = set(edges)
+
+    def __str__(self):
+        return str({
+            "data": self.data,
+            "edges": self.edges
+        })
+    
+    def copy(self):
+        out = Node()
+        out.data = self.data.copy()
+        out.edges = self.data.copy()
+        return out
 
 class GraphDataset(Dataset):
-
-    datasets: dict[str, ]
 
     def __init__(self, fl: str = "", workers: int = 1) -> None:
 
@@ -42,10 +60,12 @@ class GraphDataset(Dataset):
         else:
             self._file_ = fl
 
-        self.dataset = io.unpickle(fl)
-
-        if "count" not in self.dataset and "data" not in self.dataset and \
+        try:
+            self.dataset = io.unpickle(fl)
+            if "count" not in self.dataset and "data" not in self.dataset and \
                 "edges" not in self.dataset and "__temp__" not in self.dataset:
+                raise
+        except Exception:
             raise FileNotFoundError(
                 f".lign file not found at location: {self._file_}")
 
@@ -60,21 +80,19 @@ class GraphDataset(Dataset):
                     "absolute value of index should not exceed dataset length")
             indx = len(self) + indx
 
-        node = {
-            "data": {}
-        }
+        node = Node()
 
         for key in self.dataset["data"].keys():
-            node["data"][key] = self.dataset["data"][key][indx]
+            node.data[key] = self.dataset["data"][key][indx]
 
-        node["edges"] = self.dataset["edges"][indx]
+        node.edges = self.dataset["edges"][indx]
 
         return node
 
-    def get_properties(self) -> List[str]:
+    def get_properties(self) -> list[str]:
         return io.to_iter(self.dataset["data"].keys())
 
-    def get_data(self, data: str, nodes=[]) -> Union[Tensor, List[T]]:
+    def get_data(self, data: str, nodes=[]) -> Union[Tensor, list[T]]:
         ls = io.to_iter(nodes)
         if not len(ls):
             return self.dataset["data"][data]
@@ -84,25 +102,25 @@ class GraphDataset(Dataset):
             else:
                 return [self.dataset["data"][data][nd] for nd in ls]
 
-    def set_data(self, data: str, features: Union[Tensor, List[T]], nodes: Union[int, List[int]] = []) -> None:
-        ls = io.to_iter(nodes)
-        if not len(ls):
+    def set_data(self, data: str, features: Union[Tensor, list[T]], nodes: Union[int, list[int]] = []) -> None:
+        nodes = io.to_iter(nodes)
+        if not len(nodes):
             self.dataset["data"][data] = features
         else:
             if torch.is_tensor(self.dataset["data"][data]):
                 self.dataset["data"][data][nodes] = features
             else:
-                for indx, nd in enumerate(ls):
+                for indx, nd in enumerate(nodes):
                     self.dataset["data"][data][nd] = features[indx]
 
-    def add_edge(self, node: int, edges: Union[int, List[int]]) -> None:
+    def add_edge(self, node: int, edges: Union[int, list[int]]) -> None:
         edges = io.to_iter(edges)
         self.dataset["edges"][node].update(edges)
 
-    def get_edges(self, node: int) -> List[int]:
+    def get_edges(self, node: int) -> list[int]:
         return self.dataset["edges"][node]
 
-    def remove_edge(self, node: int, edges: Union[int, List[int]]) -> None:
+    def remove_edge(self, node: int, edges: Union[int, list[int]]) -> None:
         edges = io.to_iter(edges)
         self.dataset["edges"][node].difference_update(edges)
 
@@ -123,52 +141,31 @@ class GraphDataset(Dataset):
             else:
                 self.dataset["data"][data].append(data)
 
-    def __copy_node__(self, node1):
-        node = {
-            "data": {}
-        }
-
-        for key, value in node1.items():
-            if torch.is_tensor(value):
-                node[key] = value.detach().clone()
-            elif io.is_primitve(value):
-                node[key] = value
-            else:
-                node[key] = value.copy()
-
-        return node
-
-    def pop_data(self, data: str) -> Union[Tensor, List[T], None]:
+    def pop_data(self, data: str) -> Union[Tensor, list[T], None]:
         return self.dataset["data"].pop(data, None)
 
-    def add(self, nodes: Union[Node, List[Node], int, None] = None, add_self: bool = True) -> None:
+    def add(self, nodes: Optional[int, Node, list[Node]] = None, add_self: bool = True) -> None:
 
         if not nodes:
-            nodes = {
-                "data": {},
-                "edges": set()
-            }
+            nodes = Node()
         elif type(nodes) is int:
-            nodes = [{
-                "data": {},
-                "edges": set()
-            } for i in range(nodes)]
+            nodes = [Node() for i in range(nodes)]
 
         nodes = io.to_iter(nodes)
         for nd in nodes:
             if add_self:
-                nd["edges"].add(len(self))
+                nd.edges.add(len(self))
 
             mutual_data = set(self.dataset["data"].keys())
-            mutual_data = mutual_data.intersection(nd["data"].keys())
+            mutual_data = mutual_data.intersection(nd.data.keys())
 
             if len(mutual_data) != len(self.dataset["data"].keys()):
-                node_keys = nd["data"].keys()
+                node_keys = nd.data.keys()
                 raise ValueError(
                     f"The data in the node is not the same as in the dataset. Node Data:\n\t{node_keys}\nDataset data:\n\t{self.get_properties()}")
 
             for key in nd["data"].keys():
-                self.__add_data__(key, nd["data"][key])
+                self.__add_data__(key, nd.data[key])
 
             self.dataset["edges"].append(nd["edges"])
 
@@ -176,13 +173,13 @@ class GraphDataset(Dataset):
             self.dataset["count"] += 1
 
     # returns isolated graph
-    def subgraph(self, nodes: Union[int, List[int]], get_data: bool = False, get_edges: bool = False) -> SubGraph:
+    def subgraph(self, nodes: Union[int, list[int]], get_data: bool = False, get_edges: bool = False) -> SubGraph:
         nodes = io.to_iter(nodes)
         subgraph = SubGraph(self, nodes, get_data, get_edges)
         return subgraph
 
     # pulls others' data from nodes that it points to into it's temp
-    def pull(self, func: Union[Callable[[Union[Tensor, List[T]]], Union[Tensor, T]], nn.Module, None] = None, data: Union[str, None] = None, nodes: Union[int, List[int]] = [], reset_buffer: bool = True) -> None:
+    def pull(self, func: Optional[Callable[[Union[Tensor, list[T]]], Union[Tensor, T]], nn.Module] = None, data: Optional[str] = None, nodes: Union[int, list[int]] = [], reset_buffer: bool = True) -> None:
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
@@ -194,7 +191,7 @@ class GraphDataset(Dataset):
 
             for node in lis:
                 nd = self[node]
-                tw = nodes.intersection(nd["edges"])
+                tw = nodes.intersection(nd.edges)
 
                 for el in tw:
                     self.dataset["__temp__"][el].append(nd)
@@ -202,20 +199,30 @@ class GraphDataset(Dataset):
             if func:
                 if data:
                     for node in nodes:
-                        out = [self.dataset["__temp__"][node][i]["data"][data]
+                        out = [self.dataset["__temp__"][node][i].data[data]
                                for i in range(len(self.dataset["__temp__"][node]))]
                         out = func(out)
                         self.dataset["data"][data][node] = out
                 else:
                     out = [func(self.dataset["__temp__"][node])
                            for node in nodes]
-                    data_keys = out[0]["data"].keys()
 
                     for indx, node in enumerate(nodes):
-                        for key in data_keys:
-                            self.dataset["data"][key][node] = out[indx]["data"][key]
 
-                        self.add_edge(node, out[indx]["edges"])
+                        mutual_data = set(self.dataset["data"].keys())
+                        mutual_data = mutual_data.intersection(node.data.keys())
+
+                        if len(mutual_data) != len(self.dataset["data"].keys()):
+                            node_keys = nd.data.keys()
+                            raise ValueError(
+                                f"The data in the node is not the same as in the dataset. Node Data:\n\t{node_keys}\nDataset data:\n\t{self.get_properties()}")
+
+                        data_keys = node.data.keys()
+
+                        for key in data_keys:
+                            self.dataset["data"][key][node] = out[indx].data[key]
+
+                        self.add_edge(node, out[indx].edges)
 
         if reset_buffer:
             self.reset_temp()
@@ -223,7 +230,7 @@ class GraphDataset(Dataset):
             warnings.warn("Temporary buffer was not reset")
 
     # pushes its data to nodes that it points to into nodes' temp
-    def push(self, func: Union[Callable[[Union[Tensor, List[T]]], Union[Tensor, T]], nn.Module, None] = None, data: Union[str, None] = None, nodes: Union[int, List[int]] = [], reset_buffer: bool = True) -> None:
+    def push(self, func: Optional[Callable[[Union[Tensor, list[T]]], Union[Tensor, T]], nn.Module] = None, data: Optional[str] = None, nodes: Union[int, list[int]] = [], reset_buffer: bool = True) -> None:
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
@@ -237,26 +244,36 @@ class GraphDataset(Dataset):
         if func:
             if data:
                 for node in nodes:
-                    out = [self.dataset["__temp__"][node][i]["data"][data]
+                    out = [self.dataset["__temp__"][node][i].data[data]
                            for i in range(len(self.dataset["__temp__"][node]))]
                     out = func(out)
                     self.dataset["data"][data][node] = out
             else:
                 out = [func(self.dataset["__temp__"][node]) for node in nodes]
-                data_keys = out[0]["data"].keys()
 
                 for indx, node in enumerate(nodes):
-                    for key in data_keys:
-                        self.dataset["data"][key][node] = out[indx]["data"][key]
 
-                    self.add_edge(node, out[indx]["edges"])
+                    mutual_data = set(self.dataset["data"].keys())
+                    mutual_data = mutual_data.intersection(node.data.keys())
+
+                    if len(mutual_data) != len(self.dataset["data"].keys()):
+                        node_keys = nd.data.keys()
+                        raise ValueError(
+                            f"The data in the node is not the same as in the dataset. Node Data:\n\t{node_keys}\nDataset data:\n\t{self.get_properties()}")
+
+                    data_keys = node.data.keys()
+
+                    for key in data_keys:
+                        self.dataset["data"][key][node] = out[indx].data[key]
+
+                    self.add_edge(node, out[indx].edges)
 
         if reset_buffer:
             self.reset_temp()
         else:
             warnings.warn("Temporary buffer was not reset")
 
-    def apply(self, func: Union[Callable[[Union[Tensor, List[T]]], Union[Tensor, T]], None], data: str, nodes: Union[int, List[int]] = []) -> None:
+    def apply(self, func: Optional[Callable[[Union[Tensor, list[T]]], Union[Tensor, T]]], data: str, nodes: Union[int, list[int]] = []) -> None:
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
@@ -274,7 +291,7 @@ class GraphDataset(Dataset):
                     self.dataset["data"][data][node])
 
     # clear collected data from other nodes
-    def reset_temp(self, nodes: Union[int, List[int]] = []) -> None:
+    def reset_temp(self, nodes: Union[int, list[int]] = []) -> None:
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
@@ -283,7 +300,7 @@ class GraphDataset(Dataset):
         self.dataset["__temp__"] = [[] for i in nodes]
 
     # returns nodes' index that pass at least one of the filters
-    def filter(self, filters: Union[Callable[[Tensor], bool], List[Callable[[Tensor], bool]]], data: str) -> Tensor:
+    def filter(self, filters: Union[Callable[[Tensor], bool], list[Callable[[Tensor], bool]]], data: str) -> Tensor:
         filters = io.to_iter(filters)
 
         if not len(filters):
@@ -299,12 +316,14 @@ class GraphDataset(Dataset):
     def save(self, fl: str = "") -> None:
         if not len(fl):
             fl = self._file_
+        else:
+            self._file_ = fl
 
         io.pickle(self.dataset, fl)
 
 
 class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e. changes made here might not be written back to parents unless data is a reference). Meant to be more efficient if only processing a few nodes from the dataset
-    def __init__(self, graph_dataset: GraphDataset, nodes: Union[List[int], int], get_data: bool = False, get_edges: bool = False) -> None:
+    def __init__(self, graph_dataset: GraphDataset, nodes: Union[list[int], int], get_data: bool = False, get_edges: bool = False) -> None:
         super().__init__()
 
         self.parent = graph_dataset
@@ -319,14 +338,14 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
         if get_edges:
             self.get_all_parent_edges()
 
-    def peek_children_index(self) -> List[int]:
+    def peek_children_index(self) -> list[int]:
         return self.i_nodes
 
-    def peek_parent_node(self, nodes: Union[List[int], int]) -> List[Node]:
+    def peek_parent_node(self, nodes: Union[list[int], int]) -> list[Node]:
         nodes = io.to_iter(nodes)
         return [self.parent[self.p_nodes[node]] for node in nodes]
 
-    def get_parent_node(self, nodes: Union[List[int], int], get_data: bool = False, get_edges: bool = False) -> List[Node]:
+    def get_parent_node(self, nodes: Union[list[int], int], get_data: bool = False, get_edges: bool = False) -> list[Node]:
         nodes = io.to_iter(nodes)
 
         mutual_data = set(self.dataset["data"].keys())
@@ -339,11 +358,10 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
         for node in nodes:
 
-            out = {"data": {},
-                   "edges": set()}
+            out = Node()
 
             for mut in mutual_data:
-                out["data"][mut] = self.parent.get_data(mut, nodes=node)[0]
+                out.data[mut] = self.parent.get_data(mut, nodes=node)[0]
 
             self.i_nodes.append(len(self))
             self.p_nodes.append(node)
@@ -357,10 +375,10 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
         return self.peek_parent_node(nodes)
 
-    def peek_parent_data(self, data: str) -> Union[Tensor, List[T]]:
+    def peek_parent_data(self, data: str) -> Union[Tensor, list[T]]:
         return self.parent.get_data(data, nodes=self.p_nodes)
 
-    def get_parent_data(self, data: str) -> Union[Tensor, List[T]]:
+    def get_parent_data(self, data: str) -> Union[Tensor, list[T]]:
         p_data = self.peek_parent_data(data)
 
         self.set_data(data, p_data)
@@ -373,10 +391,10 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
         for data in all_v:
             self.get_parent_data(data)
 
-    def peek_parent_edges(self) -> List[List[int]]:
+    def peek_parent_edges(self) -> list[list[int]]:
         return [self.parent.get_edges(node) for node in self.p_nodes]
 
-    def get_parent_edges(self, nodes: Union[List[int], int]) -> List[List[int]]:
+    def get_parent_edges(self, nodes: Union[list[int], int]) -> list[list[int]]:
         nodes = io.to_iter(nodes)
 
         edges = []
@@ -394,7 +412,7 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
     def get_all_parent_edges(self) -> None:
         self.get_parent_edges(self.p_nodes)
 
-    def peek_parent_index(self, nodes: Union[int, List[int]] = []) -> List[int]:
+    def peek_parent_index(self, nodes: Union[int, list[int]] = []) -> list[int]:
         nodes = io.to_iter(nodes)
 
         if len(nodes) == len(self.p_nodes) or not len(nodes):
