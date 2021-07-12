@@ -15,10 +15,12 @@ def unsuperv(
 
     nodes = fn.filter_tags(tag_out, labels, graph)
 
-    cluster.k = len(labels)
-    cluster.train(graph.get_data(tag_in)[nodes])
+    dt = graph.get_data(tag_in)
 
-    data = cluster(graph.get_data(tag_in))
+    cluster.k = len(labels)
+    cluster.train(dt[nodes])
+
+    data = cluster(dt)
     graph.set_data('_p_label_', data)
 
     superv(models, graph, labels, opt, 
@@ -34,11 +36,13 @@ def semi_superv(
 
     tag_in, tag_out = tags
 
-    nodes = fn.filter_tags(tag_out, labels, graph)
+    tr_nodes, tr_labs = fn.filter_k_from_tags(tag_out, labels, graph, k)
 
-    cluster.train(graph.get_data(tag_in)[nodes])
+    dt = graph.get_data(tag_in)
 
-    data = cluster(graph.get_data(tag_in))
+    cluster.train(dt[tr_nodes], tr_labs)
+
+    data = cluster(dt)
     graph.set_data('_p_label_', data)
 
     superv(models, graph, labels, opt, 
