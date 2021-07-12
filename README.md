@@ -2,7 +2,7 @@
 
 [![LIGN logo](docs/imgs/logo.png "LIGN logo")][repo-url]
 
-A deep learning framework for implementing lifelong learning and graph convoluitional networks (GCN) on tensor and graph data
+A deep learning framework developed for implementing continual lifelong learning, graph convolutional networks (GCN) and graph-based machine learning methods
 
 [View Docs][docs-url]
 ·
