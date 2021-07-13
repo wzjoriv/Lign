@@ -3,4 +3,3 @@ torchvision
 numpy
 matplotlib
 pandas
-typing-extensions

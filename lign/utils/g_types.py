@@ -6,11 +6,6 @@ import sys
 import typing
 from typing import TypeVar
 
-try:
-    from typing import TypedDict
-except Exception:
-    from typing_extensions import TypedDict
-
 if sys.version < "3.9":
     Callable = typing.Callable
     Dict = typing.Dict
