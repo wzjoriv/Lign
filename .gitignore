@@ -1,8 +1,11 @@
+## cache
 *.lnk
 .ipynb_checkpoints/
-.rug/
-data/
-.vscode/
 *.pyc
 __pycache__
+
+## development environment
+.vscode/
+.rug/
+data/
 main.ipynb
