@@ -11,15 +11,17 @@ try:
 except Exception:
     from typing_extensions import TypedDict
 
-if sys.version > (3, 9):
-    Callable = abc.Callable
-    Dict = abc.dict
-    List = abc.list
-    Tuple = abc.tuple
-else:
+if sys.version < "3.9":
     Callable = typing.Callable
     Dict = typing.Dict
     List = typing.List
     Tuple = typing.Tuple
+    Set = typing.Set
+else:
+    Callable = abc.Callable
+    Dict = dict
+    List = list
+    Tuple = tuple
+    Set = set
 
 T = TypeVar('T')

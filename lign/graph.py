@@ -8,7 +8,7 @@ from torch import nn
 from torch.utils.data import Dataset
 
 from lign.utils import io
-from lign.utils.types import Tensor, T
+from lign.utils.g_types import Tensor, T, List, Tuple, Set
 
 """
     node = {
@@ -25,26 +25,28 @@ from lign.utils.types import Tensor, T
     
 """
 
-def node(data: dict = {}, edges: Union[set, tuple, list] = set()) -> Node:
+
+def node(data: dict = {}, edges: Union[set, Tuple[int], List[int]] = set()) -> Node:
     return Node(data, edges)
 
 class Node():
-    def __init__(self, data: dict = {}, edges: Union[set, tuple, list] = set()) -> None:
+    def __init__(self, data: dict = {}, edges: Union[Set[int], Tuple[int, ...], List[int]] = set()) -> None:
 
         self.data = data
         self.edges = set(edges)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str({
             "data": self.data,
             "edges": self.edges
         })
-    
-    def copy(self):
+
+    def copy(self) -> Node:
         out = Node()
         out.data = self.data.copy()
         out.edges = self.data.copy()
         return out
+
 
 class GraphDataset(Dataset):
 
@@ -63,7 +65,7 @@ class GraphDataset(Dataset):
         try:
             self.dataset = io.unpickle(fl)
             if "count" not in self.dataset and "data" not in self.dataset and \
-                "edges" not in self.dataset and "__temp__" not in self.dataset:
+                    "edges" not in self.dataset and "__temp__" not in self.dataset:
                 raise
         except Exception:
             raise FileNotFoundError(
@@ -89,10 +91,10 @@ class GraphDataset(Dataset):
 
         return node
 
-    def get_properties(self) -> list[str]:
+    def get_properties(self) -> List[str]:
         return io.to_iter(self.dataset["data"].keys())
 
-    def get_data(self, data: str, nodes=[]) -> Union[Tensor, list[T]]:
+    def get_data(self, data: str, nodes=[]) -> Union[Tensor, List[T]]:
         ls = io.to_iter(nodes)
         if not len(ls):
             return self.dataset["data"][data]
@@ -102,7 +104,7 @@ class GraphDataset(Dataset):
             else:
                 return [self.dataset["data"][data][nd] for nd in ls]
 
-    def set_data(self, data: str, features: Union[Tensor, list[T]], nodes: Union[int, list[int]] = []) -> None:
+    def set_data(self, data: str, features: Union[Tensor, List[T]], nodes: Union[int, List[int]] = []) -> None:
         nodes = io.to_iter(nodes)
         if not len(nodes):
             self.dataset["data"][data] = features
@@ -113,14 +115,14 @@ class GraphDataset(Dataset):
                 for indx, nd in enumerate(nodes):
                     self.dataset["data"][data][nd] = features[indx]
 
-    def add_edge(self, node: int, edges: Union[int, list[int]]) -> None:
+    def add_edge(self, node: int, edges: Union[int, List[int]]) -> None:
         edges = io.to_iter(edges)
         self.dataset["edges"][node].update(edges)
 
-    def get_edges(self, node: int) -> list[int]:
+    def get_edges(self, node: int) -> List[int]:
         return self.dataset["edges"][node]
 
-    def remove_edge(self, node: int, edges: Union[int, list[int]]) -> None:
+    def remove_edge(self, node: int, edges: Union[int, List[int]]) -> None:
         edges = io.to_iter(edges)
         self.dataset["edges"][node].difference_update(edges)
 
@@ -141,10 +143,10 @@ class GraphDataset(Dataset):
             else:
                 self.dataset["data"][data].append(data)
 
-    def pop_data(self, data: str) -> Union[Tensor, list[T], None]:
+    def pop_data(self, data: str) -> Union[Tensor, List[T], None]:
         return self.dataset["data"].pop(data, None)
 
-    def add(self, nodes: Optional[int, Node, list[Node]] = None, add_self: bool = True) -> None:
+    def add(self, nodes: Optional[Union[int, Node, List[Node]]] = None, add_self: bool = True) -> None:
 
         if not nodes:
             nodes = Node()
@@ -173,13 +175,20 @@ class GraphDataset(Dataset):
             self.dataset["count"] += 1
 
     # returns isolated graph
-    def subgraph(self, nodes: Union[int, list[int]], get_data: bool = False, get_edges: bool = False) -> SubGraph:
+    def subgraph(self, nodes: Union[int, List[int]], get_data: bool = False, get_edges: bool = False) -> SubGraph:
         nodes = io.to_iter(nodes)
         subgraph = SubGraph(self, nodes, get_data, get_edges)
         return subgraph
 
     # pulls others' data from nodes that it points to into it's temp
-    def pull(self, func: Optional[Callable[[Union[Tensor, list[T]]], Union[Tensor, T]], nn.Module] = None, data: Optional[str] = None, nodes: Union[int, list[int]] = [], reset_buffer: bool = True) -> None:
+    def pull(
+        self,
+        func: Optional[Union[Callable[[Union[Tensor, List[T]]], Union[Tensor, T]], nn.Module]] = None,
+        data: Optional[str] = None,
+        nodes: Union[int, List[int]] = [],
+        reset_buffer: bool = True
+    ) -> None:
+
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
@@ -210,7 +219,8 @@ class GraphDataset(Dataset):
                     for indx, node in enumerate(nodes):
 
                         mutual_data = set(self.dataset["data"].keys())
-                        mutual_data = mutual_data.intersection(node.data.keys())
+                        mutual_data = mutual_data.intersection(
+                            node.data.keys())
 
                         if len(mutual_data) != len(self.dataset["data"].keys()):
                             node_keys = nd.data.keys()
@@ -230,7 +240,7 @@ class GraphDataset(Dataset):
             warnings.warn("Temporary buffer was not reset")
 
     # pushes its data to nodes that it points to into nodes' temp
-    def push(self, func: Optional[Callable[[Union[Tensor, list[T]]], Union[Tensor, T]], nn.Module] = None, data: Optional[str] = None, nodes: Union[int, list[int]] = [], reset_buffer: bool = True) -> None:
+    def push(self, func: Optional[Union[Callable[[Union[Tensor, List[T]]], Union[Tensor, T]], nn.Module]] = None, data: Optional[str] = None, nodes: Union[int, List[int]] = [], reset_buffer: bool = True) -> None:
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
@@ -273,7 +283,7 @@ class GraphDataset(Dataset):
         else:
             warnings.warn("Temporary buffer was not reset")
 
-    def apply(self, func: Optional[Callable[[Union[Tensor, list[T]]], Union[Tensor, T]]], data: str, nodes: Union[int, list[int]] = []) -> None:
+    def apply(self, func: Optional[Callable[[Union[Tensor, List[T]]], Union[Tensor, T]]], data: str, nodes: Union[int, List[int]] = []) -> None:
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
@@ -291,7 +301,7 @@ class GraphDataset(Dataset):
                     self.dataset["data"][data][node])
 
     # clear collected data from other nodes
-    def reset_temp(self, nodes: Union[int, list[int]] = []) -> None:
+    def reset_temp(self, nodes: Union[int, List[int]] = []) -> None:
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
@@ -300,7 +310,7 @@ class GraphDataset(Dataset):
         self.dataset["__temp__"] = [[] for i in nodes]
 
     # returns nodes' index that pass at least one of the filters
-    def filter(self, filters: Union[Callable[[Tensor], bool], list[Callable[[Tensor], bool]]], data: str) -> Tensor:
+    def filter(self, filters: Union[Callable[[Tensor], bool], List[Callable[[Tensor], bool]]], data: str) -> Tensor:
         filters = io.to_iter(filters)
 
         if not len(filters):
@@ -323,7 +333,7 @@ class GraphDataset(Dataset):
 
 
 class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e. changes made here might not be written back to parents unless data is a reference). Meant to be more efficient if only processing a few nodes from the dataset
-    def __init__(self, graph_dataset: GraphDataset, nodes: Union[list[int], int], get_data: bool = False, get_edges: bool = False) -> None:
+    def __init__(self, graph_dataset: GraphDataset, nodes: Union[List[int], int], get_data: bool = False, get_edges: bool = False) -> None:
         super().__init__()
 
         self.parent = graph_dataset
@@ -338,14 +348,14 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
         if get_edges:
             self.get_all_parent_edges()
 
-    def peek_children_index(self) -> list[int]:
+    def peek_children_index(self) -> List[int]:
         return self.i_nodes
 
-    def peek_parent_node(self, nodes: Union[list[int], int]) -> list[Node]:
+    def peek_parent_node(self, nodes: Union[List[int], int]) -> List[Node]:
         nodes = io.to_iter(nodes)
         return [self.parent[self.p_nodes[node]] for node in nodes]
 
-    def get_parent_node(self, nodes: Union[list[int], int], get_data: bool = False, get_edges: bool = False) -> list[Node]:
+    def get_parent_node(self, nodes: Union[List[int], int], get_data: bool = False, get_edges: bool = False) -> List[Node]:
         nodes = io.to_iter(nodes)
 
         mutual_data = set(self.dataset["data"].keys())
@@ -375,10 +385,10 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
 
         return self.peek_parent_node(nodes)
 
-    def peek_parent_data(self, data: str) -> Union[Tensor, list[T]]:
+    def peek_parent_data(self, data: str) -> Union[Tensor, List[T]]:
         return self.parent.get_data(data, nodes=self.p_nodes)
 
-    def get_parent_data(self, data: str) -> Union[Tensor, list[T]]:
+    def get_parent_data(self, data: str) -> Union[Tensor, List[T]]:
         p_data = self.peek_parent_data(data)
 
         self.set_data(data, p_data)
@@ -391,10 +401,10 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
         for data in all_v:
             self.get_parent_data(data)
 
-    def peek_parent_edges(self) -> list[list[int]]:
+    def peek_parent_edges(self) -> List[List[int]]:
         return [self.parent.get_edges(node) for node in self.p_nodes]
 
-    def get_parent_edges(self, nodes: Union[list[int], int]) -> list[list[int]]:
+    def get_parent_edges(self, nodes: Union[List[int], int]) -> List[List[int]]:
         nodes = io.to_iter(nodes)
 
         edges = []
@@ -412,7 +422,7 @@ class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e.
     def get_all_parent_edges(self) -> None:
         self.get_parent_edges(self.p_nodes)
 
-    def peek_parent_index(self, nodes: Union[int, list[int]] = []) -> list[int]:
+    def peek_parent_index(self, nodes: Union[int, List[int]] = []) -> List[int]:
         nodes = io.to_iter(nodes)
 
         if len(nodes) == len(self.p_nodes) or not len(nodes):
