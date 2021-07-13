@@ -1,4 +1,4 @@
-# LIGN
+# Lign
 
 [![LIGN logo](docs/imgs/logo.png "LIGN logo")][repo-url]
 
@@ -35,7 +35,7 @@ A deep learning framework developed for implementing continual lifelong learning
 
 ## About The Project
 
-LIGN is a deep learning framework developed for implementing continual lifelong learning, graph convolutional networks (GCN) and graph-based machine learning. It was build as a component of my master thesis.
+Lign is a deep learning framework developed for implementing continual lifelong learning, graph convolutional networks (GCN) and graph-based machine learning. It was build as a component of my master thesis.
 
 ### Built With
 
@@ -70,8 +70,8 @@ _For more details, please read the [developer documentation](docs/dev)_
    ```
 
    ```sh
-   conda env create -f docs/dev/environment.yml -n LIGN
-   conda activate LIGN
+   conda env create -f docs/dev/environment.yml -n lign
+   conda activate lign
    ```
 
 4. Install package
