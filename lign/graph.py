@@ -8,7 +8,7 @@ from torch import nn
 from torch.utils.data import Dataset
 
 from lign.utils import io
-from lign.utils.g_types import Tensor, T, List, Tuple, Set
+from lign.utils.g_types import Tensor, T, List, Tuple, Set, Dict
 
 """
     node = {
@@ -47,6 +47,11 @@ class Node():
         out.edges = self.data.copy()
         return out
 
+    def to_dict(self) -> Dict:
+        return {
+            "data": self.data,
+            "edges": self.edges
+        }
 
 class GraphDataset(Dataset):
 
@@ -166,10 +171,10 @@ class GraphDataset(Dataset):
                 raise ValueError(
                     f"The data in the node is not the same as in the dataset. Node Data:\n\t{node_keys}\nDataset data:\n\t{self.get_properties()}")
 
-            for key in nd["data"].keys():
+            for key in nd.data.keys():
                 self.__add_data__(key, nd.data[key])
 
-            self.dataset["edges"].append(nd["edges"])
+            self.dataset["edges"].append(nd.edges)
 
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
@@ -248,7 +253,7 @@ class GraphDataset(Dataset):
 
         for node in nodes:
             nd = self[node]
-            for edge in nd["edges"]:
+            for edge in nd.edges:
                 self.dataset["__temp__"][edge].append(nd)
 
         if func:

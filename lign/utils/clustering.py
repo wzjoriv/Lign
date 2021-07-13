@@ -32,7 +32,8 @@ class KNN(NN):
     
     def train(self, X, Y):
         super().train(X, Y)
-        self.unique_labels = self.train_label.unique()
+        if type(X) != type(None) or type(Y) != type(None):
+            self.unique_labels = self.train_label.unique()
 
     def predict(self, x):
         if type(self.train_pts) == type(None) or type(self.train_label) == type(None):
