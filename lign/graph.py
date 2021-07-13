@@ -26,7 +26,7 @@ from lign.utils.g_types import Tensor, T, List, Tuple, Set, Dict
 """
 
 
-def node(data: dict = {}, edges: Union[set, Tuple[int], List[int]] = set()) -> Node:
+def node(data: dict = {}, edges: Union[Set[int], Tuple[int, ...], List[int]] = set()) -> Node:
     return Node(data, edges)
 
 class Node():
@@ -36,10 +36,13 @@ class Node():
         self.edges = set(edges)
 
     def __str__(self) -> str:
-        return str({
+        return "node(" + str({
             "data": self.data,
             "edges": self.edges
-        })
+        }) + ")"
+
+    def __repr__(self):
+        return str(self)
 
     def copy(self) -> Node:
         out = Node()
@@ -76,25 +79,57 @@ class GraphDataset(Dataset):
             raise FileNotFoundError(
                 f".lign file not found at location: {self._file_}")
 
+    def __str__(self) -> str:
+        return "graph(" + str(self.dataset) + ")"
+
+    def __setitem__(self, data: str, features: Union[Tensor, List[T]]) -> None:
+        self.set_data(data, features)
+
+    def __repr__(self):
+        return str(self)
+
     def __len__(self) -> int:
         return self.dataset["count"]
 
-    def __getitem__(self, indx: int) -> Node:
+    def __getitem__(
+            self, 
+            indx: Union[List[int], List[str], slice, str, int, Tuple[int]]
+            ) -> Union[Node, List[Node], set, List[set], Tensor, List[T]]:
 
-        if indx < 0:
-            if -indx > len(self):
-                raise IndexError(
-                    "absolute value of index should not exceed dataset length")
-            indx = len(self) + indx
+        tp = type(indx)
 
-        node = Node()
+        if (tp is int or tp is slice or (tp is list and type(indx[0]) is int)):
+            return self.get_node(indx)
+        elif (tp is str or (tp is list and type(indx[0]) is str)):
+            return self.get_data(indx)
+        elif (tp == tuple and type(indx[0]) is str):
+            return self.get_edges(indx)
 
-        for key in self.dataset["data"].keys():
-            node.data[key] = self.dataset["data"][key][indx]
+        raise TypeError("Input is invalid. Only List[int], List[str], slice, str, int or Tuple[int] is accepted")
+    
+    def get_node(self, indx:Union[slice, int, List[int]]) -> Node:
 
-        node.edges = self.dataset["edges"][indx]
+        indx = range(len(self))[indx] if type(indx) == slice else io.to_iter(indx)
 
-        return node
+        nodes = []
+
+        for ind in indx:
+            if ind < 0:
+                if -ind > len(self):
+                    raise IndexError(
+                        "absolute value of index should not exceed dataset length")
+                ind = len(self) + ind
+
+            node = Node()
+
+            for key in self.dataset["data"].keys():
+                node.data[key] = self.dataset["data"][key][ind]
+
+            node.edges = self.dataset["edges"][ind]
+
+            nodes.append()
+
+        return nodes if len(nodes) > 0 else nodes[0]
 
     def get_properties(self) -> List[str]:
         return io.to_iter(self.dataset["data"].keys())
@@ -107,7 +142,7 @@ class GraphDataset(Dataset):
             if torch.is_tensor(self.dataset["data"][data]):
                 return self.dataset["data"][data][ls]
             else:
-                return [self.dataset["data"][data][nd] for nd in ls]
+                return [self.dataset["data"][data][nd] for nd in ls] if len(ls) > 1 else self.dataset["data"][data][ls[0]]
 
     def set_data(self, data: str, features: Union[Tensor, List[T]], nodes: Union[int, List[int]] = []) -> None:
         nodes = io.to_iter(nodes)
@@ -124,8 +159,15 @@ class GraphDataset(Dataset):
         edges = io.to_iter(edges)
         self.dataset["edges"][node].update(edges)
 
-    def get_edges(self, node: int) -> List[int]:
-        return self.dataset["edges"][node]
+    def get_edges(self, nodes: int) -> Union(set, List[set]):
+
+        nodes = io.to_iter(nodes)
+        edges = []
+
+        for node in nodes:
+            edges.append(self.dataset["edges"][node])
+
+        return edges if len(nodes) > 1 else edges[0]
 
     def remove_edge(self, node: int, edges: Union[int, List[int]]) -> None:
         edges = io.to_iter(edges)
