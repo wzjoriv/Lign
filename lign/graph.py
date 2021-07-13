@@ -127,9 +127,9 @@ class GraphDataset(Dataset):
 
             node.edges = self.dataset["edges"][ind]
 
-            nodes.append()
+            nodes.append(node)
 
-        return nodes if len(nodes) > 0 else nodes[0]
+        return nodes if len(nodes) > 1 else nodes[0]
 
     def get_properties(self) -> List[str]:
         return io.to_iter(self.dataset["data"].keys())
