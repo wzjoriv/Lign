@@ -92,7 +92,7 @@ See the [open issues][issues-url] for a list of proposed features (and known iss
 
 ## Citation
 
-Refer to [CITATION](docs/CITATION.bib) for BibTex citation
+Refer to [CITATION.bib](docs/CITATION.bib) for BibTex citation
 
 ## Contributing
 
