@@ -22,4 +22,5 @@ setup(name='lign',
 		url='https://github.com/JosueCom/LIGN',
 		packages=['lign'],
 		install_requires=install_requires,
+		python_requires='>=3.7.0'
      )

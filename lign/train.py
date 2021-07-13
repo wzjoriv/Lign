@@ -7,17 +7,20 @@ from lign.utils.clustering import KMeans, KNN
 
 def unsuperv(
             models, graph, labels, opt, 
-            tags = ('x', 'label'), cluster = KMeans(), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+            tags = ('x', 'label'), cluster = KMeans(), device = (th.device('cpu'), None), 
+            lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
         ):
 
     tag_in, tag_out = tags
 
-    nodes = graph.peek_parent_index(fn.filter_tags(tag_out, labels, graph))
+    nodes = fn.filter_tags(tag_out, labels, graph)
+
+    dt = graph.get_data(tag_in)
 
     cluster.k = len(labels)
-    cluster = cluster.train(graph.peek_parent_data(tag_in)[nodes])
+    cluster.train(dt[nodes])
 
-    data = cluster(graph.get_data(tag_in))
+    data = cluster(dt)
     graph.set_data('_p_label_', data)
 
     superv(models, graph, labels, opt, 
@@ -27,16 +30,19 @@ def unsuperv(
 
 def semi_superv(
             models, graph, labels, opt, 
-            tags = ('x', 'label'), k = 5, cluster = KNN(), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+            tags = ('x', 'label'), k = 5, cluster = KNN(), device = (th.device('cpu'), None), 
+            lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
         ):
 
     tag_in, tag_out = tags
 
-    nodes = fn.filter_tags(tag_out, labels, graph)
+    tr_nodes, tr_labs = fn.filter_k_from_tags(tag_out, labels, graph, k)
 
-    cluster = cluster.train(graph.get_data(tag_in)[nodes])
+    dt = graph.get_data(tag_in)
 
-    data = cluster(graph.get_data(tag_in))
+    cluster.train(dt[tr_nodes], tr_labs)
+
+    data = cluster(dt)
     graph.set_data('_p_label_', data)
 
     superv(models, graph, labels, opt, 
@@ -46,7 +52,8 @@ def semi_superv(
 
 def superv(
             models, graph, labels, opt, 
-            tags = ('x', 'label'), device = (th.device('cpu'), None), lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+            tags = ('x', 'label'), device = (th.device('cpu'), None), 
+            lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
         ):
     
     base, classifier = models

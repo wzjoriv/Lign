@@ -2,7 +2,7 @@
 
 [![LIGN logo](docs/imgs/logo.png "LIGN logo")][repo-url]
 
-A deep learning framework for implementing lifelong learning on vector and graph data
+A deep learning framework developed for implementing continual lifelong learning, graph convolutional networks (GCN) and graph-based machine learning methods
 
 [View Docs][docs-url]
 ·
@@ -69,6 +69,11 @@ _For more details, please read the [developer documentation](docs/dev)_
    pip install -r docs/dev/requirements.txt
    ```
 
+   ```sh
+   conda env create -f docs/dev/environment.yml -n LIGN
+   conda activate LIGN
+   ```
+
 4. Install package
 
    ```sh
@@ -87,7 +92,7 @@ See the [open issues][issues-url] for a list of proposed features (and known iss
 
 ## Citation
 
-Refer to [CITATION](docs/CITATION) for BibTex citation
+Refer to [CITATION.bib](docs/CITATION.bib) for BibTex citation
 
 ## Contributing
 

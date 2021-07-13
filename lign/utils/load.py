@@ -6,13 +6,24 @@ import os
 
 from lign.utils.functions import onehot_encode
 
-def mnist_to_lign(path, transforms = None, split = 0.8):
+def mnist_to_lign(path, transforms = None, split = 0.0):
     from lign.graph import GraphDataset
 
     try:
-        dataset =  datasets.MNIST(path, train=True) + datasets.MNIST(path, train=False)
+        d_train = datasets.MNIST(path, train=True)
+        d_test = datasets.MNIST(path, train=False)
+        len_train = len(d_train)
+        len_test = len(d_test)
+
+        dataset =  d_train + d_test
     except:
         raise FileNotFoundError(f"Error loading MNIST from location: {path}")
+
+    if (type(split) == int):
+        split = float(split) / (len_train + len_test)
+    
+    if (split >= 1.0 or split <= 0.0):
+        split = float(len_train) / (len_train + len_test)
 
     graph = GraphDataset()
 
@@ -42,13 +53,25 @@ def mnist_to_lign(path, transforms = None, split = 0.8):
 
     return graph, graph_train, graph_test
 
-def cifar_to_lign(path, transforms = None, split = 0.8):
+def cifar_to_lign(path, transforms = None, split = 0.0):
     from lign.graph import GraphDataset
 
     try:
-        dataset =  datasets.CIFAR100(path, train=True) + datasets.CIFAR100(path, train=False)
+
+        d_train = datasets.CIFAR100(path, train=True)
+        d_test = datasets.CIFAR100(path, train=False)
+        len_train = len(d_train)
+        len_test = len(d_test)
+
+        dataset =  d_train + d_test
     except:
         raise FileNotFoundError(f"Error loading CIFAR from location: {path}")
+
+    if (type(split) == int):
+        split = float(split) / (len_train + len_test)
+    
+    if (split >= 1.0 or split <= 0.0):
+        split = float(len_train) / (len_train + len_test)
 
     graph = GraphDataset()
     
@@ -75,9 +98,12 @@ def cifar_to_lign(path, transforms = None, split = 0.8):
 
     return graph, graph_train, graph_test
 
-def cora_to_lign(path, split = 0.8):
+def cora_to_lign(path, split = 0.0):
     from lign.graph import GraphDataset
     graph = GraphDataset()
+
+    if (type(split) == int or split >= 1.0 or split <= 0.0):
+        split = 0.8
 
     try:
         cora_cont =  pd.read_csv(os.path.join(path, "cora.content"), sep="\t", header=None)
@@ -102,7 +128,7 @@ def cora_to_lign(path, split = 0.8):
     parents = edge_parents.groups.keys()
 
     for key in parents:
-        p_node = graph.filter(lambda x: x == key, "id")
+        p_node = graph.filter(lambda x: x == key, "id")[0]
 
         childrens = edge_parents.get_group(key)[1].values
         c_nodes = list(cora_cont.loc[cora_cont[0].isin(childrens)].index.values)
@@ -131,14 +157,14 @@ def dataset_to_lign(format, **locations):
                 csv: [column1, column2, 3, [0_9]]               ##  Indicate index or column name to retrieve; multiple columns are merges as one
 
         data type:
-            imgs = images folder                                ### Heavy lign graph suggested for large images
+            imgs = images folder
+            tensor
             csv = csv file
-            imgs_url = file of list of images url                ### Heavy lign graph suggested
+            imgs_url = file of list of images url
 
         example:
-            format = (imgs(x)[data_[0_9]*.png], csv(label)[column2])'
+            format = "(imgs('x')['data_[0_9]*.png'], csv('label')['file.csv/column2'])"
             'data/', 'labels.txt'
     """
 
-    pass
     return 'hey'
