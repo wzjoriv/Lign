@@ -159,7 +159,7 @@ class GraphDataset(Dataset):
         edges = io.to_iter(edges)
         self.dataset["edges"][node].update(edges)
 
-    def get_edges(self, nodes: int) -> Union(set, List[set]):
+    def get_edges(self, nodes: int) -> Union[set, List[Set]]:
 
         nodes = io.to_iter(nodes)
         edges = []
