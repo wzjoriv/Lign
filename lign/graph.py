@@ -132,7 +132,7 @@ class GraphDataset(Dataset):
         return nodes if len(nodes) > 1 else nodes[0]
 
     def get_properties(self) -> List[str]:
-        return io.to_iter(self.dataset["data"].keys())
+        return list(self.dataset["data"].keys())
 
     def get_data(self, data: str, nodes=[]) -> Union[Tensor, List[T]]:
         ls = io.to_iter(nodes)
@@ -146,6 +146,14 @@ class GraphDataset(Dataset):
 
     def set_data(self, data: str, features: Union[Tensor, List[T]], nodes: Union[int, List[int]] = []) -> None:
         nodes = io.to_iter(nodes)
+
+        if (len(features) > len(self)):
+            raise ValueError("There are more features then there are nodes in the graph")
+        elif (len(nodes) > len(self)):
+            raise IndexError("More node indexes were given than number of nodes in the graph")
+        elif (not len(nodes) and len(features) != len(self)):
+            raise ValueError("The number of features must match the number of nodes currently in the graph")
+
         if not len(nodes):
             self.dataset["data"][data] = features
         else:
@@ -209,7 +217,7 @@ class GraphDataset(Dataset):
             mutual_data = mutual_data.intersection(nd.data.keys())
 
             if len(mutual_data) != len(self.dataset["data"].keys()):
-                node_keys = nd.data.keys()
+                node_keys = list(nd.data.keys())
                 raise ValueError(
                     f"The data in the node is not the same as in the dataset. Node Data:\n\t{node_keys}\nDataset data:\n\t{self.get_properties()}")
 
