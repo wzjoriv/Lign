@@ -102,7 +102,7 @@ class GraphDataset(Dataset):
             return self.get_node(indx)
         elif (tp is str or (tp is list and type(indx[0]) is str)):
             return self.get_data(indx)
-        elif (tp == tuple and type(indx[0]) is str):
+        elif (tp is tuple and type(indx[0]) is int):
             return self.get_edges(indx)
 
         raise TypeError("Input is invalid. Only List[int], List[str], slice, str, int or Tuple[int] is accepted")
@@ -113,17 +113,23 @@ class GraphDataset(Dataset):
 
         nodes = []
 
-        for ind in indx:
-            if ind < 0:
-                if -ind > len(self):
+        for i in indx:
+            if i < 0:
+                if -i > len(self):
                     raise IndexError(
                         "absolute value of index should not exceed dataset length")
-                ind = len(self) + ind
+                ind = len(self) + i
+            else:
+                ind = i
 
             node = Node()
 
+            dts = {}
+
             for key in self.dataset["data"].keys():
-                node.data[key] = self.dataset["data"][key][ind]
+                dts[key] = self.dataset["data"][key][ind]
+
+            node.data = dts
 
             node.edges = self.dataset["edges"][ind]
 
