@@ -27,12 +27,12 @@ class NN():
 class KNN(NN):
 
     def __init__(self, X = None, Y = None, k = 3, p = 2):
-        super().__init__(X, Y, p)
         self.k = k
+        super().__init__(X, Y, p)
     
     def train(self, X, Y):
         super().train(X, Y)
-        if type(X) != type(None) or type(Y) != type(None):
+        if type(Y) != type(None):
             self.unique_labels = self.train_label.unique()
 
     def predict(self, x):
