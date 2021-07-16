@@ -25,8 +25,8 @@ tm_now = datetime.datetime.now
 
 dataset_name = "MNIST" #<<<<<
 
-dataset = lg.graph.GraphDataset("data/datasets/mnist_train.lign")
-validate = lg.graph.GraphDataset("data/datasets/mnist_test.lign")
+dataset = lg.graph.Graph("data/datasets/mnist_train.lign")
+validate = lg.graph.Graph("data/datasets/mnist_test.lign")
 
 
 # ### Cuda GPUs

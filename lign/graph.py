@@ -56,7 +56,7 @@ class Node():
             "edges": self.edges
         }
 
-class GraphDataset(Dataset):
+class Graph(Dataset):
 
     def __init__(self, fl: str = "", workers: int = 1) -> None:
 
@@ -93,7 +93,7 @@ class GraphDataset(Dataset):
 
     def __getitem__(
             self, 
-            indx: Union[List[int], List[str], slice, str, int, Tuple[int]]
+            indx: Union[List[int], List[str], slice, str, int, Set[int]]
             ) -> Union[Node, List[Node], set, List[set], Tensor, List[T]]:
 
         tp = type(indx)
@@ -102,15 +102,14 @@ class GraphDataset(Dataset):
             return self.get_node(indx)
         elif (tp is str or (tp is list and type(indx[0]) is str)):
             return self.get_data(indx)
-        elif (tp is tuple and type(indx[0]) is int):
+        elif (tp is set and type(indx[0]) is int):
             return self.get_edges(indx)
 
-        raise TypeError("Input is invalid. Only List[int], List[str], slice, str, int or Tuple[int] is accepted")
+        raise TypeError("Input is invalid. Only List[int], List[str], slice, str, int or Set[int] is accepted")
     
     def get_node(self, indx:Union[slice, int, List[int]]) -> Node:
 
         indx = range(len(self))[indx] if type(indx) == slice else io.to_iter(indx)
-
         nodes = []
 
         for i in indx:
@@ -123,16 +122,13 @@ class GraphDataset(Dataset):
                 ind = i
 
             node = Node()
-
             dts = {}
 
             for key in self.dataset["data"].keys():
                 dts[key] = self.dataset["data"][key][ind]
 
             node.data = dts
-
             node.edges = self.dataset["edges"][ind]
-
             nodes.append(node)
 
         return nodes if len(nodes) > 1 else nodes[0]
@@ -173,7 +169,7 @@ class GraphDataset(Dataset):
         edges = io.to_iter(edges)
         self.dataset["edges"][node].update(edges)
 
-    def get_edges(self, nodes: int) -> Union[set, List[Set]]:
+    def get_edges(self, nodes: Union[int, List[int], Set[int], Tuple[int]]) -> Union[set, List[Set]]:
 
         nodes = io.to_iter(nodes)
         edges = []
@@ -393,8 +389,8 @@ class GraphDataset(Dataset):
         io.pickle(self.dataset, fl)
 
 
-class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e. changes made here might not be written back to parents unless data is a reference). Meant to be more efficient if only processing a few nodes from the dataset
-    def __init__(self, graph_dataset: GraphDataset, nodes: Union[List[int], int], get_data: bool = False, get_edges: bool = False) -> None:
+class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. changes made here might not be written back to parents unless data is a reference). Meant to be more efficient if only processing a few nodes from the dataset
+    def __init__(self, graph_dataset: Graph, nodes: Union[List[int], int], get_data: bool = False, get_edges: bool = False) -> None:
         super().__init__()
 
         self.parent = graph_dataset
