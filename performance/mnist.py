@@ -1,4 +1,4 @@
-# # LIGN - MNIST
+# # Lign - MNIST
 # 
 # ----
 # 
@@ -25,8 +25,8 @@ tm_now = datetime.datetime.now
 
 dataset_name = "MNIST" #<<<<<
 
-dataset = lg.graph.GraphDataset("data/datasets/mnist_train.lign")
-validate = lg.graph.GraphDataset("data/datasets/mnist_test.lign")
+dataset = lg.graph.Graph("data/datasets/mnist_train.lign")
+validate = lg.graph.Graph("data/datasets/mnist_test.lign")
 
 
 # ### Cuda GPUs
@@ -68,9 +68,9 @@ np.random.shuffle(LABELS)
 
 # ---
 # ## Models
-# ### LIGN
+# ### Lign
 # 
-# [L]ifelong Learning [I]nduced by [G]raph [N]eural Networks Model (LIGN)
+# [L]ifelong Learning [I]nduced by [G]raph [N]eural Networks Model (Lign)
 
 class LIGN_MNIST(nn.Module):
     def __init__(self, out_feats):

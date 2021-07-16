@@ -13,8 +13,8 @@ import numpy as np
 import datetime
 tm_now = datetime.datetime.now
 
-dataset = lg.graph.GraphDataset("../data/datasets/cifar100_train.lign")
-validate = lg.graph.GraphDataset("../data/datasets/cifar100_test.lign")
+dataset = lg.graph.Graph("../data/datasets/cifar100_train.lign")
+validate = lg.graph.Graph("../data/datasets/cifar100_test.lign")
 
 if th.cuda.is_available():
     device = th.device("cuda")

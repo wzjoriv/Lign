@@ -7,7 +7,7 @@ import os
 from lign.utils.functions import onehot_encode
 
 def mnist_to_lign(path, transforms = None, split = 0.0):
-    from lign.graph import GraphDataset
+    from lign.graph import Graph
 
     try:
         d_train = datasets.MNIST(path, train=True)
@@ -25,7 +25,7 @@ def mnist_to_lign(path, transforms = None, split = 0.0):
     if (split >= 1.0 or split <= 0.0):
         split = float(len_train) / (len_train + len_test)
 
-    graph = GraphDataset()
+    graph = Graph()
 
     graph.add(len(dataset)) # add n_{train} and n_{validate} nodes
 
@@ -54,7 +54,7 @@ def mnist_to_lign(path, transforms = None, split = 0.0):
     return graph, graph_train, graph_test
 
 def cifar_to_lign(path, transforms = None, split = 0.0):
-    from lign.graph import GraphDataset
+    from lign.graph import Graph
 
     try:
 
@@ -73,7 +73,7 @@ def cifar_to_lign(path, transforms = None, split = 0.0):
     if (split >= 1.0 or split <= 0.0):
         split = float(len_train) / (len_train + len_test)
 
-    graph = GraphDataset()
+    graph = Graph()
     
     graph.add(len(dataset))
     
@@ -99,8 +99,8 @@ def cifar_to_lign(path, transforms = None, split = 0.0):
     return graph, graph_train, graph_test
 
 def cora_to_lign(path, split = 0.0):
-    from lign.graph import GraphDataset
-    graph = GraphDataset()
+    from lign.graph import Graph
+    graph = Graph()
 
     if (type(split) == int or split >= 1.0 or split <= 0.0):
         split = 0.8

@@ -27,12 +27,13 @@ class NN():
 class KNN(NN):
 
     def __init__(self, X = None, Y = None, k = 3, p = 2):
-        super().__init__(X, Y, p)
         self.k = k
+        super().__init__(X, Y, p)
     
     def train(self, X, Y):
         super().train(X, Y)
-        self.unique_labels = self.train_label.unique()
+        if type(Y) != type(None):
+            self.unique_labels = self.train_label.unique()
 
     def predict(self, x):
         if type(self.train_pts) == type(None) or type(self.train_label) == type(None):
@@ -83,5 +84,5 @@ class Spectral(KNN):
 
     def __init__(self, X = None, k=2, n_iters = 10, p = 2):
         name = self.__class__.__name__
-        raise NotImplementedError(f"{name} hasn't been implemnted yet.")
+        raise NotImplementedError(f"{name} hasn't been implemented yet.")
 

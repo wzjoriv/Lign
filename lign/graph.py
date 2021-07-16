@@ -8,7 +8,7 @@ from torch import nn
 from torch.utils.data import Dataset
 
 from lign.utils import io
-from lign.utils.g_types import Tensor, T, List, Tuple, Set
+from lign.utils.g_types import Tensor, T, List, Tuple, Set, Dict
 
 """
     node = {
@@ -26,7 +26,7 @@ from lign.utils.g_types import Tensor, T, List, Tuple, Set
 """
 
 
-def node(data: dict = {}, edges: Union[set, Tuple[int], List[int]] = set()) -> Node:
+def node(data: dict = {}, edges: Union[Set[int], Tuple[int, ...], List[int]] = set()) -> Node:
     return Node(data, edges)
 
 class Node():
@@ -36,10 +36,13 @@ class Node():
         self.edges = set(edges)
 
     def __str__(self) -> str:
-        return str({
+        return "node(" + str({
             "data": self.data,
             "edges": self.edges
-        })
+        }) + ")"
+
+    def __repr__(self):
+        return str(self)
 
     def copy(self) -> Node:
         out = Node()
@@ -47,8 +50,13 @@ class Node():
         out.edges = self.data.copy()
         return out
 
+    def to_dict(self) -> Dict:
+        return {
+            "data": self.data,
+            "edges": self.edges
+        }
 
-class GraphDataset(Dataset):
+class Graph(Dataset):
 
     def __init__(self, fl: str = "", workers: int = 1) -> None:
 
@@ -71,41 +79,99 @@ class GraphDataset(Dataset):
             raise FileNotFoundError(
                 f".lign file not found at location: {self._file_}")
 
+    def __str__(self) -> str:
+        return "graph(" + str(self.dataset) + ")"
+
+    def __setitem__(
+            self, 
+            indx: Union[List[int], slice, str, int, Tuple[int]], 
+            features: Union[int, Node, List[Node], set, List[set], Tensor, List[T]]
+            ) -> None:
+
+        tp = type(indx)
+
+        if (tp is str):
+            self.set_data(indx, features)
+        elif (tp is tuple and type(indx[0]) is int):
+            self.add_edges(indx, features)
+        else:
+            raise TypeError("Input is invalid. Only str or Tuple[int] is accepted")
+
+    def __repr__(self):
+        return str(self)
+
     def __len__(self) -> int:
         return self.dataset["count"]
 
-    def __getitem__(self, indx: int) -> Node:
+    def __getitem__(
+            self, 
+            indx: Union[List[int], slice, str, int, Tuple[int]]
+            ) -> Union[Node, List[Node], set, List[set], Tensor, List[T]]:
 
-        if indx < 0:
-            if -indx > len(self):
-                raise IndexError(
-                    "absolute value of index should not exceed dataset length")
-            indx = len(self) + indx
+        tp = type(indx)
 
-        node = Node()
+        if (tp is int or tp is slice or (tp is list and type(indx[0]) is int)):
+            return self.get_nodes(indx)
+        elif (tp is str):
+            return self.get_data(indx)
+        elif (tp is tuple and type(indx[0]) is int):
+            return self.get_edges(indx)
 
-        for key in self.dataset["data"].keys():
-            node.data[key] = self.dataset["data"][key][indx]
+        raise TypeError("Input is invalid. Only List[int], slice, str, int or Tuple[int] is accepted")
+    
+    def get_nodes(self, indx:Union[slice, int, List[int]]) -> Node:
 
-        node.edges = self.dataset["edges"][indx]
+        indx = range(len(self))[indx] if type(indx) == slice else io.to_iter(indx)
+        nodes = []
 
-        return node
+        for i in indx:
+            if i < 0:
+                if -i > len(self):
+                    raise IndexError(
+                        "absolute value of index should not exceed dataset length")
+                ind = len(self) + i
+            else:
+                ind = i
+
+            node = Node()
+            dts = {}
+
+            for key in self.dataset["data"].keys():
+                dts[key] = self.dataset["data"][key][ind]
+
+            node.data = dts
+            node.edges = self.dataset["edges"][ind]
+            nodes.append(node)
+
+        return nodes if len(nodes) > 1 else nodes[0]
 
     def get_properties(self) -> List[str]:
-        return io.to_iter(self.dataset["data"].keys())
+        return list(self.dataset["data"].keys())
 
     def get_data(self, data: str, nodes=[]) -> Union[Tensor, List[T]]:
         ls = io.to_iter(nodes)
+
+        if (data not in self.get_properties()):
+            raise KeyError(f"{data} is not a property of the graph")
+
         if not len(ls):
             return self.dataset["data"][data]
         else:
             if torch.is_tensor(self.dataset["data"][data]):
                 return self.dataset["data"][data][ls]
             else:
-                return [self.dataset["data"][data][nd] for nd in ls]
+                return [self.dataset["data"][data][nd] for nd in ls] if len(ls) > 1 else self.dataset["data"][data][ls[0]]
 
     def set_data(self, data: str, features: Union[Tensor, List[T]], nodes: Union[int, List[int]] = []) -> None:
         nodes = io.to_iter(nodes)
+
+        if (len(features) > len(self)):
+            raise ValueError("There are more features then there are nodes in the graph")
+        elif (len(nodes) > len(self)):
+            raise IndexError("More node indexes were given than number of nodes in the graph")
+        elif (not len(nodes) and len(features) != len(self)):
+            raise ValueError("The number of features must match the number of nodes currently in the graph")
+
         if not len(nodes):
             self.dataset["data"][data] = features
         else:
@@ -115,16 +181,30 @@ class GraphDataset(Dataset):
                 for indx, nd in enumerate(nodes):
                     self.dataset["data"][data][nd] = features[indx]
 
-    def add_edge(self, node: int, edges: Union[int, List[int]]) -> None:
+    def add_edges(self, nodes: Union[int, List[int]], edges: Union[int, List[int]]) -> None:
+        nodes = io.to_iter(nodes)
         edges = io.to_iter(edges)
-        self.dataset["edges"][node].update(edges)
 
-    def get_edges(self, node: int) -> List[int]:
-        return self.dataset["edges"][node]
+        for node in nodes:
+            self.dataset["edges"][node].update(edges)
 
-    def remove_edge(self, node: int, edges: Union[int, List[int]]) -> None:
+    def get_edges(self, nodes: Union[int, List[int], Set[int], Tuple[int]]) -> Union[set, List[Set]]:
+
+        nodes = io.to_iter(nodes)
+        edges = []
+
+        for node in nodes:
+            edges.append(self.dataset["edges"][node])
+
+        return edges if len(nodes) > 1 else edges[0]
+
+    def remove_edge(self, nodes: int, edges: Union[int, List[int]]) -> None:
+
+        nodes = io.to_iter(nodes)
         edges = io.to_iter(edges)
-        self.dataset["edges"][node].difference_update(edges)
+
+        for node in nodes:
+            self.dataset["edges"][node].difference_update(edges)
 
     def __add_data__(self, data, obj):
         if not data in self.dataset["data"].keys():
@@ -146,7 +226,7 @@ class GraphDataset(Dataset):
     def pop_data(self, data: str) -> Union[Tensor, List[T], None]:
         return self.dataset["data"].pop(data, None)
 
-    def add(self, nodes: Optional[Union[int, Node, List[Node]]] = None, add_self: bool = True) -> None:
+    def add(self, nodes: Optional[Union[int, Node, List[Node]]] = None, add_edges: bool = True) -> None:
 
         if not nodes:
             nodes = Node()
@@ -155,21 +235,21 @@ class GraphDataset(Dataset):
 
         nodes = io.to_iter(nodes)
         for nd in nodes:
-            if add_self:
+            if add_edges:
                 nd.edges.add(len(self))
 
             mutual_data = set(self.dataset["data"].keys())
             mutual_data = mutual_data.intersection(nd.data.keys())
 
             if len(mutual_data) != len(self.dataset["data"].keys()):
-                node_keys = nd.data.keys()
+                node_keys = list(nd.data.keys())
                 raise ValueError(
                     f"The data in the node is not the same as in the dataset. Node Data:\n\t{node_keys}\nDataset data:\n\t{self.get_properties()}")
 
-            for key in nd["data"].keys():
+            for key in nd.data.keys():
                 self.__add_data__(key, nd.data[key])
 
-            self.dataset["edges"].append(nd["edges"])
+            self.dataset["edges"].append(nd.edges)
 
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
@@ -248,7 +328,7 @@ class GraphDataset(Dataset):
 
         for node in nodes:
             nd = self[node]
-            for edge in nd["edges"]:
+            for edge in nd.edges:
                 self.dataset["__temp__"][edge].append(nd)
 
         if func:
@@ -332,8 +412,8 @@ class GraphDataset(Dataset):
         io.pickle(self.dataset, fl)
 
 
-class SubGraph(GraphDataset):  # creates a isolated graph from the dataset (i.e. changes made here might not be written back to parents unless data is a reference). Meant to be more efficient if only processing a few nodes from the dataset
-    def __init__(self, graph_dataset: GraphDataset, nodes: Union[List[int], int], get_data: bool = False, get_edges: bool = False) -> None:
+class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. changes made here might not be written back to parents unless data is a reference). Meant to be more efficient if only processing a few nodes from the dataset
+    def __init__(self, graph_dataset: Graph, nodes: Union[List[int], int], get_data: bool = False, get_edges: bool = False) -> None:
         super().__init__()
 
         self.parent = graph_dataset
