@@ -82,8 +82,20 @@ class Graph(Dataset):
     def __str__(self) -> str:
         return "graph(" + str(self.dataset) + ")"
 
-    def __setitem__(self, data: str, features: Union[Tensor, List[T]]) -> None:
-        self.set_data(data, features)
+    def __setitem__(
+            self, 
+            indx: Union[List[int], slice, str, int, Tuple[int]], 
+            features: Union[int, Node, List[Node], set, List[set], Tensor, List[T]]
+            ) -> None:
+
+        tp = type(indx)
+
+        if (tp is str):
+            self.set_data(indx, features)
+        elif (tp is tuple and type(indx[0]) is int):
+            self.add_edges(indx, features)
+        else:
+            raise TypeError("Input is invalid. Only str or Tuple[int] is accepted")
 
     def __repr__(self):
         return str(self)
@@ -99,15 +111,15 @@ class Graph(Dataset):
         tp = type(indx)
 
         if (tp is int or tp is slice or (tp is list and type(indx[0]) is int)):
-            return self.get_node(indx)
+            return self.get_nodes(indx)
         elif (tp is str):
             return self.get_data(indx)
         elif (tp is tuple and type(indx[0]) is int):
             return self.get_edges(indx)
 
-        raise TypeError("Input is invalid. Only List[int], List[str], slice, str, int or Set[int] is accepted")
+        raise TypeError("Input is invalid. Only List[int], slice, str, int or Tuple[int] is accepted")
     
-    def get_node(self, indx:Union[slice, int, List[int]]) -> Node:
+    def get_nodes(self, indx:Union[slice, int, List[int]]) -> Node:
 
         indx = range(len(self))[indx] if type(indx) == slice else io.to_iter(indx)
         nodes = []
@@ -169,9 +181,12 @@ class Graph(Dataset):
                 for indx, nd in enumerate(nodes):
                     self.dataset["data"][data][nd] = features[indx]
 
-    def add_edge(self, node: int, edges: Union[int, List[int]]) -> None:
+    def add_edges(self, nodes: Union[int, List[int]], edges: Union[int, List[int]]) -> None:
+        nodes = io.to_iter(nodes)
         edges = io.to_iter(edges)
-        self.dataset["edges"][node].update(edges)
+
+        for node in nodes:
+            self.dataset["edges"][node].update(edges)
 
     def get_edges(self, nodes: Union[int, List[int], Set[int], Tuple[int]]) -> Union[set, List[Set]]:
 
@@ -183,9 +198,13 @@ class Graph(Dataset):
 
         return edges if len(nodes) > 1 else edges[0]
 
-    def remove_edge(self, node: int, edges: Union[int, List[int]]) -> None:
+    def remove_edge(self, nodes: int, edges: Union[int, List[int]]) -> None:
+
+        nodes = io.to_iter(nodes)
         edges = io.to_iter(edges)
-        self.dataset["edges"][node].difference_update(edges)
+
+        for node in nodes:
+            self.dataset["edges"][node].difference_update(edges)
 
     def __add_data__(self, data, obj):
         if not data in self.dataset["data"].keys():
