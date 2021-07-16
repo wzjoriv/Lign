@@ -4,12 +4,12 @@
 
 - [Documentations](#documentations)
   - [Table of Contents](#table-of-contents)
-  - [LIGN Docs](#lign-docs)
+  - [Lign Docs](#lign-docs)
   - [Devoper Documentation](#devoper-documentation)
   - [Examples](#examples)
   - [Third Party Software](#third-party-software)
 
-## LIGN Docs
+## Lign Docs
 
 ## Devoper Documentation
 

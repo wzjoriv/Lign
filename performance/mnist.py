@@ -1,4 +1,4 @@
-# # LIGN - MNIST
+# # Lign - MNIST
 # 
 # ----
 # 
@@ -68,9 +68,9 @@ np.random.shuffle(LABELS)
 
 # ---
 # ## Models
-# ### LIGN
+# ### Lign
 # 
-# [L]ifelong Learning [I]nduced by [G]raph [N]eural Networks Model (LIGN)
+# [L]ifelong Learning [I]nduced by [G]raph [N]eural Networks Model (Lign)
 
 class LIGN_MNIST(nn.Module):
     def __init__(self, out_feats):

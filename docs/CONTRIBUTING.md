@@ -16,7 +16,7 @@
 
 ## Getting Started
 
-These are instructions for getting started with development. If only interested in the package, please install LIGN via ``pip install lign`` or by downloading the [package][release-url] on github.
+These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign`` or by downloading the [package][release-url] on github.
 
 _For more details, please read the [development documentation](docs/dev)_
 
@@ -25,13 +25,13 @@ _For more details, please read the [development documentation](docs/dev)_
 1. Clone the repo
 
    ```sh
-   git clone https://github.com/JosueCom/LIGN.git
+   git clone https://github.com/JosueCom/Lign.git
    ```
 
 2. Switch directory
 
    ```sh
-   cd LIGN
+   cd Lign
    ```
 
 3. Install prerequisites
@@ -41,8 +41,8 @@ _For more details, please read the [development documentation](docs/dev)_
    ```
 
    ```sh
-   conda env create -f docs/dev/environment.yml -n LIGN
-   conda activate LIGN
+   conda env create -f docs/dev/environment.yml -n Lign
+   conda activate Lign
    ```
 
 4. Install package
@@ -161,8 +161,8 @@ Any changes made to the source code (``ling/``) must be documented using [Google
 
 ## Developer Docs
 
-Feel free to read the [developer documentation](docs/dev) for more information about contributing to LIGN.
+Feel free to read the [developer documentation](docs/dev) for more information about contributing to Lign.
 
-[release-url]: https://github.com/JosueCom/LIGN/releases
+[release-url]: https://github.com/JosueCom/Lign/releases
 [example-url]: https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html#example-google
 [docstring-url]: https://google.github.io/styleguide/pyguide.html

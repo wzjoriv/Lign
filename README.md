@@ -1,8 +1,8 @@
 # Lign
 
-[![LIGN logo](docs/imgs/logo.png "LIGN logo")][repo-url]
+[![Lign logo](docs/imgs/logo.png "Lign logo")][repo-url]
 
-A deep learning framework developed for implementing continual lifelong learning, graph convolutional networks (GCN) and graph-based machine learning methods
+A deep learning framework developed for implementing graph convolutional networks (GCNs), continual lifelong learning on graphs and other graph-based machine learning methods alongside PyTorch
 
 [View Docs][docs-url]
 ·
@@ -20,7 +20,7 @@ A deep learning framework developed for implementing continual lifelong learning
 
 ## Table of Contents
 
-- [LIGN](#lign)
+- [Lign](#lign)
   - [Table of Contents](#table-of-contents)
   - [About The Project](#about-the-project)
     - [Built With](#built-with)
@@ -43,7 +43,7 @@ Lign is a deep learning framework developed for implementing continual lifelong 
 
 ## Getting Started
 
-These are instructions for getting started with development. If only interested in the package, please install LIGN via ``pip install lign`` or by downloading the [package][release-url] on github.
+These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign`` or by downloading the [package][release-url] on github.
 
 _For more details, please read the [developer documentation](docs/dev)_
 
@@ -52,13 +52,13 @@ _For more details, please read the [developer documentation](docs/dev)_
 1. Clone the repo
 
    ```sh
-   git clone https://github.com/JosueCom/LIGN.git
+   git clone https://github.com/JosueCom/Lign.git
    ```
 
 2. Switch directory
 
    ```sh
-   cd LIGN
+   cd Lign
    ```
 
 3. Install prerequisites
@@ -108,20 +108,20 @@ Distributed under the Mozilla Public License Version 2.0. See [LICENSE](LICENSE)
 
 [@josuecom_](https://github.com/JosueCom)
 
-[contributors-shield]: https://img.shields.io/github/contributors/JosueCom/LIGN.svg?style=for-the-badge
-[contributors-url]: https://github.com/JosueCom/LIGN/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/JosueCom/LIGN.svg?style=for-the-badge
-[forks-url]: https://github.com/JosueCom/LIGN/network/members
-[stars-shield]: https://img.shields.io/github/stars/JosueCom/LIGN.svg?style=for-the-badge
-[stars-url]: https://github.com/JosueCom/LIGN/stargazers
-[issues-shield]: https://img.shields.io/github/issues/JosueCom/LIGN.svg?style=for-the-badge
-[issues-url]: https://github.com/JosueCom/LIGN/issues
-[license-shield]: https://img.shields.io/github/license/JosueCom/LIGN.svg?style=for-the-badge
-[license-url]: https://github.com/JosueCom/LIGN/blob/master/LICENSE
+[contributors-shield]: https://img.shields.io/github/contributors/JosueCom/Lign.svg?style=for-the-badge
+[contributors-url]: https://github.com/JosueCom/Lign/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/JosueCom/Lign.svg?style=for-the-badge
+[forks-url]: https://github.com/JosueCom/Lign/network/members
+[stars-shield]: https://img.shields.io/github/stars/JosueCom/Lign.svg?style=for-the-badge
+[stars-url]: https://github.com/JosueCom/Lign/stargazers
+[issues-shield]: https://img.shields.io/github/issues/JosueCom/Lign.svg?style=for-the-badge
+[issues-url]: https://github.com/JosueCom/Lign/issues
+[license-shield]: https://img.shields.io/github/license/JosueCom/Lign.svg?style=for-the-badge
+[license-url]: https://github.com/JosueCom/Lign/blob/master/LICENSE
 [product-screenshot]: images/screenshot.png
-[docs-url]: https://github.com/JosueCom/LIGN/tree/master/docs
-[examples-url]: https://github.com/JosueCom/LIGN/tree/master/docs/examples
-[bugs-url]: https://github.com/JosueCom/LIGN/issues
-[release-url]: https://github.com/JosueCom/LIGN/releases
-[issues-url]: https://github.com/JosueCom/LIGN/issues
-[repo-url]: https://github.com/JosueCom/LIGN
+[docs-url]: https://github.com/JosueCom/Lign/tree/master/docs
+[examples-url]: https://github.com/JosueCom/Lign/tree/master/docs/examples
+[bugs-url]: https://github.com/JosueCom/Lign/issues
+[release-url]: https://github.com/JosueCom/Lign/releases
+[issues-url]: https://github.com/JosueCom/Lign/issues
+[repo-url]: https://github.com/JosueCom/Lign

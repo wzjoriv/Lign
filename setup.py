@@ -19,7 +19,7 @@ setup(name='lign',
 		license="Mozilla Public License Version 2.0",
 		author='Josue N Rivera',
 		author_email='josue.n.rivera@outlook.com',
-		url='https://github.com/JosueCom/LIGN',
+		url='https://github.com/JosueCom/Lign',
 		packages=['lign'],
 		install_requires=install_requires,
 		python_requires='>=3.7.0'
