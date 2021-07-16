@@ -93,16 +93,16 @@ class Graph(Dataset):
 
     def __getitem__(
             self, 
-            indx: Union[List[int], List[str], slice, str, int, Set[int]]
+            indx: Union[List[int], slice, str, int, Tuple[int]]
             ) -> Union[Node, List[Node], set, List[set], Tensor, List[T]]:
 
         tp = type(indx)
 
         if (tp is int or tp is slice or (tp is list and type(indx[0]) is int)):
             return self.get_node(indx)
-        elif (tp is str or (tp is list and type(indx[0]) is str)):
+        elif (tp is str):
             return self.get_data(indx)
-        elif (tp is set and type(indx[0]) is int):
+        elif (tp is tuple and type(indx[0]) is int):
             return self.get_edges(indx)
 
         raise TypeError("Input is invalid. Only List[int], List[str], slice, str, int or Set[int] is accepted")
@@ -138,6 +138,10 @@ class Graph(Dataset):
 
     def get_data(self, data: str, nodes=[]) -> Union[Tensor, List[T]]:
         ls = io.to_iter(nodes)
+
+        if (data not in self.get_properties()):
+            raise KeyError(f"{data} is not a property of the graph")
+
         if not len(ls):
             return self.dataset["data"][data]
         else:
@@ -203,7 +207,7 @@ class Graph(Dataset):
     def pop_data(self, data: str) -> Union[Tensor, List[T], None]:
         return self.dataset["data"].pop(data, None)
 
-    def add(self, nodes: Optional[Union[int, Node, List[Node]]] = None, add_self: bool = True) -> None:
+    def add(self, nodes: Optional[Union[int, Node, List[Node]]] = None, add_edges: bool = True) -> None:
 
         if not nodes:
             nodes = Node()
@@ -212,7 +216,7 @@ class Graph(Dataset):
 
         nodes = io.to_iter(nodes)
         for nd in nodes:
-            if add_self:
+            if add_edges:
                 nd.edges.add(len(self))
 
             mutual_data = set(self.dataset["data"].keys())
