@@ -26,20 +26,17 @@ from lign.utils.g_types import Tensor, T, List, Tuple, Set, Dict
 """
 
 
-def node(data: dict = {}, edges: Union[Set[int], Tuple[int, ...], List[int]] = set()) -> Node:
+def node(data: dict = {}, edges: Union[Set[int], Tuple[int], List[int]] = set()) -> Node:
     return Node(data, edges)
 
 class Node():
-    def __init__(self, data: dict = {}, edges: Union[Set[int], Tuple[int, ...], List[int]] = set()) -> None:
+    def __init__(self, data: dict = {}, edges: Union[Set[int], Tuple[int], List[int]] = set()) -> None:
 
         self.data = data
         self.edges = set(edges)
 
     def __str__(self) -> str:
-        return "node(" + str({
-            "data": self.data,
-            "edges": self.edges
-        }) + ")"
+        return "node(" + str(self.to_dict()) + ")"
 
     def __repr__(self):
         return str(self)
