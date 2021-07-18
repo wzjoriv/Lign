@@ -166,5 +166,4 @@ def dataset_to_lign(format, **locations):
             format = "(imgs('x')['data_[0_9]*.png'], csv('label')['file.csv/column2'])"
             'data/', 'labels.txt'
     """
-
-    return 'hey'
+    raise NotImplementedError("Not implemented. May come in a future update")
