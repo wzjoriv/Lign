@@ -43,7 +43,7 @@ Lign is a deep learning framework developed for implementing continual lifelong 
 
 ## Getting Started
 
-These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign`` or by downloading the [package][release-url] on github.
+These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign``, ``conda install lign`` or by downloading the [package][release-url] on github.
 
 _For more details, please read the [developer documentation](docs/dev)_
 
