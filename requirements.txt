@@ -1,6 +1,5 @@
 torch
 torchvision
 numpy
-matplotlib
 pandas
 future
