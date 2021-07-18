@@ -102,9 +102,6 @@ def cora_to_lign(path, split = 0.0):
     from lign.graph import Graph
     graph = Graph()
 
-    if (type(split) == int or split >= 1.0 or split <= 0.0):
-        split = 0.8
-
     try:
         cora_cont =  pd.read_csv(os.path.join(path, "cora.content"), sep="\t", header=None)
         cora_cite =  pd.read_csv(os.path.join(path, "cora.cites"), sep="\t", header=None)
@@ -113,6 +110,13 @@ def cora_to_lign(path, split = 0.0):
     
     
     n = len(cora_cont[0])
+
+    if (type(split) == int):
+        split = float(split) / n
+    
+    if (split >= 1.0 or split <= 0.0):
+        split = 0.8
+
     graph.add(n) # add n empty nodes
 
     marker = [1, 1433] # where data is seperated in the csv
