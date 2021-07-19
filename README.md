@@ -43,7 +43,7 @@ Lign is a deep learning framework developed for implementing graph convolutional
 
 ## Getting Started
 
-These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign``, ``conda install lign`` or by downloading the [package][release-url] on github.
+These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign``, ``conda install lign -c pytorch -c josuecom`` or by downloading the [package][release-url] on github.
 
 _For more details, please read the [developer documentation](docs/dev)_
 
@@ -82,7 +82,137 @@ _For more details, please read the [developer documentation](docs/dev)_
 
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+* Create a new graph, assign some values and view properties
+
+   ```python
+   >>> import lign as lg
+   >>> import torch as th
+   >>> n = 5
+   >>> g = lg.Graph()
+   >>> g.add(n)
+   >>> g['x'] = th.rand(n, 3) ## e.g. g.set_data('x', th.rand(n, 3))
+   >>> 
+   >>> g
+   >>> g['x'] ## e.g. g.get_data('x')
+   >>> g[0] ## e.g. g.get_nodes(1)
+   >>> g[[1, 2]] ## e.g. g.get_nodes([1, 2])
+   >>> g[3:4] ## e.g. g.get_nodes(slice(3, 4))
+   >>> g[(4,)] ## e.g. g.get_edges(4)
+   ```
+
+* Process data with a neural network
+
+   ```python
+   >>> import lign as lg
+   >>> import torch as th
+   >>> from torch import nn
+   >>> n = 5
+   >>> g = lg.Graph()
+   >>> g.add(n, add_edges=False) ## not self loop edges since no relational data present
+   >>> g['x'] = th.rand(n, 3) ## e.g. g.set_data('x', th.rand(n, 3))
+   >>> g['x']
+   >>> 
+   >>> linear = nn.Linear(3, 2)
+   >>> g['x'] = linear(g['x']) ## e.g. g.apply(linear, data = 'x')
+   >>> g['x']
+   ```
+
+* Process data with a GCN
+
+   ```python
+   >>> import lign as lg
+   >>> import torch as th
+   >>> from torch import nn
+   >>> from lign.layers import GCN
+   >>> from lign.utils.functions import sum_neighs_data
+   >>> n = 5
+   >>> g = lg.Graph()
+   >>> g.add(n)
+   >>> g['x'] = th.rand(n, 3) ## e.g. g.set_data('x', th.rand(n, 3)
+   >>> g['x']
+   >>> 
+   >>> gcn = GCN(nn.Linear(3, 2))
+   >>> g['x'] = gcn(g, g['x'])
+   >>> g['x']
+   >>> 
+   >>> g[(2, 3, 4)] = {2, 3, 4} ## Add edges to nodes 2, 3, 4; remove via g.remove_edges()
+   >>> gcn = GCN(nn.Linear(2, 3), aggregation = sum_neighs_data)
+   >>> g['x'] = gcn(g, g['x'])
+   >>> g['x']
+   >>> 
+   >>> gcn = GCN(nn.Linear(3, 2), aggregation = sum_neighs_data, inclusion = nn.Linear(2, 3))
+   >>> g['x'] = gcn(g, g['x'])
+   >>> g['x']
+   ```
+
+* Apply function
+
+   ```python
+   >>> import lign as lg
+   >>> import torch as th
+   >>> from torch import nn
+   >>> from lign.layers import GCN
+   >>> n = 5
+   >>> g = lg.Graph()
+   >>> g.add(n)
+   >>> g['x'] = th.rand(n, 3) ## e.g. g.set_data('x', th.rand(n, 3))
+   >>> 
+   >>> add_constant = lambda x: x + 3
+   >>> g.apply(add_constant, data='x') ## use apply if involving individual nodes
+   >>> g['x']
+   >>> 
+   >>> def sum_neighs_data(neighs):
+   ...     out = neighs[0]
+   ...     for neigh in neighs[1:]:
+   ...         out = out + neigh
+   ...     return out
+   ... 
+   >>> g[(2, 3, 4)] = {2, 3, 4} ## Add edges to nodes 2, 3, 4; remove via g.remove_edges()
+   >>> g.push(sum_neighs_data, data='x') ## use push or pull if only involving multiple nodes
+   >>> g['x']
+   ```
+
+* Create subgraphs
+
+   ```python
+   >>> import lign as lg
+   >>> import torch as th
+   >>> n = 5
+   >>> g = lg.Graph()
+   >>> g.add(n)
+   >>> g['x'] = th.rand(n, 3) ## Others, g.set_data('x', th.rand(n, 3))
+   >>> g[tuple(range(n))] = set(range(3, n))
+   >>> g
+   >>> 
+   >>> sub = g.subgraph([2, 3, 4], get_data = True, get_edges = True)
+   >>> sub
+   >>> 
+   >>> sub = g.subgraph(2, get_edges = True)
+   >>> sub.add(2)
+   >>> sub
+   >>> 
+   >>> sub = g.subgraph([3, 4], get_data = True)
+   >>> sub.add([lg.node({'x': th.rand(3)}) for i in range(2)], add_edges = False)
+   >>> sub
+   >>> sub[(2, 3)] = sub.get_parent_edges([0, 2])
+   >>> sub
+   ```
+
+* Save and load created graphs
+
+   ```python
+   >>> import lign as lg
+   >>> import torch as th
+   >>> n = 5
+   >>> g = lg.Graph()
+   >>> g.add(n)
+   >>> 
+   >>> g['x'] = th.rand(n, 3) ## Others, g.set_data('x', th.rand(n, 3))
+   >>> g.save("data/graph.lign")
+   >>> 
+   >>> f = lg.Graph("data/graph.lign") ## load from file
+   >>> (f['x'] == g['x']).all() ## are all data the same check
+   ```
 
 _Please refer to the [documentation](docs/examples) for other examples_
 

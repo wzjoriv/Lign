@@ -195,7 +195,7 @@ class Graph(Dataset):
 
         return edges if len(nodes) > 1 else edges[0]
 
-    def remove_edge(self, nodes: int, edges: Union[int, List[int]]) -> None:
+    def remove_edges(self, nodes: int, edges: Union[int, List[int]]) -> None:
 
         nodes = io.to_iter(nodes)
         edges = io.to_iter(edges)
@@ -441,7 +441,7 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
 
         if len(mutual_data) != len(self.get_properties()):
             raise LookupError(
-                f"Parent graph and sub graph do not have the same properties: \nSubgraph:\n\t{self.get_properties()}\nMutual data:\n\t{mutual_data}")
+                f"Parent graph and sub graph do not have the same properties: \nSub graph:\n\t{self.get_properties()}\nMutual data:\n\t{mutual_data}")
 
         for node in nodes:
 
@@ -497,7 +497,7 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
         return edges
 
     def get_all_parent_edges(self) -> None:
-        self.get_parent_edges(self.p_nodes)
+        return self.get_parent_edges(self.p_nodes)
 
     def peek_parent_index(self, nodes: Union[int, List[int]] = []) -> List[int]:
         nodes = io.to_iter(nodes)
