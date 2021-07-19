@@ -93,7 +93,7 @@ def superv(
                     if is_base_gcn:
                         out = classifier(graph, out)[b_nodes] if is_classifier_gcn else classifier(out[b_nodes])
                     else:
-                        out = classifier(out)
+                        out = classifier(sub, out) if is_classifier_gcn else classifier(out)
                     loss = lossF(out, outp)
 
                 scaler.scale(loss).backward()
@@ -105,7 +105,7 @@ def superv(
                 if is_base_gcn:
                     out = classifier(graph, out)[b_nodes] if is_classifier_gcn else classifier(out[b_nodes])
                 else:
-                    out = classifier(out)
+                    out = classifier(sub, out) if is_classifier_gcn else classifier(out)
                 loss = lossF(out, outp)
 
                 loss.backward()
