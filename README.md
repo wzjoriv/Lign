@@ -162,11 +162,11 @@ _For more details, please read the [developer documentation](docs/dev)_
    g['x']
    
    def sum_neighs_data(neighs):
-   ...     out = neighs[0]
-   ...     for neigh in neighs[1:]:
-   ...         out = out + neigh
-   ...     return out
-   ... 
+       out = neighs[0]
+       for neigh in neighs[1:]:
+           out = out + neigh
+       return out
+    
    g[(2, 3, 4)] = {2, 3, 4} ## Add edges to nodes 2, 3, 4; remove via g.remove_edges()
    g.push(sum_neighs_data, data='x') ## use push or pull if only involving multiple nodes
    g['x']
