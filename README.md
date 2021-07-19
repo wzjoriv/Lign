@@ -35,7 +35,7 @@ A deep learning framework developed for implementing graph convolutional network
 
 ## About The Project
 
-Lign is a deep learning framework developed for implementing continual lifelong learning, graph convolutional networks (GCN) and graph-based machine learning. It was build as a component of my master thesis.
+Lign is a deep learning framework developed for implementing graph convolutional networks (GCNs), continual lifelong learning on graphs and other graph-based machine learning methods alongside PyTorch. It was build as a component of my master thesis.
 
 ### Built With
 
