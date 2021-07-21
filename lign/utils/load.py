@@ -124,7 +124,7 @@ def cora_to_lign(path, split = 0.0):
 
     labels = onehot_encode(cora_cont[marker[1] + 1].values, unq_labels) # onehot encoding
 
-    graph.set_data("id", torch.tensor(cora_cont[0].values))
+    graph.set_data("id", torch.LongTensor(cora_cont[0].values))
     graph.set_data("x", torch.tensor(cora_cont.loc[:, marker[0]:marker[1]].values))
     graph.set_data("labels", torch.LongTensor(labels))
 
