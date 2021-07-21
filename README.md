@@ -93,14 +93,14 @@ It is recommended to run the following instructions in a python console to view 
    n = 5
    g = lg.Graph()
    g.add(n)
-   g['x'] = th.rand(n, 3) ## e.g. g.set_data('x', th.rand(n, 3))
+   g['x'] = th.rand(n, 3) ## Or, g.set_data('x', th.rand(n, 3))
 
    g
-   g['x'] ## e.g. g.get_data('x')
-   g[0] ## e.g. g.get_nodes(1)
-   g[[1, 2]] ## e.g. g.get_nodes([1, 2])
-   g[3:4] ## e.g. g.get_nodes(slice(3, 4))
-   g[(4,)] ## e.g. g.get_edges(4)
+   g['x'] ## Or, g.get_data('x')
+   g[0] ## Or, g.get_nodes(1)
+   g[[1, 2]] ## Or, g.get_nodes([1, 2])
+   g[3:4] ## Or, g.get_nodes(slice(3, 4))
+   g[(4,)] ## Or, g.get_edges(4)
    ```
 
 * Process data with a neural network
