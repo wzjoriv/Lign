@@ -43,7 +43,7 @@ Lign (Lifelong learning Induced by Graph Neural networks) is a deep learning fra
 
 ## Getting Started
 
-These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign``, ``conda install lign -c pytorch -c josuecom`` or by downloading the [package][release-url] on github.
+These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign``, ``conda install lign -c pytorch -c josuecom`` or by downloading the [package][release-url] on github and saving in the ``site-packages/`` directory.
 
 _For more details, please read the [developer documentation](docs/dev)_
 
@@ -82,16 +82,19 @@ _For more details, please read the [developer documentation](docs/dev)_
 
 ## Usage
 
+It is recommended to run the following instructions in a python console to view all produced output  
+
 * Create a new graph, assign some values and view properties
 
    ```python
    import lign as lg
    import torch as th
+
    n = 5
    g = lg.Graph()
    g.add(n)
    g['x'] = th.rand(n, 3) ## e.g. g.set_data('x', th.rand(n, 3))
-   
+
    g
    g['x'] ## e.g. g.get_data('x')
    g[0] ## e.g. g.get_nodes(1)
@@ -106,14 +109,15 @@ _For more details, please read the [developer documentation](docs/dev)_
    import lign as lg
    import torch as th
    from torch import nn
+
    n = 5
    g = lg.Graph()
-   g.add(n, add_edges=False) ## not self loop edges since no relational data present
-   g['x'] = th.rand(n, 3) ## e.g. g.set_data('x', th.rand(n, 3))
+   g.add(n, add_edges=False) ## No self loop edges added since no relational data is present
+   g['x'] = th.rand(n, 3)
    g['x']
    
    linear = nn.Linear(3, 2)
-   g['x'] = linear(g['x']) ## e.g. g.apply(linear, data = 'x')
+   g['x'] = linear(g['x']) ## Or, g.apply(linear, data = 'x')
    g['x']
    ```
 
@@ -125,21 +129,25 @@ _For more details, please read the [developer documentation](docs/dev)_
    from torch import nn
    from lign.layers import GCN
    from lign.utils.functions import sum_neighs_data
+
    n = 5
    g = lg.Graph()
    g.add(n)
-   g['x'] = th.rand(n, 3) ## e.g. g.set_data('x', th.rand(n, 3)
+   g['x'] = th.rand(n, 3)
    g['x']
    
+   # 1^{st} Approach: Basic gcn with no message passing
    gcn = GCN(nn.Linear(3, 2))
    g['x'] = gcn(g, g['x'])
    g['x']
    
-   g[(2, 3, 4)] = {2, 3, 4} ## Add edges to nodes 2, 3, 4; remove via g.remove_edges()
+   # 2^{nd} Approach: Basic gcn with message passing via neighbors data summation
+   g[(2, 3, 4)] = {2, 3, 4} ## Add edges to nodes 2, 3, 4; nodes can be removed via g.remove_edges()
    gcn = GCN(nn.Linear(2, 3), aggregation = sum_neighs_data)
    g['x'] = gcn(g, g['x'])
    g['x']
    
+   # 3^{rd} Approach: Proposed GCN with discovery and inclusion layers
    gcn = GCN(nn.Linear(3, 2), aggregation = sum_neighs_data, inclusion = nn.Linear(2, 3))
    g['x'] = gcn(g, g['x'])
    g['x']
@@ -155,20 +163,22 @@ _For more details, please read the [developer documentation](docs/dev)_
    n = 5
    g = lg.Graph()
    g.add(n)
-   g['x'] = th.rand(n, 3) ## e.g. g.set_data('x', th.rand(n, 3))
+   g['x'] = th.rand(n, 3)
    
+   # Add 3 to all data in the dataset; doesn't require neighbors
    add_constant = lambda x: x + 3
    g.apply(add_constant, data='x') ## use apply if involving individual nodes
    g['x']
    
+   # Sum neighbors 'x' value together; require neighbors
    def sum_neighs_data(neighs):
        out = neighs[0]
        for neigh in neighs[1:]:
            out = out + neigh
        return out
     
-   g[(2, 3, 4)] = {2, 3, 4} ## Add edges to nodes 2, 3, 4; remove via g.remove_edges()
-   g.push(sum_neighs_data, data='x') ## use push or pull if only involving multiple nodes
+   g[(2, 3, 4)] = {2, 3, 4}
+   g.push(sum_neighs_data, data='x') ## Use push or pull if only involving multiple nodes
    g['x']
    ```
 
@@ -180,17 +190,21 @@ _For more details, please read the [developer documentation](docs/dev)_
    n = 5
    g = lg.Graph()
    g.add(n)
-   g['x'] = th.rand(n, 3) ## Others, g.set_data('x', th.rand(n, 3))
-   g[tuple(range(n))] = set(range(3, n))
+   g['x'] = th.rand(n, 3)
+   g[tuple(range(n))] = set(range(3, n)) ## Add edge from each node to 3 and 4
    g
    
+   # Make sub graph with all data and edges from parent; edges are updated to reflect new indexes
    sub = g.sub_graph([2, 3, 4], get_data = True, get_edges = True)
    sub
    
+   # Make sub graph with only edges from parent; edges are updated to reflect new indexes
    sub = g.sub_graph(2, get_edges = True)
    sub.add(2)
    sub
    
+   # Make sub graph with only data from parent
+   # Add nodes not known to the parent graph
    sub = g.sub_graph([3, 4], get_data = True)
    sub.add([lg.node({'x': th.rand(3)}) for i in range(2)], add_edges = False)
    sub
@@ -206,12 +220,16 @@ _For more details, please read the [developer documentation](docs/dev)_
    n = 5
    g = lg.Graph()
    g.add(n)
-   
-   g['x'] = th.rand(n, 3) ## Others, g.set_data('x', th.rand(n, 3))
+   g['x'] = th.rand(n, 3)
+
+   # Save to file
    g.save("data/graph.lign")
    
-   f = lg.Graph("data/graph.lign") ## load from file
-   (f['x'] == g['x']).all() ## are all data the same check
+   # Load from file
+   f = lg.Graph("data/graph.lign")
+
+   # Check all data are the same
+   (f['x'] == g['x']).all()
    ```
 
 _Please refer to the [documentation](docs/examples) for other examples_
