@@ -84,15 +84,15 @@ retrain_superv = lambda x: (x + RETRAIN_PER["superv"][0])%RETRAIN_PER["superv"][
 retrain_semi = lambda x: (x + RETRAIN_PER["semi"][0])%RETRAIN_PER["semi"][1] == 0
 
 
-lg.train.superv(model, opt, dataset, "x", "labels", DIST_VEC_SIZE, LABELS[:INIT_NUM_LAB], LAMBDA, (device, scaler), addon = ADDON, subgraph_size=SUBGRPAH_SIZE, epochs=EPOCHS)
+lg.train.superv(model, opt, dataset, "x", "labels", DIST_VEC_SIZE, LABELS[:INIT_NUM_LAB], LAMBDA, (device, scaler), addon = ADDON, sub_graph_size=SUBGRPAH_SIZE, epochs=EPOCHS)
 
 for num_labels in range(INIT_NUM_LAB, num_of_labels + 1):
 
     """if retrain_semi(num_labels):
-        lg.train.semi_superv(model, opt, dataset, "x", "labels", DIST_VEC_SIZE, LABELS[:num_labels], LAMBDA, (device, scaler), addon = ADDON, subgraph_size=SUBGRPAH_SIZE, epochs=EPOCHS, cluster=(utl.clustering.NN(), 5))"""
+        lg.train.semi_superv(model, opt, dataset, "x", "labels", DIST_VEC_SIZE, LABELS[:num_labels], LAMBDA, (device, scaler), addon = ADDON, sub_graph_size=SUBGRPAH_SIZE, epochs=EPOCHS, cluster=(utl.clustering.NN(), 5))"""
 
     if retrain_superv(num_labels):
-        lg.train.superv(model, opt, dataset, "x", "labels", DIST_VEC_SIZE, LABELS[:num_labels], LAMBDA, (device, scaler), epochs=EPOCHS, addon = ADDON, subgraph_size=SUBGRPAH_SIZE)
+        lg.train.superv(model, opt, dataset, "x", "labels", DIST_VEC_SIZE, LABELS[:num_labels], LAMBDA, (device, scaler), epochs=EPOCHS, addon = ADDON, sub_graph_size=SUBGRPAH_SIZE)
     
     acc = lg.test.accuracy(model, validate, dataset, "x", "labels", LABELS[:num_labels], cluster=(utl.clustering.NN(), 8), device=device)
 

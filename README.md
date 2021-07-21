@@ -172,7 +172,7 @@ _For more details, please read the [developer documentation](docs/dev)_
    g['x']
    ```
 
-* Create subgraphs
+* Create sub graphs
 
    ```python
    import lign as lg
@@ -184,14 +184,14 @@ _For more details, please read the [developer documentation](docs/dev)_
    g[tuple(range(n))] = set(range(3, n))
    g
    
-   sub = g.subgraph([2, 3, 4], get_data = True, get_edges = True)
+   sub = g.sub_graph([2, 3, 4], get_data = True, get_edges = True)
    sub
    
-   sub = g.subgraph(2, get_edges = True)
+   sub = g.sub_graph(2, get_edges = True)
    sub.add(2)
    sub
    
-   sub = g.subgraph([3, 4], get_data = True)
+   sub = g.sub_graph([3, 4], get_data = True)
    sub.add([lg.node({'x': th.rand(3)}) for i in range(2)], add_edges = False)
    sub
    sub[(2, 3)] = sub.get_parent_edges([0, 2])

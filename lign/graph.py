@@ -252,10 +252,10 @@ class Graph(Dataset):
             self.dataset["count"] += 1
 
     # returns isolated graph
-    def subgraph(self, nodes: Union[int, List[int]], get_data: bool = False, get_edges: bool = False) -> SubGraph:
+    def sub_graph(self, nodes: Union[int, List[int]], get_data: bool = False, get_edges: bool = False) -> SubGraph:
         nodes = io.to_iter(nodes)
-        subgraph = SubGraph(self, nodes, get_data, get_edges)
-        return subgraph
+        sub_graph = SubGraph(self, nodes, get_data, get_edges)
+        return sub_graph
 
     # pulls others' data from nodes that it points to into it's temp
     def pull(

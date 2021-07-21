@@ -8,14 +8,14 @@ def validate(model, graph, train, tag_in, tag_out, labels, metrics = ['accuracy'
     model.eval()
     with th.no_grad():
         tr_nodes, tr_labs = fn.filter_k_from_tags(tag_out, labels, train, cluster[1])
-        sub = train.subgraph(tr_nodes)
+        sub = train.sub_graph(tr_nodes)
         inp = sub.get_parent_data(tag_in).to(device)
         
         cluster = cluster[0]
         cluster.train(model(sub, inp), tr_labs.to(device))
 
         ts_nodes = fn.filter_tags(tag_out, labels, graph)
-        graph = graph.subgraph(ts_nodes)
+        graph = graph.sub_graph(ts_nodes)
 
         inp = graph.get_parent_data(tag_in).to(device)
         outp_t = graph.get_parent_data(tag_out).to(device)

@@ -8,7 +8,7 @@ from lign.utils.clustering import KMeans, KNN
 def unsuperv(
             models, graph, labels, opt, 
             tags = ('x', 'label'), cluster = KMeans(), device = (th.device('cpu'), None), 
-            lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+            lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200
         ):
 
     tag_in, tag_out = tags
@@ -24,14 +24,14 @@ def unsuperv(
     graph.set_data('_p_label_', data)
 
     superv(models, graph, labels, opt, 
-            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, subgraph_size = subgraph_size)
+            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, sub_graph_size = sub_graph_size)
 
     graph.pop_data('_p_label_')
 
 def semi_superv(
             models, graph, labels, opt, 
             tags = ('x', 'label'), k = 5, cluster = KNN(), device = (th.device('cpu'), None), 
-            lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+            lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200
         ):
 
     tag_in, tag_out = tags
@@ -46,14 +46,14 @@ def semi_superv(
     graph.set_data('_p_label_', data)
 
     superv(models, graph, labels, opt, 
-            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, subgraph_size = subgraph_size)
+            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, sub_graph_size = sub_graph_size)
 
     graph.pop_data('_p_label_')
 
 def superv(
             models, graph, labels, opt, 
             tags = ('x', 'label'), device = (th.device('cpu'), None), 
-            lossF = nn.CrossEntropyLoss(), epochs=1000, subgraph_size = 200
+            lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200
         ):
     
     base, classifier = models
@@ -77,10 +77,10 @@ def superv(
         opt.zero_grad()
 
         nodes = fn.randomize_tensor(nodes)
-        for batch in range(0, nodes_len, subgraph_size):
+        for batch in range(0, nodes_len, sub_graph_size):
             with th.no_grad():
-                b_nodes = nodes[batch:min(nodes_len, batch + subgraph_size)]
-                sub = graph.subgraph(b_nodes)
+                b_nodes = nodes[batch:min(nodes_len, batch + sub_graph_size)]
+                sub = graph.sub_graph(b_nodes)
 
                 inp = graph.get_data(tag_in).to(device[0]) if is_base_gcn else sub.get_parent_data(tag_in).to(device[0])
                 outp = fn.onehot_encode(sub.get_parent_data(tag_out), labels).to(device[0])
