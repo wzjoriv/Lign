@@ -1,5 +1,5 @@
 import torch as th
-from lign.layers import GCN
+from lign.nn import GCN
 
 def is_gcn(module):
     return issubclass(module.__class__, GCN)

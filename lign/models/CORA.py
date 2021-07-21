@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch as th
 import torch.nn.functional as F
 
-from lign.layers import DyLinear
+from lign.nn import DyLinear
 
 class Base(nn.Module):  ## base, feature extractor
     def __init__(self, out_feats):

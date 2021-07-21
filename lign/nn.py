@@ -43,3 +43,11 @@ class DyLinear(nn.Module):
             with th.no_grad():
                 self.out_fea = size
                 self.weight = nn.Parameter(th.cat((self.weight, th.randn(size - self.out_fea, self.in_fea).to(self.device)), 0)).to(self.device)
+
+class Module(nn.Module):
+    def __init__(self, *args):
+        super(Module, self).__init__()
+        self.__args__ = args
+
+    def __copy__(self):
+        return type(self)(*self.__args__)

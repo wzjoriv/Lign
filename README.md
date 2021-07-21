@@ -127,7 +127,7 @@ It is recommended to run the following instructions in a python console to view 
    import lign as lg
    import torch as th
    from torch import nn
-   from lign.layers import GCN
+   from lign.nn import GCN
    from lign.utils.functions import sum_neighs_data
 
    n = 5
@@ -159,7 +159,7 @@ It is recommended to run the following instructions in a python console to view 
    import lign as lg
    import torch as th
    from torch import nn
-   from lign.layers import GCN
+   from lign.nn import GCN
    n = 5
    g = lg.Graph()
    g.add(n)

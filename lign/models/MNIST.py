@@ -1,10 +1,10 @@
-import torch.nn as nn
 import torch as th
+import torch.nn as nn
 import torch.nn.functional as F
 
-from lign.layers import DyLinear
+import lign.nn
 
-class Base(nn.Module):  ## base, feature extractor
+class Base(lign.nn.Module):  ## base, feature extractor
     def __init__(self, out_feats):
         super(Base, self).__init__()
         self.unit1 = nn.Conv2d(1, 32, 3, 1)
@@ -24,10 +24,10 @@ class Base(nn.Module):  ## base, feature extractor
         return self.drop2(x)
 
 
-class Classifier(nn.Module): ## temporality layer for training
+class Classifier(lign.nn.Module): ## temporality layer for training
     def __init__(self, in_fea, out_fea, device = 'cuda'):
         super(Classifier, self).__init__()
-        self.DyLinear = DyLinear(in_fea, out_fea, device=device) # dynamic linear dense layer
+        self.DyLinear = lign.nn.DyLinear(in_fea, out_fea, device=device) # dynamic linear dense layer
     
     def forward(self, features):
         x = F.log_softmax(self.DyLinear(features), dim=1)

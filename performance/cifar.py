@@ -31,7 +31,7 @@ def sum_neighs_data(neighs): ## adds up neighbors' data before executing post_mo
 class ADDON(nn.Module): ## tempory layer for training
     def __init__(self, in_fea, out_fea):
         super(ADDON, self).__init__()
-        self.gcn1 = lg.layers.GCN(nn.Linear(in_fea, out_fea))
+        self.gcn1 = lg.nn.GCN(nn.Linear(in_fea, out_fea))
     
     def forward(self, g, features):
         x = self.gcn1(g, features)
