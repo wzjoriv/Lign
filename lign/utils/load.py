@@ -2,7 +2,7 @@ import torch
 from torchvision import datasets
 
 import pandas as pd
-import os
+import os, numpy as np
 
 from lign.utils.functions import onehot_encode
 
@@ -35,9 +35,10 @@ def mnist_to_lign(path, transforms = None, split = 0.0):
         digits.append(img)
         labels.append(lab)
     
-    digits = torch.stack(digits)
     if transforms:
-        digits = transforms(digits)
+        digits = [transforms(digit) for digit in digits]
+
+    digits = torch.stack(digits)
     labels = torch.LongTensor(labels)
 
     graph.set_data('x', digits)
@@ -83,9 +84,10 @@ def cifar_to_lign(path, transforms = None, split = 0.0):
         imgs.append(img)
         labels.append(lab)
     
-    imgs = torch.stack(imgs)
     if transforms:
-        imgs = transforms(imgs)
+        imgs = [transforms(img) for img in imgs]
+
+    imgs = torch.stack(imgs)
     labels = torch.LongTensor(labels)
 
     n = len(graph)
