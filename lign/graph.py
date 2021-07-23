@@ -393,14 +393,14 @@ class Graph(Dataset):
         filters = io.to_iter(filters)
 
         if not len(filters):
-            raise ValueError("Filters must at least have one filter")
+            raise ValueError("Filters must have at least one filter function")
 
         out = filters[0](self.dataset["data"][data])
 
         for fun in filters[1:]:
             out |= fun(self.dataset["data"][data])
 
-        return torch.nonzero(out, as_tuple=False).squeeze()
+        return torch.nonzero(out, as_tuple=False).view(-1)
 
     def save(self, fl: str = "") -> None:
         if not len(fl):
@@ -419,7 +419,7 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
         self.p_nodes = io.to_iter(nodes)
         self.i_nodes = list(range(len(self.p_nodes)))
 
-        self.add(len(self.p_nodes))
+        self.add(len(self.p_nodes), self_loop = False)
 
         if get_data:
             self.get_all_parent_data()

@@ -27,7 +27,7 @@ def mnist_to_lign(path, transforms = None, split = 0.0, self_loop: bool = False)
 
     graph = Graph()
 
-    graph.add(len(dataset), add_edges=self_loop) # add n_{train} and n_{validate} nodes
+    graph.add(len(dataset), self_loop=self_loop) # add n_{train} and n_{validate} nodes
 
     digits = []
     labels = []
@@ -76,7 +76,7 @@ def cifar_to_lign(path, transforms = None, split = 0.0, self_loop: bool = False)
 
     graph = Graph()
     
-    graph.add(len(dataset), add_edges=self_loop)
+    graph.add(len(dataset), self_loop=self_loop)
     
     imgs = []
     labels = []
@@ -89,6 +89,9 @@ def cifar_to_lign(path, transforms = None, split = 0.0, self_loop: bool = False)
 
     imgs = torch.stack(imgs)
     labels = torch.LongTensor(labels)
+
+    graph.set_data('x', imgs)
+    graph.set_data('labels', labels)
 
     n = len(graph)
     split = int(n * split)
@@ -119,14 +122,14 @@ def cora_to_lign(path, split = 0.0, self_loop=True):
     if (split >= 1.0 or split <= 0.0):
         split = 0.8
 
-    graph.add(n, add_edges=self_loop) # add n empty nodes
+    graph.add(n, self_loop=self_loop) # add n empty nodes
 
     marker = [1, 1433] # where data is seperated in the csv
     unq_labels = list(cora_cont[marker[1] + 1].unique())
 
     labels = onehot_encode(cora_cont[marker[1] + 1].values, unq_labels) # onehot encoding
 
-    graph.set_data("id", torch.LongTensor(cora_cont[0].values))
+    graph.set_data("id", torch.tensor(cora_cont[0].values))
     graph.set_data("x", torch.tensor(cora_cont.loc[:, marker[0]:marker[1]].values))
     graph.set_data("labels", torch.LongTensor(labels))
 
@@ -138,7 +141,7 @@ def cora_to_lign(path, split = 0.0, self_loop=True):
 
         childrens = edge_parents.get_group(key)[1].values
         c_nodes = list(cora_cont.loc[cora_cont[0].isin(childrens)].index.values)
-        graph.add_edge(p_node, c_nodes)
+        graph.add_edges(p_node, c_nodes)
 
     n = len(cora_cont[0])
     split = int(n * split)
