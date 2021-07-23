@@ -6,7 +6,7 @@ import os, numpy as np
 
 from lign.utils.functions import onehot_encode
 
-def mnist_to_lign(path, transforms = None, split = 0.0):
+def mnist_to_lign(path, transforms = None, split = 0.0, self_loop: bool = False):
     from lign.graph import Graph
 
     try:
@@ -27,7 +27,7 @@ def mnist_to_lign(path, transforms = None, split = 0.0):
 
     graph = Graph()
 
-    graph.add(len(dataset)) # add n_{train} and n_{validate} nodes
+    graph.add(len(dataset), add_edges=self_loop) # add n_{train} and n_{validate} nodes
 
     digits = []
     labels = []
@@ -54,7 +54,7 @@ def mnist_to_lign(path, transforms = None, split = 0.0):
 
     return graph, graph_train, graph_test
 
-def cifar_to_lign(path, transforms = None, split = 0.0):
+def cifar_to_lign(path, transforms = None, split = 0.0, self_loop: bool = False):
     from lign.graph import Graph
 
     try:
@@ -76,7 +76,7 @@ def cifar_to_lign(path, transforms = None, split = 0.0):
 
     graph = Graph()
     
-    graph.add(len(dataset))
+    graph.add(len(dataset), add_edges=self_loop)
     
     imgs = []
     labels = []
@@ -100,7 +100,7 @@ def cifar_to_lign(path, transforms = None, split = 0.0):
 
     return graph, graph_train, graph_test
 
-def cora_to_lign(path, split = 0.0):
+def cora_to_lign(path, split = 0.0, self_loop=True):
     from lign.graph import Graph
     graph = Graph()
 
@@ -119,7 +119,7 @@ def cora_to_lign(path, split = 0.0):
     if (split >= 1.0 or split <= 0.0):
         split = 0.8
 
-    graph.add(n) # add n empty nodes
+    graph.add(n, add_edges=self_loop) # add n empty nodes
 
     marker = [1, 1433] # where data is seperated in the csv
     unq_labels = list(cora_cont[marker[1] + 1].unique())

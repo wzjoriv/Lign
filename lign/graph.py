@@ -117,6 +117,7 @@ class Graph(Dataset):
         raise TypeError("Input is invalid. Only List[int], slice, str, int or Tuple[int] is accepted")
     
     def get_nodes(self, indx:Union[slice, int, List[int]]) -> Node:
+        primitive = io.is_primitve(indx)
 
         indx = range(len(self))[indx] if type(indx) == slice else io.to_iter(indx)
         nodes = []
@@ -140,12 +141,13 @@ class Graph(Dataset):
             node.edges = self.dataset["edges"][ind]
             nodes.append(node)
 
-        return nodes if len(nodes) > 1 else nodes[0]
+        return nodes if not primitive else nodes[0]
 
     def get_properties(self) -> List[str]:
         return list(self.dataset["data"].keys())
 
     def get_data(self, data: str, nodes=[]) -> Union[Tensor, List[T]]:
+        primitive = io.is_primitve(nodes)
         ls = io.to_iter(nodes)
 
         if (data not in self.get_properties()):
@@ -157,7 +159,7 @@ class Graph(Dataset):
             if torch.is_tensor(self.dataset["data"][data]):
                 return self.dataset["data"][data][ls]
             else:
-                return [self.dataset["data"][data][nd] for nd in ls] if len(ls) > 1 else self.dataset["data"][data][ls[0]]
+                return [self.dataset["data"][data][nd] for nd in ls] if not primitive else self.dataset["data"][data][ls[0]]
 
     def set_data(self, data: str, features: Union[Tensor, List[T]], nodes: Union[int, List[int]] = []) -> None:
         nodes = io.to_iter(nodes)
@@ -169,7 +171,7 @@ class Graph(Dataset):
         elif (not len(nodes) and len(features) != len(self)):
             raise ValueError("The number of features must match the number of nodes currently in the graph")
 
-        if not len(nodes):
+        if not len(nodes) or len(nodes) == len(self):
             self.dataset["data"][data] = features
         else:
             if torch.is_tensor(self.dataset["data"][data]):
@@ -186,14 +188,14 @@ class Graph(Dataset):
             self.dataset["edges"][node].update(edges)
 
     def get_edges(self, nodes: Union[int, List[int], Set[int], Tuple[int]]) -> Union[set, List[Set]]:
-
+        primitive = io.is_primitve(nodes)
         nodes = io.to_iter(nodes)
         edges = []
 
         for node in nodes:
             edges.append(self.dataset["edges"][node])
 
-        return edges if len(nodes) > 1 else edges[0]
+        return edges if not primitive else edges[0]
 
     def remove_edges(self, nodes: int, edges: Union[int, List[int]]) -> None:
 
@@ -223,7 +225,7 @@ class Graph(Dataset):
     def pop_data(self, data: str) -> Union[Tensor, List[T], None]:
         return self.dataset["data"].pop(data, None)
 
-    def add(self, nodes: Optional[Union[int, Node, List[Node]]] = None, add_edges: bool = True) -> None:
+    def add(self, nodes: Optional[Union[int, Node, List[Node]]] = None, self_loop: bool = True) -> None:
 
         if not nodes:
             nodes = Node()
@@ -232,7 +234,7 @@ class Graph(Dataset):
 
         nodes = io.to_iter(nodes)
         for nd in nodes:
-            if add_edges:
+            if self_loop:
                 nd.edges.add(len(self))
 
             mutual_data = set(self.dataset["data"].keys())
@@ -425,12 +427,43 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
         if get_edges:
             self.get_all_parent_edges()
 
-    def peek_children_index(self) -> List[int]:
-        return self.i_nodes
+    def parent_to_child_index(self, nodes: Union[int, List[int]] = []) -> List[int]: ## return indexes in child of parent nodes
+        primitive = io.is_primitve(nodes)
+        nodes = io.to_iter(nodes)
+
+        diff_data = set(nodes) - set(self.p_nodes)
+
+        if len(diff_data):
+            raise LookupError(f"The nodes {diff_data} are not part of the sub graph")
+
+        if len(nodes) == len(self.p_nodes) or not len(nodes):
+            return self.p_nodes
+
+        return [self.p_nodes.index(nd) for nd in nodes] if not primitive else self.p_nodes.index(nodes[0])
+
+    def child_to_parent_index(self, nodes: Union[int, List[int]] = []) -> List[int]:  ## return indexes in parents of child nodes
+        primitive = io.is_primitve(nodes)
+        nodes = io.to_iter(nodes)
+
+        if len(nodes) == len(self.p_nodes) or not len(nodes):
+            return self.p_nodes
+
+        return [self.p_nodes[i] for i in nodes] if not primitive else self.p_nodes[nodes[0]]
+
+    def child_to_index(self, nodes: Union[int, List[int]] = []):
+        primitive = io.is_primitve(nodes)
+
+        if len(nodes) == len(self.p_nodes) or not len(nodes):
+            return self.i_nodes
+
+        return [self.i_nodes[i] for i in nodes] if not primitive else self.i_nodes[nodes[0]]
 
     def peek_parent_node(self, nodes: Union[List[int], int]) -> List[Node]:
+        primitive = io.is_primitve(nodes)
         nodes = io.to_iter(nodes)
-        return [self.parent[self.p_nodes[node]] for node in nodes]
+        out = [self.parent[self.p_nodes[node]] for node in nodes]
+
+        return out if not primitive else out[0]
 
     def get_parent_node(self, nodes: Union[List[int], int], get_data: bool = False, get_edges: bool = False) -> List[Node]:
         nodes = io.to_iter(nodes)
@@ -448,7 +481,7 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
             out = Node()
 
             for mut in mutual_data:
-                out.data[mut] = self.parent.get_data(mut, nodes=node)[0]
+                out.data[mut] = self.parent.get_data(mut, nodes=node)
 
             self.i_nodes.append(len(self))
             self.p_nodes.append(node)
@@ -468,7 +501,7 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
     def get_parent_data(self, data: str) -> Union[Tensor, List[T]]:
         p_data = self.peek_parent_data(data)
 
-        self.set_data(data, p_data)
+        self.set_data(data, p_data, nodes=self.i_nodes)
         return p_data
 
     def get_all_parent_data(self) -> None:
@@ -477,32 +510,30 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
 
         for data in all_v:
             self.get_parent_data(data)
+        
+        return self.dataset["data"]
 
-    def peek_parent_edges(self) -> List[List[int]]:
-        return [self.parent.get_edges(node) for node in self.p_nodes]
+    def peek_parent_edges(self, nodes=[]) -> List[List[int]]:
+        primitive = io.is_primitve(nodes)
 
-    def get_parent_edges(self, nodes: Union[List[int], int]) -> List[List[int]]:
+        nodes = self.child_to_parent_index(nodes)
+
+        return [self.parent.get_edges(node) for node in nodes] if not primitive else self.parent.get_edges(nodes)
+
+    def get_parent_edges(self, nodes: Union[List[int], int] = []) -> List[Set[int]]:
+        primitive = io.is_primitve(nodes)
         nodes = io.to_iter(nodes)
 
         edges = []
 
         for node in nodes:
-            mutual_edges = self.parent.get_edges(
-                node).intersection(self.p_nodes)
-            edge = [self.p_nodes.index(ed) for ed in mutual_edges]
-            edges.append(edge)
+            mutual_edges = self.parent.get_edges(self.child_to_parent_index(node)).intersection(self.p_nodes)
+            edgs = [self.p_nodes.index(ed) for ed in mutual_edges]
+            edges.append(edgs)
 
-            self.dataset["edges"][node] = edge
+            self.dataset["edges"][node] = edgs
 
-        return edges
+        return edges if not primitive else edges[0]
 
-    def get_all_parent_edges(self) -> None:
-        return self.get_parent_edges(self.p_nodes)
-
-    def peek_parent_index(self, nodes: Union[int, List[int]] = []) -> List[int]:
-        nodes = io.to_iter(nodes)
-
-        if len(nodes) == len(self.p_nodes) or not len(nodes):
-            return self.p_nodes
-
-        return [self.p_nodes[i] for i in nodes]
+    def get_all_parent_edges(self) -> List[Set[int]]:
+        return self.get_parent_edges()
