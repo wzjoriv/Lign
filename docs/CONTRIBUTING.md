@@ -10,7 +10,7 @@
   - [Documentation](#documentation)
     - [Pull Request](#pull-request)
     - [Issue](#issue)
-    - [Feature](#feature)
+    - [Feature Request](#feature-request)
     - [Docstring](#docstring)
   - [Developer Docs](#developer-docs)
 
@@ -86,10 +86,8 @@ When contributing any change, please insert and fill the following template in t
 
 ```text
 Changes: 
-    - [file1.rm, file3.rm] 
-        - [made change 1 and 2]
-    - [sub/folder/file2.py] 
-        - [made another change here]
+    - [made change 1 and 2]
+    - [made another change here]
 
 Reason:
     - [I made change 1 and 2 to make an example]
@@ -134,7 +132,7 @@ Comment (Optional):
     [Use this template for issues]
 ```
 
-### Feature
+### Feature Request
 
 When requesting a feature, please insert and fill the following template in the description. Additionally, insert ``[FEATURE]`` or ``[IMPROVEMENT]`` in the title of the Github Issue.
 

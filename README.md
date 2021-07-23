@@ -84,7 +84,7 @@ _For more details, please read the [developer documentation](docs/dev)_
 
 It is recommended to run the following instructions in a python console to view all produced output  
 
-* Create a new graph, assign some values and view properties
+- Create a new graph, assign some values and view properties
 
    ```python
    import lign as lg
@@ -103,7 +103,7 @@ It is recommended to run the following instructions in a python console to view 
    g[(4,)] ## Or, g.get_edges(4)
    ```
 
-* Process data with a neural network
+- Process data with a neural network
 
    ```python
    import lign as lg
@@ -112,7 +112,7 @@ It is recommended to run the following instructions in a python console to view 
 
    n = 5
    g = lg.Graph()
-   g.add(n, add_edges=False) ## No self loop edges added since no relational data is present
+   g.add(n, self_loop=False) ## No self loop edges added since no relational data is present
    g['x'] = th.rand(n, 3)
    g['x']
    
@@ -121,7 +121,7 @@ It is recommended to run the following instructions in a python console to view 
    g['x']
    ```
 
-* Process data with a GCN
+- Process data with a GCN
 
    ```python
    import lign as lg
@@ -153,7 +153,7 @@ It is recommended to run the following instructions in a python console to view 
    g['x']
    ```
 
-* Apply function
+- Apply function
 
    ```python
    import lign as lg
@@ -182,7 +182,7 @@ It is recommended to run the following instructions in a python console to view 
    g['x']
    ```
 
-* Create sub graphs
+- Create sub graphs
 
    ```python
    import lign as lg
@@ -212,7 +212,7 @@ It is recommended to run the following instructions in a python console to view 
    sub
    ```
 
-* Save and load created graphs
+- Save and load created graphs
 
    ```python
    import lign as lg
