@@ -142,7 +142,7 @@ log.append("Label: {}/{} -- Accuracy: {}% -- Original".format(INIT_NUM_LAB, num_
 print(log[-1])
 
 
-lg.train.superv(model, opt, dataset, "x", "labels", LABELS[:INIT_NUM_LAB], addon, LAMBDA, (device, scaler), epochs=EPOCHS, subgraph_size=SUBGRPAH_SIZE)
+lg.train.superv(model, opt, dataset, "x", "labels", LABELS[:INIT_NUM_LAB], addon, LAMBDA, (device, scaler), epochs=EPOCHS, sub_graph_size=SUBGRPAH_SIZE)
 
 for num_labels in range(INIT_NUM_LAB, num_of_labels + 1):
   
@@ -155,7 +155,7 @@ for num_labels in range(INIT_NUM_LAB, num_of_labels + 1):
 
         addon.addon.update_size(num_labels)
         EPOCHS -= int(EPOCHS*0.05)
-        lg.train.superv(model, opt, dataset, "x", "labels", LABELS[:num_labels], addon, LAMBDA, (device, scaler), epochs=EPOCHS, subgraph_size=SUBGRPAH_SIZE)
+        lg.train.superv(model, opt, dataset, "x", "labels", LABELS[:num_labels], addon, LAMBDA, (device, scaler), epochs=EPOCHS, sub_graph_size=SUBGRPAH_SIZE)
     
     acc = lg.test.accuracy(model, validate, dataset, "x", "labels", LABELS[:num_labels], cluster=(utl.clustering.NN(), 5), sv_img = '2d', device=device)
 

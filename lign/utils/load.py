@@ -2,11 +2,11 @@ import torch
 from torchvision import datasets
 
 import pandas as pd
-import os
+import os, numpy as np
 
 from lign.utils.functions import onehot_encode
 
-def mnist_to_lign(path, transforms = None, split = 0.0):
+def mnist_to_lign(path, transforms = None, split = 0.0, self_loop: bool = False):
     from lign.graph import Graph
 
     try:
@@ -27,7 +27,7 @@ def mnist_to_lign(path, transforms = None, split = 0.0):
 
     graph = Graph()
 
-    graph.add(len(dataset)) # add n_{train} and n_{validate} nodes
+    graph.add(len(dataset), self_loop=self_loop) # add n_{train} and n_{validate} nodes
 
     digits = []
     labels = []
@@ -35,9 +35,10 @@ def mnist_to_lign(path, transforms = None, split = 0.0):
         digits.append(img)
         labels.append(lab)
     
-    digits = torch.stack(digits)
     if transforms:
-        digits = transforms(digits)
+        digits = [transforms(digit) for digit in digits]
+
+    digits = torch.stack(digits)
     labels = torch.LongTensor(labels)
 
     graph.set_data('x', digits)
@@ -48,12 +49,12 @@ def mnist_to_lign(path, transforms = None, split = 0.0):
     subnodes_train = list(range(split))  # training nodes
     subnodes_test = list(range(split, n)) # testing nodes
 
-    graph_train = graph.subgraph(nodes=subnodes_train, get_data=True, get_edges=True)
-    graph_test = graph.subgraph(nodes=subnodes_test, get_data=True, get_edges=True)
+    graph_train = graph.sub_graph(nodes=subnodes_train, get_data=True, get_edges=True)
+    graph_test = graph.sub_graph(nodes=subnodes_test, get_data=True, get_edges=True)
 
     return graph, graph_train, graph_test
 
-def cifar_to_lign(path, transforms = None, split = 0.0):
+def cifar_to_lign(path, transforms = None, split = 0.0, self_loop: bool = False):
     from lign.graph import Graph
 
     try:
@@ -75,7 +76,7 @@ def cifar_to_lign(path, transforms = None, split = 0.0):
 
     graph = Graph()
     
-    graph.add(len(dataset))
+    graph.add(len(dataset), self_loop=self_loop)
     
     imgs = []
     labels = []
@@ -83,22 +84,26 @@ def cifar_to_lign(path, transforms = None, split = 0.0):
         imgs.append(img)
         labels.append(lab)
     
-    imgs = torch.stack(imgs)
     if transforms:
-        imgs = transforms(imgs)
+        imgs = [transforms(img) for img in imgs]
+
+    imgs = torch.stack(imgs)
     labels = torch.LongTensor(labels)
+
+    graph.set_data('x', imgs)
+    graph.set_data('labels', labels)
 
     n = len(graph)
     split = int(n * split)
     subnodes_train = list(range(split))  # training nodes
     subnodes_test = list(range(split, n)) # testing nodes
 
-    graph_train = graph.subgraph(nodes=subnodes_train, get_data=True, get_edges=True)
-    graph_test = graph.subgraph(nodes=subnodes_test, get_data=True, get_edges=True)
+    graph_train = graph.sub_graph(nodes=subnodes_train, get_data=True, get_edges=True)
+    graph_test = graph.sub_graph(nodes=subnodes_test, get_data=True, get_edges=True)
 
     return graph, graph_train, graph_test
 
-def cora_to_lign(path, split = 0.0):
+def cora_to_lign(path, split = 0.0, self_loop=True):
     from lign.graph import Graph
     graph = Graph()
 
@@ -117,7 +122,7 @@ def cora_to_lign(path, split = 0.0):
     if (split >= 1.0 or split <= 0.0):
         split = 0.8
 
-    graph.add(n) # add n empty nodes
+    graph.add(n, self_loop=self_loop) # add n empty nodes
 
     marker = [1, 1433] # where data is seperated in the csv
     unq_labels = list(cora_cont[marker[1] + 1].unique())
@@ -136,15 +141,15 @@ def cora_to_lign(path, split = 0.0):
 
         childrens = edge_parents.get_group(key)[1].values
         c_nodes = list(cora_cont.loc[cora_cont[0].isin(childrens)].index.values)
-        graph.add_edge(p_node, c_nodes)
+        graph.add_edges(p_node, c_nodes)
 
     n = len(cora_cont[0])
     split = int(n * split)
     subnodes_train = list(range(split))  # training nodes
     subnodes_test = list(range(split, n)) # testing nodes
 
-    graph_train = graph.subgraph(nodes=subnodes_train, get_data=True, get_edges=True)
-    graph_test = graph.subgraph(nodes=subnodes_test, get_data=True, get_edges=True)
+    graph_train = graph.sub_graph(nodes=subnodes_train, get_data=True, get_edges=True)
+    graph_test = graph.sub_graph(nodes=subnodes_test, get_data=True, get_edges=True)
 
     return graph, graph_train, graph_test
 
