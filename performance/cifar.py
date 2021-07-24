@@ -22,12 +22,6 @@ if th.cuda.is_available():
 else:
     device = th.device("cpu")
 
-def sum_neighs_data(neighs): ## adds up neighbors' data before executing post_mod (pre_mod happens before)
-    out = neighs[0]
-    for neigh in neighs[1:]:
-        out = out + neigh
-    return out
-
 class ADDON(nn.Module): ## tempory layer for training
     def __init__(self, in_fea, out_fea):
         super(ADDON, self).__init__()

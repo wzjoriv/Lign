@@ -128,7 +128,7 @@ It is recommended to run the following instructions in a python console to view 
    import torch as th
    from torch import nn
    from lign.nn import GCN
-   from lign.utils.functions import sum_neighs_data
+   from lign.utils.functions import sum_tensors
 
    n = 5
    g = lg.Graph()
@@ -143,12 +143,12 @@ It is recommended to run the following instructions in a python console to view 
    
    # 2^{nd} Approach: Basic gcn with message passing via neighbors data summation
    g[(2, 3, 4)] = {2, 3, 4} ## Add edges to nodes 2, 3, 4; nodes can be removed via g.remove_edges()
-   gcn = GCN(nn.Linear(2, 3), aggregation = sum_neighs_data)
+   gcn = GCN(nn.Linear(2, 3), aggregation = sum_tensors)
    g['x'] = gcn(g, g['x'])
    g['x']
    
    # 3^{rd} Approach: Proposed GCN with discovery and inclusion layers
-   gcn = GCN(nn.Linear(3, 2), aggregation = sum_neighs_data, inclusion = nn.Linear(2, 3))
+   gcn = GCN(nn.Linear(3, 2), aggregation = sum_tensors, inclusion = nn.Linear(2, 3))
    g['x'] = gcn(g, g['x'])
    g['x']
    ```
@@ -171,14 +171,11 @@ It is recommended to run the following instructions in a python console to view 
    g['x']
    
    # Sum neighbors 'x' value together; require neighbors
-   def sum_neighs_data(neighs):
-       out = neighs[0]
-       for neigh in neighs[1:]:
-           out = out + neigh
-       return out
+   def sum_tensors(neighs):
+       return th.stack(neighs).sum(dim = 0)
     
    g[(2, 3, 4)] = {2, 3, 4}
-   g.push(sum_neighs_data, data='x') ## Use push or pull if only involving multiple nodes
+   g.push(sum_tensors, data='x') ## Use push or pull if only involving multiple nodes
    g['x']
    ```
 

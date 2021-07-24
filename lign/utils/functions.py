@@ -61,8 +61,12 @@ def onehot_encode(data, labels): # onehot encoding
     
     return final
 
-def sum_neighs_data(neighs):
+def sum_data(neighs):
     out = neighs[0]
     for neigh in neighs[1:]:
         out = out + neigh
     return out
+
+def sum_tensors(neighs):
+    return th.stack(neighs).sum(dim = 0)
+
