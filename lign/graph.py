@@ -475,7 +475,7 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
         primitive = io.is_primitve(nodes)
         nodes = io.to_iter(nodes)
 
-        diff_data = set(nodes) - set(self.i_nodes)
+        diff_data = list(set(nodes) - set(self.i_nodes))
 
         if len(diff_data):
             raise LookupError(f"The nodes {diff_data} are not part of those brought from the parent graph")
@@ -550,6 +550,9 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
     def get_parent_edges(self, nodes: Union[List[int], int] = []) -> List[Set[int]]:
         primitive = io.is_primitve(nodes)
         nodes = io.to_iter(nodes)
+
+        if not len(nodes):
+            nodes = list(range(len(self.p_nodes)))
 
         edges = []
 
