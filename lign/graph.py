@@ -256,6 +256,9 @@ class Graph(Dataset):
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
 
+    def remove(self):
+        raise NotImplementedError("Removal of nodes not yet implemented")
+
     # returns isolated graph
     def sub_graph(self, nodes: Union[int, List[int]], get_data: bool = False, get_edges: bool = False) -> SubGraph:
         nodes = io.to_iter(nodes)
@@ -319,10 +322,17 @@ class Graph(Dataset):
         if reset_buffer:
             self.reset_temp()
         else:
-            warnings.warn("Temporary buffer was not reset")
+            warnings.warn("Temporary buffer was not reset. Data will be accomulated next time push() or pull() is called")
 
     # pushes its data to nodes that it points to into nodes' temp
-    def push(self, func: Optional[Union[Callable[[Union[Tensor, List[T]]], Union[Tensor, T]], nn.Module]] = None, data: Optional[str] = None, nodes: Union[int, List[int]] = [], reset_buffer: bool = True) -> None:
+    def push(
+        self, 
+        func: Optional[Union[Callable[[Union[Tensor, List[T]]], Union[Tensor, T]], nn.Module]] = None, 
+        data: Optional[str] = None, 
+        nodes: Union[int, List[int]] = [], 
+        reset_buffer: bool = True
+    ) -> None:
+
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
@@ -363,7 +373,7 @@ class Graph(Dataset):
         if reset_buffer:
             self.reset_temp()
         else:
-            warnings.warn("Temporary buffer was not reset")
+            warnings.warn("Temporary buffer was not reset. Data will be accomulated next time push() or pull() is called")
 
     def apply(self, func: Optional[Callable[[Union[Tensor, List[T]]], Union[Tensor, T]]], data: str, nodes: Union[int, List[int]] = []) -> None:
         nodes = io.to_iter(nodes)
