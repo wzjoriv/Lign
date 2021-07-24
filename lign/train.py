@@ -53,8 +53,15 @@ def semi_superv(
 def superv(
             models, graph, labels, opt, 
             tags = ('x', 'label'), device = (th.device('cpu'), None), 
-            lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200
+            lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200, kipf_approach=False
         ):
+
+    if kipf_approach:
+        full_graph = graph[0]
+        train_graph = graph[1]
+    else:
+        full_graph = graph
+        train_graph = graph
     
     base, classifier = models
     tag_in, tag_out = tags
@@ -65,7 +72,7 @@ def superv(
     is_base_gcn = fn.has_gcn(base)
     is_classifier_gcn = fn.has_gcn(classifier)
 
-    nodes = fn.filter_tags(tag_out, labels, graph)
+    nodes = fn.filter_tags(tag_out, labels, train_graph)
     
     nodes_len = len(nodes)
 
@@ -80,18 +87,21 @@ def superv(
         for batch in range(0, nodes_len, sub_graph_size):
             with th.no_grad():
                 b_nodes = nodes[batch:min(nodes_len, batch + sub_graph_size)]
-                sub = graph.sub_graph(b_nodes)
+                sub = train_graph.sub_graph(b_nodes)
 
-                inp = graph.get_data(tag_in).to(device[0]) if is_base_gcn else sub.get_parent_data(tag_in).to(device[0])
+                if kipf_approach:
+                    b_nodes = train_graph.child_to_parent_index(b_nodes)
+
+                inp = full_graph.get_data(tag_in).to(device[0]) if is_base_gcn else sub.get_parent_data(tag_in).to(device[0])
                 outp = fn.onehot_encode(sub.get_parent_data(tag_out), labels).to(device[0])
 
             opt.zero_grad()
 
             if amp_enable:
                 with th.cuda.amp.autocast():
-                    out = base(graph, inp) if is_base_gcn else base(inp)
+                    out = base(full_graph, inp) if is_base_gcn else base(inp)
                     if is_base_gcn:
-                        out = classifier(graph, out)[b_nodes] if is_classifier_gcn else classifier(out[b_nodes])
+                        out = classifier(full_graph, out)[b_nodes] if is_classifier_gcn else classifier(out[b_nodes])
                     else:
                         out = classifier(sub, out) if is_classifier_gcn else classifier(out)
                     loss = lossF(out, outp)
@@ -101,9 +111,9 @@ def superv(
                 scaler.update()
                 
             else:
-                out = base(graph, inp) if is_base_gcn else base(inp)
+                out = base(full_graph, inp) if is_base_gcn else base(inp)
                 if is_base_gcn:
-                    out = classifier(graph, out)[b_nodes] if is_classifier_gcn else classifier(out[b_nodes])
+                    out = classifier(full_graph, out)[b_nodes] if is_classifier_gcn else classifier(out[b_nodes])
                 else:
                     out = classifier(sub, out) if is_classifier_gcn else classifier(out)
                 loss = lossF(out, outp)
