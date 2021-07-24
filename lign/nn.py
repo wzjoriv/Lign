@@ -11,17 +11,17 @@ class GCN(nn.Module):
         self.inclusion = inclusion
 
     def forward(self, g, data):
-        g.set_data("_hidden_", data)
+        g.set_data("__hidden__", data)
 
-        g.apply(self.discovery, "_hidden_")
+        g.apply(self.discovery, "__hidden__")
 
         if self.aggregation:
-            g.push(aggregation = self.aggregation, data = "_hidden_")
+            g.push(aggregation = self.aggregation, data = "__hidden__")
         
         if self.inclusion:
-            g.apply(self.inclusion, "_hidden_")
+            g.apply(self.inclusion, "__hidden__")
 
-        return g.pop_data("_hidden_")
+        return g.pop_data("__hidden__")
 
 # dynamic Linear Layer
 class DyLinear(nn.Module):
@@ -43,11 +43,3 @@ class DyLinear(nn.Module):
             with th.no_grad():
                 self.out_fea = size
                 self.weight = nn.Parameter(th.cat((self.weight, th.randn(size - self.out_fea, self.in_fea).to(self.device)), 0)).to(self.device)
-
-class Module(nn.Module):
-    def __init__(self, *args):
-        super(Module, self).__init__()
-        self.__args__ = args
-
-    def __copy__(self):
-        return type(self)(*self.__args__)

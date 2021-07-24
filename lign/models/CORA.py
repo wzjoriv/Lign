@@ -2,9 +2,9 @@ import torch.nn as nn
 import torch as th
 import torch.nn.functional as F
 
-from lign.nn import DyLinear, Module
+from lign.nn import DyLinear
 
-class Base(Module):  ## base, feature extractor
+class Base(nn.Module):  ## base, feature extractor
     def __init__(self, out_feats):
         super(Base, self).__init__()
         self.unit1 = nn.Conv2d(1, 32, 3, 1)
@@ -24,7 +24,7 @@ class Base(Module):  ## base, feature extractor
         return self.drop2(x)
 
 
-class Classifier(Module): ## temporality layer for training
+class Classifier(nn.Module): ## temporality layer for training
     def __init__(self, in_fea, out_fea, device = 'cuda'):
         super(Classifier, self).__init__()
         self.DyLinear = DyLinear(in_fea, out_fea, device=device) # dynamic linear dense layer
