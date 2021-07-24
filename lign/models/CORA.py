@@ -2,26 +2,24 @@ import torch.nn as nn
 import torch as th
 import torch.nn.functional as F
 
-from lign.nn import DyLinear
+from lign.nn import GCN, DyLinear
+from lign.utils.functions import sum_tensors
 
 class Base(nn.Module):  ## base, feature extractor
     def __init__(self, out_feats):
         super(Base, self).__init__()
-        self.unit1 = nn.Conv2d(1, 32, 3, 1)
-        self.unit2 = nn.Conv2d(32, 64, 3, 1)
-        self.unit3 = nn.Linear(9216, out_feats)
-        self.drop1 = nn.Dropout(0.25)
-        self.drop2 = nn.Dropout(0.5)
+        self.unit1 = GCN(nn.Linear(1433, 500), aggregation=sum_tensors)
+        self.unit2 = GCN(nn.Linear(500, 100), aggregation=sum_tensors)
+        self.unit3 = GCN(nn.Linear(100, 50), aggregation=sum_tensors, inclusion=nn.Linear(50, out_feats))
+        self.drop1 = nn.Dropout(0.5)
+        self.drop2 = nn.Dropout(0.25)
 
-    def forward(self, features):
-        x = F.relu(self.unit1(features))
+    def forward(self, g, features):
+        x = self.drop1(F.relu(self.unit1(g, features)))
+        x = self.drop2(F.relu(self.unit2(g, x)))
+        x = F.relu(self.unit3(g, x))
 
-        x = F.relu(self.unit2(x))
-        x = F.max_pool2d(x, 2)
-        x = th.flatten(self.drop1(x), 1)
-        x = F.relu(self.unit3(x))
-
-        return self.drop2(x)
+        return x
 
 
 class Classifier(nn.Module): ## temporality layer for training
