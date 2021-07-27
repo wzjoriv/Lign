@@ -50,9 +50,9 @@ LAMBDA = 0.05
 DIST_VEC_SIZE = 300 #128
 INIT_NUM_LAB = 50
 LABELS = np.arange(100)
-SUBGRPAH_SIZE = 500
+SUBGRPAH_SIZE = 128
 AMP_ENABLE = True and th.cuda.is_available()
-EPOCHS = 300
+EPOCHS = 200
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
     "superv": lambda x: not (x + 50)%10, 

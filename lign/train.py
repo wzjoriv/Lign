@@ -5,6 +5,30 @@ import torch.nn.functional as F
 from lign.utils import functions as fn
 from lign.utils.clustering import KMeans, KNN
 
+def growing_exemplar(
+            models, graph, labels, opt, 
+            tags = ('x', 'label'), examplar_n = 20, device = (th.device('cpu'), None), 
+            lossF = nn.CrossEntropyLoss(), epochs=200, sub_graph_size = 128
+        ):
+
+    tag_in, tag_out = tags
+
+    tr_nodes, _ = fn.filter_k_from_tags(tag_out, labels, graph, examplar_n)
+
+    sub = graph.sub_graph(tr_nodes, get_data=True)
+
+    superv(models, sub, labels, opt, 
+            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, sub_graph_size = sub_graph_size)
+
+def fixed_exemplar(
+            models, graph, labels, opt, 
+            tags = ('x', 'label'), examplar_n = 2000, device = (th.device('cpu'), None), 
+            lossF = nn.CrossEntropyLoss(), epochs=200, sub_graph_size = 128
+        ):
+
+    growing_exemplar(models, graph, labels, opt, 
+            tags = tags, examplar_n=int(examplar_n/len(labels)), device = device, lossF=lossF, epochs=epochs, sub_graph_size = sub_graph_size)
+
 def unsuperv(
             models, graph, labels, opt, 
             tags = ('x', 'label'), cluster = KMeans(), device = (th.device('cpu'), None), 
