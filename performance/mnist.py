@@ -112,7 +112,6 @@ def test_and_log(num_labels, text, method=utl.clustering.NN()):
     label_and_acc[1].append(acc)
     print(log[-1])
 
-
 # ### Load State
 
 checkpoint = th.load('data/models/LIGN_training_cool_time.pt') ## change file name
@@ -212,6 +211,3 @@ if AMP_ENABLE:
     check["scaler"] = scaler.state_dict()
 
 th.save(check, os.path.join("data", "models", filename+".pt"))
-    
-
-
