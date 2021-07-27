@@ -36,7 +36,6 @@ nodes_n = list(range(len(dataset)))
 dataset_train = dataset.sub_graph(nodes_n[:split_n], get_data = True, get_edges = True)
 dataset_validate = dataset.sub_graph(nodes_n[split_n:], get_data = True, get_edges = True)
 
-
 # ### Cuda GPUs
 
 if th.cuda.is_available():

@@ -17,9 +17,7 @@ tm_now = datetime.datetime.now
 import os
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 
-
 # ### Load Dataset
-
 
 dataset_name = "MNIST" #<<<<<
 
@@ -39,8 +37,7 @@ if th.cuda.is_available():
     th.cuda.empty_cache()
 else:
     device = th.device("cpu")
-
-
+    
 # ### Hyperparameters
 
 LAMBDA = 0.08
