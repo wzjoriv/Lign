@@ -40,9 +40,9 @@ class DyLinear(nn.Module):
         if size <= self.out_fea:
             raise ValueError(f"New size ({size}) needs to be bigger than current output size ({self.out_fea})")
         else:
-            self.out_fea = size
             new_weight = th.cat(
                                 (self.weight, 
                                 th.randn(size - self.out_fea, self.in_fea).to(self.device)
                                 ), 0)
             self.weight = nn.Parameter(new_weight).to(self.device)
+            self.out_fea = size

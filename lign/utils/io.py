@@ -18,7 +18,7 @@ def unjson(fl):
 
 def json(data, fl):
     with open(fl, 'w') as f:
-        jn.dump(data, f)
+        jn.dump(data, f, indent=4)
 
 def move_file(fl1, fl2):
     os.rename(fl1, fl2)
