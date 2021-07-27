@@ -27,7 +27,7 @@ trans = tv.transforms.Compose([
 
 dataset_name = "CIFAR" #<<<<<
 
-dataset = lg.graph.Graph("data/datasets/cifar.lign")
+dataset = lg.graph.Graph("../data/datasets/cifar.lign")
 
 split = 5/6
 split_n = int(len(dataset)*split)

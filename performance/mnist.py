@@ -21,7 +21,7 @@ os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 
 dataset_name = "MNIST" #<<<<<
 
-dataset = lg.graph.Graph("data/datasets/mnist.lign")
+dataset = lg.graph.Graph("../data/datasets/mnist.lign")
 
 split = 6/7
 split_n = int(len(dataset)*split)
