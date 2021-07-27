@@ -27,7 +27,11 @@ def move_dir(dir1, dir2):
     os.renames(dir1, dir2)
 
 def to_iter(data):
-    if type(data) not in (list, set, tuple):
+    try:
+        iter(data)
+    except TypeError:
+        data = [data]
+    if type(data) == str:
         data = [data]
     return data
 
