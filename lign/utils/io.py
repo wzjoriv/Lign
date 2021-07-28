@@ -8,8 +8,7 @@ def unpickle(fl):
     return dict
 
 def pickle(data, fl):
-    if len(os.path.dirname(fl)) and not os.path.exists(os.path.dirname(fl)):
-        os.makedirs(os.path.dirname(fl))
+    make_dir(os.path.dirname(fl))
         
     with open(fl, 'wb') as f:
         pk.dump(data, f)
@@ -20,8 +19,7 @@ def unjson(fl):
     return dict
 
 def json(data, fl):
-    if len(os.path.dirname(fl)) and not os.path.exists(os.path.dirname(fl)):
-        os.makedirs(os.path.dirname(fl))
+    make_dir(os.path.dirname(fl))
 
     with open(fl, 'w') as f:
         jn.dump(data, f, indent=4)
@@ -31,6 +29,10 @@ def move_file(fl1, fl2):
 
 def move_dir(dir1, dir2):
     os.renames(dir1, dir2)
+
+def make_dir(dir):
+    if len(dir) and not os.path.exists(dir):
+        os.makedirs(dir)
 
 def to_iter(data):
     try:

@@ -33,8 +33,8 @@ split = 5/6
 split_n = int(len(dataset)*split)
 nodes_n = list(range(len(dataset)))
 
-dataset_train = dataset.sub_graph(nodes_n[:split_n], get_data = True, get_edges = True)
-dataset_validate = dataset.sub_graph(nodes_n[split_n:], get_data = True, get_edges = True)
+dataset_train = dataset.sub_graph(nodes_n[:split_n], get_data = True, get_edges=False)
+dataset_validate = dataset.sub_graph(nodes_n[split_n:], get_data = True, get_edges=False)
 
 # ### Cuda GPUs
 
@@ -184,7 +184,8 @@ para = {
     "AMP_ENABLE": AMP_ENABLE,
     "EPOCHS": EPOCHS,
     "LR": LR,
-    "RETRAIN_PER": RETRAIN_PER,
+    "ACCURACY_MED": ACCURACY_MED.__class__.__name__,
+    "STEP_SIZE": STEP_SIZE,
     "STRUCTURE": {
         "base": str(base),
         "classifier": str(classifier)
@@ -202,4 +203,6 @@ check = {
 if AMP_ENABLE:
     check["scaler"] = scaler.state_dict()
 
+dr = os.path.join("data", "models")
+utl.io.make_dir(dr)
 th.save(check, os.path.join("data", "models", filename+".pt"))

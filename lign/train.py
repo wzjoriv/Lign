@@ -18,7 +18,7 @@ def growing_exemplar(
     sub = graph.sub_graph(tr_nodes, get_data=True)
 
     superv(models, sub, labels, opt, 
-            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, sub_graph_size = sub_graph_size)
+            tags = (tag_in, tag_out), device = device, lossF = lossF, epochs = epochs, sub_graph_size = sub_graph_size)
 
 def fixed_exemplar(
             models, graph, labels, opt, 

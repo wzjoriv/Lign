@@ -27,8 +27,8 @@ split = 6/7
 split_n = int(len(dataset)*split)
 nodes_n = list(range(len(dataset)))
 
-dataset_train = dataset.sub_graph(nodes_n[:split_n], get_data = True, get_edges = True)
-dataset_validate = dataset.sub_graph(nodes_n[split_n:], get_data = True, get_edges = True)
+dataset_train = dataset.sub_graph(nodes_n[:split_n], get_data = True, get_edges=False)
+dataset_validate = dataset.sub_graph(nodes_n[split_n:], get_data = True, get_edges=False)
 
 # ### Cuda GPUs
 
@@ -49,11 +49,10 @@ AMP_ENABLE = True and th.cuda.is_available()
 EPOCHS = 5
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
-    "superv": lambda x: not (x + 6)%3, 
-    #"semi": lambda x: not (x + 1)%10,
+    "superv": lambda x: False,
     "semi": lambda x: False,
-    #"unsuperv": lambda x: not (x + 5)%10
-    "unsuperv": lambda x: False
+    "unsuperv": lambda x: False,
+    "growing_exemplar": lambda x: not (x + 6)%3
 }
 ACCURACY_MED = utl.clustering.KNN()
 LOSS_FUN = nn.CrossEntropyLoss()
@@ -61,8 +60,8 @@ STEP_SIZE = 1
 
 num_of_labels = len(LABELS)
 np.random.shuffle(LABELS)
-t_methods = [lg.train.superv, lg.train.semi_superv, lg.train.unsuperv]
-t_names = ["supervised", "semi-supervised", "unsupervised"]
+t_methods = [lg.train.superv, lg.train.semi_superv, lg.train.unsuperv, lg.train.growing_exemplar]
+t_names = ["supervised", "semi-supervised", "unsupervised", "growing exemplar"]
 scaler = GradScaler() if AMP_ENABLE else None
 accuracy = []
 log = []
@@ -130,7 +129,7 @@ test_and_log(INIT_NUM_LAB, "Initial training", method=ACCURACY_MED)
 # online learning system
 for num_labels in introductions:
 
-    to_train = [RETRAIN_PER[t](num_labels) for t in ("superv", "semi", "unsuperv")]
+    to_train = [RETRAIN_PER[t](num_labels) for t in ("superv", "semi", "unsuperv", "growing_exemplar")]
 
     if sum(to_train):
         classifier.DyLinear.update_size(num_labels)
@@ -180,7 +179,8 @@ para = {
     "AMP_ENABLE": AMP_ENABLE,
     "EPOCHS": EPOCHS,
     "LR": LR,
-    "RETRAIN_PER": RETRAIN_PER,
+    "ACCURACY_MED": ACCURACY_MED.__class__.__name__,
+    "STEP_SIZE": STEP_SIZE,
     "STRUCTURE": {
         "base": str(base),
         "classifier": str(classifier)
@@ -198,4 +198,6 @@ check = {
 if AMP_ENABLE:
     check["scaler"] = scaler.state_dict()
 
-th.save(check, os.path.join("data", "models", filename+".pt"))
+dr = os.path.join("data", "models")
+utl.io.make_dir(dr)
+th.save(check, os.path.join(dr, filename+".pt"))

@@ -49,8 +49,8 @@ def mnist_to_lign(path, transforms = None, split = 0.0, self_loop: bool = False)
     subnodes_train = list(range(split))  # training nodes
     subnodes_test = list(range(split, n)) # testing nodes
 
-    graph_train = graph.sub_graph(nodes=subnodes_train, get_data=True, get_edges=True)
-    graph_test = graph.sub_graph(nodes=subnodes_test, get_data=True, get_edges=True)
+    graph_train = graph.sub_graph(nodes=subnodes_train, get_data=True, get_edges=False)
+    graph_test = graph.sub_graph(nodes=subnodes_test, get_data=True, get_edges=False)
 
     return graph, graph_train, graph_test
 
@@ -98,8 +98,8 @@ def cifar_to_lign(path, transforms = None, split = 0.0, self_loop: bool = False)
     subnodes_train = list(range(split))  # training nodes
     subnodes_test = list(range(split, n)) # testing nodes
 
-    graph_train = graph.sub_graph(nodes=subnodes_train, get_data=True, get_edges=True)
-    graph_test = graph.sub_graph(nodes=subnodes_test, get_data=True, get_edges=True)
+    graph_train = graph.sub_graph(nodes=subnodes_train, get_data=True, get_edges=False)
+    graph_test = graph.sub_graph(nodes=subnodes_test, get_data=True, get_edges=False)
 
     return graph, graph_train, graph_test
 
