@@ -77,7 +77,7 @@ class Graph(Dataset):
                 raise
         except Exception:
             raise FileNotFoundError(
-                f".lign file not found at location: {self._file_}")
+                f"No or currepted .lign file found at location: {self._file_}")
 
     def __str__(self) -> str:
         return "graph(" + str(self.dataset) + ")"
