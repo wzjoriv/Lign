@@ -115,7 +115,6 @@ def test_and_log(num_labels, text, method=utl.clustering.NN()):
 
 # ### Train Model
 
-
 # original network
 test_and_log(INIT_NUM_LAB, "Original", method=ACCURACY_MED)
 

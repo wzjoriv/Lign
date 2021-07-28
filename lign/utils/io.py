@@ -8,6 +8,9 @@ def unpickle(fl):
     return dict
 
 def pickle(data, fl):
+    if len(os.path.dirname(fl)) and not os.path.exists(os.path.dirname(fl)):
+        os.makedirs(os.path.dirname(fl))
+        
     with open(fl, 'wb') as f:
         pk.dump(data, f)
 
@@ -17,6 +20,9 @@ def unjson(fl):
     return dict
 
 def json(data, fl):
+    if len(os.path.dirname(fl)) and not os.path.exists(os.path.dirname(fl)):
+        os.makedirs(os.path.dirname(fl))
+
     with open(fl, 'w') as f:
         jn.dump(data, f, indent=4)
 

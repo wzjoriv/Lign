@@ -109,16 +109,7 @@ def test_and_log(num_labels, text, method=utl.clustering.NN()):
     label_and_acc[1].append(acc)
     print(log[-1])
 
-# ### Load State
-
-checkpoint = th.load('data/models/LIGN_training_cool_time.pt') ## change file name
-
-base.load_state_dict(checkpoint['base'])
-classifier.load_state_dict(checkpoint['classifier'])
-opt.load_state_dict(checkpoint['optimizer'])
-
-if AMP_ENABLE:
-    scaler.load_state_dict(checkpoint['scaler'])
+# ### Train Model
 
 # original network
 test_and_log(INIT_NUM_LAB, "Original", method=ACCURACY_MED)
