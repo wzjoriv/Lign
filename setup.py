@@ -1,7 +1,4 @@
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup, find_packages
 
 long_description = ''
 with open("README.md", "r") as f:
@@ -20,7 +17,7 @@ setup(name='lign',
 		author='Josue N Rivera',
 		author_email='josue.n.rivera@outlook.com',
 		url='https://github.com/JosueCom/Lign',
-		packages=['lign'],
+		packages=find_packages(),
 		install_requires=install_requires,
 		python_requires='>=3.7.0'
      )

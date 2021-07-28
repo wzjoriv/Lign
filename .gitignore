@@ -3,6 +3,8 @@
 .ipynb_checkpoints/
 *.pyc
 __pycache__
+build/
+lign.egg-info/
 
 ## development environment
 .vscode/
