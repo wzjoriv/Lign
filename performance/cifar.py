@@ -172,7 +172,7 @@ metrics = {
     "log": log,
     "label_and_acc": label_and_acc
 }
-utl.io.json(metrics, os.path.join("data", "log", filename+".json"))
+utl.io.json(metrics, os.path.join("cifar", "log", filename+".json"))
 
 ## Save hyperparameters
 para = {
@@ -192,7 +192,7 @@ para = {
     }
 }
 
-utl.io.json(para, os.path.join("data", "parameters", filename+".json"))
+utl.io.json(para, os.path.join("cifar", "parameters", filename+".json"))
 
 ## Save model
 check = {
@@ -203,6 +203,6 @@ check = {
 if AMP_ENABLE:
     check["scaler"] = scaler.state_dict()
 
-dr = os.path.join("data", "models")
+dr = os.path.join("cifar", "models")
 utl.io.make_dir(dr)
-th.save(check, os.path.join("data", "models", filename+".pt"))
+th.save(check, os.path.join(dr, filename+".pt"))

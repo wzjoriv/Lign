@@ -44,9 +44,9 @@ LAMBDA = 0.08
 DIST_VEC_SIZE = 128 #128
 INIT_NUM_LAB = 6
 LABELS = np.arange(10)
-SUBGRPAH_SIZE = 500
+SUBGRPAH_SIZE = 50
 AMP_ENABLE = True and th.cuda.is_available()
-EPOCHS = 5
+EPOCHS = 200
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
     "superv": lambda x: False,
@@ -167,7 +167,7 @@ metrics = {
     "log": log,
     "label_and_acc": label_and_acc
 }
-utl.io.json(metrics, os.path.join("data", "log", filename+".json"))
+utl.io.json(metrics, os.path.join("mnist", "log", filename+".json"))
 
 ## Save hyperparameters
 para = {
@@ -187,7 +187,7 @@ para = {
     }
 }
 
-utl.io.json(para, os.path.join("data", "parameters", filename+".json"))
+utl.io.json(para, os.path.join("mnist", "parameters", filename+".json"))
 
 ## Save model
 check = {
@@ -198,6 +198,6 @@ check = {
 if AMP_ENABLE:
     check["scaler"] = scaler.state_dict()
 
-dr = os.path.join("data", "models")
+dr = os.path.join("mnist", "models")
 utl.io.make_dir(dr)
 th.save(check, os.path.join(dr, filename+".pt"))
