@@ -43,7 +43,7 @@ Lign (Lifelong learning Induced by Graph Neural networks) is a deep learning fra
 
 ## Getting Started
 
-These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign``, ``conda install lign -c pytorch -c josuecom`` or by downloading the [package][release-url] on github and saving in the ``site-packages/`` directory.
+These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign``, ``conda install lign -c josuecom -c pytorch`` or by downloading the [package][release-url] from github and saving in the ``site-packages/`` directory of your python interpreter.
 
 _For more details, please read the [developer documentation](docs/dev)_
 
