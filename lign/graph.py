@@ -110,11 +110,11 @@ class Graph(Dataset):
 
         tp = type(indx)
 
-        if (tp is int or tp is slice or (tp is list and type(indx[0]) is int)):
+        if (tp is int or tp is slice or tp is list):
             return self.get_nodes(indx)
         elif (tp is str):
             return self.get_data(indx)
-        elif (tp is tuple and type(indx[0]) is int):
+        elif (tp is tuple):
             return self.get_edges(indx)
 
         raise TypeError("Input is invalid. Only List[int], slice, str, int or Tuple[int] is accepted")
