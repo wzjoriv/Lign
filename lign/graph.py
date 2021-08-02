@@ -255,6 +255,8 @@ class Graph(Dataset):
 
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
+        
+        return self
 
     def remove(self):
         raise NotImplementedError("Removal of nodes not yet implemented")
