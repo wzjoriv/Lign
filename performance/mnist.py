@@ -20,6 +20,7 @@ os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 # ### Load Dataset
 
 dataset_name = "MNIST" #<<<<<
+folder_name = "mnist_1"
 
 dataset = lg.graph.Graph("../data/datasets/mnist.lign")
 
@@ -44,15 +45,15 @@ LAMBDA = 0.08
 DIST_VEC_SIZE = 128 #128
 INIT_NUM_LAB = 6
 LABELS = np.arange(10)
-SUBGRPAH_SIZE = 50
+SUBGRPAH_SIZE = 500
 AMP_ENABLE = True and th.cuda.is_available()
-EPOCHS = 200
+EPOCHS = 5
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
-    "superv": lambda x: False,
+    "superv": lambda x: not (x + 6)%3,
     "semi": lambda x: False,
     "unsuperv": lambda x: False,
-    "growing_exemplar": lambda x: not (x + 6)%3
+    "growing_exemplar": lambda x: False
 }
 ACCURACY_MED = utl.clustering.KNN()
 LOSS_FUN = nn.CrossEntropyLoss()
@@ -167,7 +168,7 @@ metrics = {
     "log": log,
     "label_and_acc": label_and_acc
 }
-utl.io.json(metrics, os.path.join("mnist", "log", filename+".json"))
+utl.io.json(metrics, os.path.join(folder_name, "log", filename+".json"))
 
 ## Save hyperparameters
 para = {
@@ -187,7 +188,7 @@ para = {
     }
 }
 
-utl.io.json(para, os.path.join("mnist", "parameters", filename+".json"))
+utl.io.json(para, os.path.join(folder_name, "parameters", filename+".json"))
 
 ## Save model
 check = {
@@ -198,6 +199,6 @@ check = {
 if AMP_ENABLE:
     check["scaler"] = scaler.state_dict()
 
-dr = os.path.join("mnist", "models")
+dr = os.path.join(folder_name, "models")
 utl.io.make_dir(dr)
 th.save(check, os.path.join(dr, filename+".pt"))

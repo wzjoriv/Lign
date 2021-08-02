@@ -10,7 +10,7 @@ __pycache__
 /.vscode/
 /.rug/
 /data/
-/performance/mnist/
-/performance/cifar/
-/performance/cora/
+/performance/mnist*/
+/performance/cifar*/
+/performance/cora*/
 /main.ipynb
