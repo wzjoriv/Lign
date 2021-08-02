@@ -3,9 +3,14 @@
 .ipynb_checkpoints/
 *.pyc
 __pycache__
+/build/
+/lign.egg-info/
 
 ## development environment
-.vscode/
-.rug/
-data/
-main.ipynb
+/.vscode/
+/.rug/
+/data/
+/performance/mnist*/
+/performance/cifar*/
+/performance/cora*/
+/main.ipynb

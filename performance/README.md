@@ -8,11 +8,11 @@
   - [Performance Test](#performance-test)
     - [MNIST](#mnist)
     - [CIFAR](#cifar)
-    - [CORA](#cora)
+    - [Cora](#cora)
 
 ## Hyper-Parameters
 
-- Representation Vector Size
+- Feature Vector Size
 
 ## Performance Test
 
@@ -20,4 +20,4 @@
 
 ### CIFAR
 
-### CORA
+### Cora

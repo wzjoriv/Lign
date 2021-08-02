@@ -3,25 +3,30 @@ import torch as th
 
 from lign.utils import io, clustering as cl, functions as fn
 
-def validate(model, graph, train, tag_in, tag_out, labels, metrics = ['accuracy'], sv_img = None, cluster = (cl.NN(), 3), device = th.device('cpu'), save_img = False):
+def validate(model, graph, train, tag_in, tag_out, labels, metrics = ['accuracy'], cluster = (cl.NN(), 3), device = th.device('cpu')):
 
     model.eval()
+    is_gcn = fn.has_gcn(model)
     with th.no_grad():
         tr_nodes, tr_labs = fn.filter_k_from_tags(tag_out, labels, train, cluster[1])
-        sub = train.sub_graph(tr_nodes)
+        sub = train.sub_graph(tr_nodes, get_edges = is_gcn)
         inp = sub.get_parent_data(tag_in).to(device)
         
-        cluster = cluster[0]
-        cluster.train(model(sub, inp), tr_labs.to(device))
+        cluster_m = cluster[0]
+        tr_vec = model(sub, inp) if is_gcn else model(inp)
+        cluster_m.train(tr_vec, tr_labs.to(device))
 
         ts_nodes = fn.filter_tags(tag_out, labels, graph)
-        graph = graph.sub_graph(ts_nodes)
+        graph = graph.sub_graph(ts_nodes, get_edges = is_gcn)
 
         inp = graph.get_parent_data(tag_in).to(device)
         outp_t = graph.get_parent_data(tag_out).to(device)
 
-        rep_vec = model(graph, inp, save=save_img)
-        outp_p = cluster(rep_vec)
+        rep_vec = model(sub, inp) if is_gcn else model(inp)
+        outp_p = th.zeros(rep_vec.size(0), dtype=rep_vec.dtype, device=rep_vec.device)
+
+        for i in range(0, len(rep_vec), 200):
+            outp_p[i:min(len(rep_vec), i + 200)] = cluster_m(rep_vec[i:min(len(rep_vec), i + 200)])
 
     out = {}
     metrics = io.to_iter(metrics)
@@ -31,8 +36,8 @@ def validate(model, graph, train, tag_in, tag_out, labels, metrics = ['accuracy'
     
     return out
 
-def accuracy(model, graph, train, tag_in, tag_out, labels, cluster = (cl.NN(), 3), sv_img = None, device = th.device('cpu'), save_img = False):
+def accuracy(model, graph, train, tag_in, tag_out, labels, cluster = (cl.NN(), 3), device = th.device('cpu')):
 
-    out = validate(model, graph, train, tag_in, tag_out, labels, metrics = 'accuracy', cluster = cluster, sv_img=sv_img, device = device, save_img = save_img)
+    out = validate(model, graph, train, tag_in, tag_out, labels, metrics = 'accuracy', cluster = cluster, device = device)
 
     return out['accuracy']

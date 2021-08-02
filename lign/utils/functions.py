@@ -26,11 +26,11 @@ def distance_matrix(x, y=None, p = 2): #pairwise distance of vectors
     
     return dist
 
-def get_equals_filter(i):
+def equals_filter(i):
     return lambda x: x == i
 
 def filter_tags(data, tags, graph):
-    fils = [get_equals_filter(i) for i in tags]
+    fils = [equals_filter(i) for i in tags]
 
     out = graph.filter(fils, data)
     return out
@@ -41,7 +41,7 @@ def filter_k_from_tags(data, tags, graph, k = 3):
 
     for tag in tags:
         labs.extend([tag] * k)
-        out.extend(graph.filter(get_equals_filter(tag), data)[:k])
+        out.extend(graph.filter(equals_filter(tag), data)[:k])
 
     return th.LongTensor(out), th.LongTensor(labs)
 
@@ -61,8 +61,12 @@ def onehot_encode(data, labels): # onehot encoding
     
     return final
 
-def sum_neighs_data(neighs):
+def sum_data(neighs):
     out = neighs[0]
     for neigh in neighs[1:]:
         out = out + neigh
     return out
+
+def sum_tensors(neighs):
+    return th.stack(neighs).sum(dim = 0)
+

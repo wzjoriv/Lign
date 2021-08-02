@@ -1,12 +1,5 @@
-# # Lign - MNIST
-# 
-# ----
-# 
-# ## Imports
-
 
 import lign as lg
-import lign.models as md
 import lign.utils as utl
 
 import torch as th
@@ -17,152 +10,152 @@ import torch.nn.functional as F
 from torch.cuda.amp import GradScaler
 
 import numpy as np
-import datetime
+import datetime, os
+from matplotlib.pyplot import plot as plt
 tm_now = datetime.datetime.now
 
+import os
+os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 
 # ### Load Dataset
 
 dataset_name = "MNIST" #<<<<<
+folder_name = "mnist_1"
 
-dataset = lg.graph.Graph("data/datasets/mnist_train.lign")
-validate = lg.graph.Graph("data/datasets/mnist_test.lign")
+dataset = lg.graph.Graph("../data/datasets/mnist.lign")
 
+split = 6/7
+split_n = int(len(dataset)*split)
+nodes_n = list(range(len(dataset)))
+
+dataset_train = dataset.sub_graph(nodes_n[:split_n], get_data = True, get_edges=False)
+dataset_validate = dataset.sub_graph(nodes_n[split_n:], get_data = True, get_edges=False)
 
 # ### Cuda GPUs
-
 
 if th.cuda.is_available():
     device = th.device("cuda")
     th.cuda.empty_cache()
 else:
     device = th.device("cpu")
-
-
+    
 # ### Hyperparameters
-# * LAMBDA: regulates how much the model relies on difference between the nodes vs the features that lead to their label 
-# * DIST_VEC_SIZE: size of vector representing the mapping of the nodes by the model
-# * INIT_NUM_LAB: number of labels used to training the model initially in the supervised method to learn pairwise mapping
-# * LABELS: list of all the labels that model comes across. Labels can be appended at any time. The order of labels is initially randomized
-# * SUBGRAPH_SIZE: represent the number of nodes processed at once. The models don't have batches. This is the closest thing to it
-# * AMP_ENABLE: toggle to enable mixed precission training
-# * EPOCHS: Loops executed during training
-# * LR: Learning rate
-# * RETRAIN_PER: period between retraining based on number of labels seen. format: (offset, period)
 
-
-LAMBDA = 0.1
+LAMBDA = 0.08
 DIST_VEC_SIZE = 128 #128
-INIT_NUM_LAB = 4
+INIT_NUM_LAB = 6
 LABELS = np.arange(10)
 SUBGRPAH_SIZE = 500
-AMP_ENABLE = True
-EPOCHS = 300
+AMP_ENABLE = True and th.cuda.is_available()
+EPOCHS = 5
 LR = 1e-3
-RETRAIN_PER = {
-    "superv": (6, 3)
+RETRAIN_PER = { # (offset, frequency); When zero, true
+    "superv": lambda x: not (x + 6)%3,
+    "semi": lambda x: False,
+    "unsuperv": lambda x: False,
+    "growing_exemplar": lambda x: False
 }
+ACCURACY_MED = utl.clustering.KNN()
+LOSS_FUN = nn.CrossEntropyLoss()
+STEP_SIZE = 1
 
+num_of_labels = len(LABELS)
 np.random.shuffle(LABELS)
+t_methods = [lg.train.superv, lg.train.semi_superv, lg.train.unsuperv, lg.train.growing_exemplar]
+t_names = ["supervised", "semi-supervised", "unsupervised", "growing exemplar"]
+scaler = GradScaler() if AMP_ENABLE else None
+accuracy = []
+log = []
+label_and_acc = [[], []]
+introductions = range(INIT_NUM_LAB + 1, num_of_labels + 1, STEP_SIZE) #start, end, step
+#LABELS = np.array([3, 1, 0, 9, 5, 7, 2, 4, 8, 6]) ## mnist
 
 
 # ---
 # ## Models
-# ### Lign
+# ### LIGN
 # 
-# [L]ifelong Learning [I]nduced by [G]raph [N]eural Networks Model (Lign)
+# [L]ifelong Learning [I]nduced by [G]raph [N]eural Networks Model (LIGN)
 
-class LIGN_MNIST(nn.Module):
-    def __init__(self, out_feats):
-        super(LIGN_MNIST, self).__init__()
-        self.gcn1 = lg.layers.GCN(nn.Conv2d(1, 32, 3, 1))
-        self.gcn2 = lg.layers.GCN(nn.Conv2d(32, 64, 3, 1))
-        self.gcn3 = lg.layers.GCN(nn.Linear(9216, out_feats))
-        self.drop1 = nn.Dropout(0.25)
-        self.drop2 = nn.Dropout(0.5)
+### MNIST
+from lign.models import MNIST
 
-    def forward(self, g, features, save=False):
-        x = F.relu(self.gcn1(g, features))
-        if(save):
-            x_sv = x[:100]
-            print(x_sv.shape)
-            for i in range(x_sv.size(0)):
-                save_image(th.unsqueeze(x_sv[i], 1), "data/thesis/mid/gcn1/img" + str(i) + ".png")
-
-        x = F.relu(self.gcn2(g, x))
-        if(save):
-            x_sv = x[:100]
-            for i in range(x_sv.size(0)):
-                save_image(th.unsqueeze(x_sv[i], 1), "data/thesis/mid/gcn2/img" + str(i) + ".png")
-        x = F.max_pool2d(x, 2)
-        x = th.flatten(self.drop1(x), 1)
-        x = F.relu(self.gcn3(g, x))
-        if(save):
-            x_sv = x[:100]
-            save_image(th.unsqueeze(th.unsqueeze(x_sv, 1), -1), "data/thesis/mid/vector output.png", nrow=100)
-
-        return self.drop2(x)
-
-
-class ADDON(nn.Module): ## tempory layer for training
-    def __init__(self, in_fea, out_fea, device = 'cuda'):
-        super(ADDON, self).__init__()
-        self.addon = lg.layers.ADDON(in_fea, out_fea, device=device) #
-    
-    def forward(self, g, features):
-        x = F.log_softmax(self.addon(g, features), dim=1)
-        return x
-
-model = LIGN_MNIST(DIST_VEC_SIZE).to(device) # base
-addon = ADDON(DIST_VEC_SIZE, INIT_NUM_LAB, device).to(device) # classifier
+base = MNIST.Base(DIST_VEC_SIZE).to(device)  # base
+classifier = MNIST.Classifier(DIST_VEC_SIZE, INIT_NUM_LAB, device).to(device) # classifer
 
 
 # ----
 # ## Training
-# ### Parameters
+# ### Snippets
 
+opt = th.optim.Adam([ # optimizer for the full network
+        {'params': base.parameters()},
+        {'params': classifier.parameters()}
+    ], lr=LR)
 
-#opt
-accuracy = []
-log = []
-num_of_labels = len(LABELS)
-opt = th.optim.Adam(model.parameters(), lr=LR)
-scaler = GradScaler() if AMP_ENABLE else None
-
-retrain_superv = lambda x: (x + RETRAIN_PER["superv"][0])%RETRAIN_PER["superv"][1] == 0
-
+def test_and_log(num_labels, text, method=utl.clustering.NN()):
+    acc = lg.test.accuracy(base, 
+                    dataset_validate, 
+                    dataset_train, 
+                    "x", "labels", 
+                    LABELS[:num_labels], 
+                    cluster=(method, 5), 
+                    device=device)
+  
+    accuracy.append(acc)
+    m_name = method.__class__.__name__
+    log.append(f"Label: {num_labels}/{num_of_labels} -- Accuracy({m_name}): {round(acc, 2)}% -- {text}")
+    label_and_acc[0].append(num_labels)
+    label_and_acc[1].append(acc)
+    print(log[-1])
 
 # ### Train Model
 
+# original network
+test_and_log(INIT_NUM_LAB, "Original", method=ACCURACY_MED)
 
-acc = lg.test.accuracy(model, validate, dataset, "x", "labels", LABELS[:INIT_NUM_LAB], cluster=(utl.clustering.NN(), 5), sv_img = '2d', device=device)
+lg.train.superv(models = (base, classifier),
+                        labels = LABELS[:INIT_NUM_LAB],
+                        graph = dataset_train,
+                        opt = opt,
+                        tags = ("x", "labels"),
+                        device = (device, scaler),
+                        lossF = LOSS_FUN,
+                        epochs=EPOCHS, 
+                        sub_graph_size=SUBGRPAH_SIZE)
 
-accuracy.append(acc)
-log.append("Label: {}/{} -- Accuracy: {}% -- Original".format(INIT_NUM_LAB, num_of_labels, round(acc, 2)))
-print(log[-1])
+# trained network
+test_and_log(INIT_NUM_LAB, "Initial training", method=ACCURACY_MED)
 
+# online learning system
+for num_labels in introductions:
 
-lg.train.superv(model, opt, dataset, "x", "labels", LABELS[:INIT_NUM_LAB], addon, LAMBDA, (device, scaler), epochs=EPOCHS, sub_graph_size=SUBGRPAH_SIZE)
+    to_train = [RETRAIN_PER[t](num_labels) for t in ("superv", "semi", "unsuperv", "growing_exemplar")]
 
-for num_labels in range(INIT_NUM_LAB, num_of_labels + 1):
-  
-    if retrain_superv(num_labels):
-        acc = lg.test.accuracy(model, validate, dataset, "x", "labels", LABELS[:num_labels], cluster=(utl.clustering.NN(), 5), device=device)
+    if sum(to_train):
+        classifier.DyLinear.update_size(num_labels)
+        opt = th.optim.Adam([ # optimizer for the full network
+                {'params': base.parameters()},
+                {'params': classifier.parameters()}
+            ], lr=LR)
+        
+        EPOCHS -= int(EPOCHS*LAMBDA)
 
-    	accuracy.append(acc)
-        log.append("Label: {}/{} -- Accuracy: {}% -- Surpervised Retraining: {}".format(num_labels, num_of_labels, round(acc, 2), False))
-        print(log[-1])
+        for i in (k for k, en in enumerate(to_train) if en):
 
-        addon.addon.update_size(num_labels)
-        EPOCHS -= int(EPOCHS*0.05)
-        lg.train.superv(model, opt, dataset, "x", "labels", LABELS[:num_labels], addon, LAMBDA, (device, scaler), epochs=EPOCHS, sub_graph_size=SUBGRPAH_SIZE)
+            test_and_log(num_labels, f"Before {t_names[i]} retraining", method=ACCURACY_MED)
+
+            t_methods[i](models = (base, classifier),
+                        labels = LABELS[:num_labels],
+                        graph = dataset_train,
+                        opt = opt,
+                        tags = ("x", "labels"),
+                        device = (device, scaler),
+                        lossF = LOSS_FUN,
+                        epochs=EPOCHS, 
+                        sub_graph_size=SUBGRPAH_SIZE)
     
-    acc = lg.test.accuracy(model, validate, dataset, "x", "labels", LABELS[:num_labels], cluster=(utl.clustering.NN(), 5), sv_img = '2d', device=device)
-
-    accuracy.append(acc)
-    log.append("Label: {}/{} -- Accuracy: {}% -- Surpervised Retraining: {}".format(num_labels, num_of_labels, round(acc, 2), retrain_superv(num_labels)))
-    print(log[-1])
-
+    test_and_log(num_labels, "Tested with labels " + str(LABELS[:num_labels]), method=ACCURACY_MED)
 
 # ### Save State
 
@@ -172,9 +165,10 @@ filename = "LIGN_" + dataset_name + "_training_"+time
 ## Save metrics
 metrics = {
     "accuracy": accuracy,
-    "log": log
+    "log": log,
+    "label_and_acc": label_and_acc
 }
-utl.io.json(metrics, "data/metrics/"+filename+".json")
+utl.io.json(metrics, os.path.join(folder_name, "log", filename+".json"))
 
 ## Save hyperparameters
 para = {
@@ -186,18 +180,25 @@ para = {
     "AMP_ENABLE": AMP_ENABLE,
     "EPOCHS": EPOCHS,
     "LR": LR,
-    "RETRAIN_PER": RETRAIN_PER,
-    "STRUCTURE": str(model)
+    "ACCURACY_MED": ACCURACY_MED.__class__.__name__,
+    "STEP_SIZE": STEP_SIZE,
+    "STRUCTURE": {
+        "base": str(base),
+        "classifier": str(classifier)
+    }
 }
 
-utl.io.json(para, "data/parameters/"+filename+".json")
+utl.io.json(para, os.path.join(folder_name, "parameters", filename+".json"))
 
 ## Save model
 check = {
-    "model": model.state_dict(),
+    "base": base.state_dict(),
+    "classifier": classifier.state_dict(),
     "optimizer": opt.state_dict()
 }
 if AMP_ENABLE:
     check["scaler"] = scaler.state_dict()
 
-th.save(check, "data/models/"+filename+".pt")
+dr = os.path.join(folder_name, "models")
+utl.io.make_dir(dr)
+th.save(check, os.path.join(dr, filename+".pt"))

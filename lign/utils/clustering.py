@@ -45,8 +45,8 @@ class KNN(NN):
         knn = dist.topk(self.k, largest=False)
         votes = self.train_label[knn.indices]
 
-        winner = th.zeros(votes.size(0), dtype = self.train_label.dtype)
-        count = th.zeros(votes.size(0), dtype = votes.dtype) - 1
+        winner = th.zeros(votes.size(0), dtype=votes.dtype, device=votes.device)
+        count = th.zeros(votes.size(0), dtype=votes.dtype, device=votes.device) - 1
 
         for lab in self.unique_labels:
             vote_count = (votes == lab).sum(1)

@@ -29,6 +29,9 @@ from lign.utils.g_types import Tensor, T, List, Tuple, Set, Dict
 def node(data: dict = {}, edges: Union[Set[int], Tuple[int], List[int]] = set()) -> Node:
     return Node(data, edges)
 
+def graph(fl: str = "", workers: int = 1) -> Graph:
+    return Graph(fl, workers)
+
 class Node():
     def __init__(self, data: dict = {}, edges: Union[Set[int], Tuple[int], List[int]] = set()) -> None:
 
@@ -74,7 +77,7 @@ class Graph(Dataset):
                 raise
         except Exception:
             raise FileNotFoundError(
-                f".lign file not found at location: {self._file_}")
+                f"No or currepted .lign file found at location: {self._file_}")
 
     def __str__(self) -> str:
         return "graph(" + str(self.dataset) + ")"
@@ -253,6 +256,9 @@ class Graph(Dataset):
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
 
+    def remove(self):
+        raise NotImplementedError("Removal of nodes not yet implemented")
+
     # returns isolated graph
     def sub_graph(self, nodes: Union[int, List[int]], get_data: bool = False, get_edges: bool = False) -> SubGraph:
         nodes = io.to_iter(nodes)
@@ -316,10 +322,17 @@ class Graph(Dataset):
         if reset_buffer:
             self.reset_temp()
         else:
-            warnings.warn("Temporary buffer was not reset")
+            warnings.warn("Temporary buffer was not reset. Data will be accomulated next time push() or pull() is called")
 
     # pushes its data to nodes that it points to into nodes' temp
-    def push(self, func: Optional[Union[Callable[[Union[Tensor, List[T]]], Union[Tensor, T]], nn.Module]] = None, data: Optional[str] = None, nodes: Union[int, List[int]] = [], reset_buffer: bool = True) -> None:
+    def push(
+        self, 
+        func: Optional[Union[Callable[[Union[Tensor, List[T]]], Union[Tensor, T]], nn.Module]] = None, 
+        data: Optional[str] = None, 
+        nodes: Union[int, List[int]] = [], 
+        reset_buffer: bool = True
+    ) -> None:
+
         nodes = io.to_iter(nodes)
 
         if not len(nodes):
@@ -360,7 +373,7 @@ class Graph(Dataset):
         if reset_buffer:
             self.reset_temp()
         else:
-            warnings.warn("Temporary buffer was not reset")
+            warnings.warn("Temporary buffer was not reset. Data will be accomulated next time push() or pull() is called")
 
     def apply(self, func: Optional[Callable[[Union[Tensor, List[T]]], Union[Tensor, T]]], data: str, nodes: Union[int, List[int]] = []) -> None:
         nodes = io.to_iter(nodes)
@@ -436,8 +449,8 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
         if len(diff_data):
             raise LookupError(f"The nodes {diff_data} are not part of the sub graph")
 
-        if len(nodes) == len(self.p_nodes) or not len(nodes):
-            return self.p_nodes
+        if not len(nodes) or len(nodes) == len(self.p_nodes):
+            return list(range(len(self.p_nodes)))
 
         return [self.p_nodes.index(nd) for nd in nodes] if not primitive else self.p_nodes.index(nodes[0])
 
@@ -445,7 +458,7 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
         primitive = io.is_primitve(nodes)
         nodes = io.to_iter(nodes)
 
-        if len(nodes) == len(self.p_nodes) or not len(nodes):
+        if not len(nodes) or len(nodes) == len(self.p_nodes):
             return self.p_nodes
 
         return [self.p_nodes[i] for i in nodes] if not primitive else self.p_nodes[nodes[0]]
@@ -453,10 +466,24 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
     def child_to_index(self, nodes: Union[int, List[int]] = []):
         primitive = io.is_primitve(nodes)
 
-        if len(nodes) == len(self.p_nodes) or not len(nodes):
+        if not len(nodes) or len(nodes) == len(self.p_nodes):
             return self.i_nodes
 
         return [self.i_nodes[i] for i in nodes] if not primitive else self.i_nodes[nodes[0]]
+
+    def index_to_child(self, nodes: Union[int, List[int]] = []):
+        primitive = io.is_primitve(nodes)
+        nodes = io.to_iter(nodes)
+
+        diff_data = list(set(nodes) - set(self.i_nodes))
+
+        if len(diff_data):
+            raise LookupError(f"The nodes {diff_data} are not part of those brought from the parent graph")
+        
+        if not len(nodes) or len(nodes) == len(self.p_nodes):
+            return list(range(len(self.i_nodes)))
+
+        return [self.i_nodes.index(nd) for nd in nodes] if not primitive else self.i_nodes[nodes[0]]
 
     def peek_parent_node(self, nodes: Union[List[int], int]) -> List[Node]:
         primitive = io.is_primitve(nodes)
@@ -523,6 +550,9 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
     def get_parent_edges(self, nodes: Union[List[int], int] = []) -> List[Set[int]]:
         primitive = io.is_primitve(nodes)
         nodes = io.to_iter(nodes)
+
+        if not len(nodes):
+            nodes = list(range(len(self.p_nodes)))
 
         edges = []
 
