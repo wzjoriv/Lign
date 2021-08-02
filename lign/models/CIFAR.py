@@ -16,17 +16,18 @@ class Base(nn.Module):  ## base, feature extractor
 class Classifier(nn.Module): ## temporality layer for training
     def __init__(self, in_fea, out_fea, device = 'cuda'):
         super(Classifier, self).__init__()
-        self.DyLinear = DyLinear(in_fea, out_fea, device=device) # dynamic linear dense layer
+        self.linear = nn.Linear(in_fea, in_fea*2)
+        self.DyLinear = DyLinear(in_fea*2, out_fea, device=device) # dynamic linear dense layer
     
     def forward(self, features):
-        x = self.DyLinear(features)
+        x = F.relu(self.linear(features))
+        x = self.DyLinear(x)
         x = F.log_softmax(x, dim=1)
         return x
 
 #----------------------- Credit: PyTorch and https://github.com/akamaster/pytorch_resnet_cifar10 -------------------------
 
 def _weights_init(m):
-    classname = m.__class__.__name__
     if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
         init.kaiming_normal_(m.weight)
 
