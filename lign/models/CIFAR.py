@@ -25,7 +25,7 @@ class Classifier(nn.Module): ## temporality layer for training
         x = F.log_softmax(x, dim=1)
         return x
 
-#----------------------- Credit: PyTorch and https://github.com/akamaster/pytorch_resnet_cifar10 -------------------------
+#----------------------- Credit to PyTorch and https://github.com/akamaster/pytorch_resnet_cifar10 -------------------------
 
 def _weights_init(m):
     if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
