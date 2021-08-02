@@ -91,8 +91,7 @@ It is recommended to run the following instructions in a python console to view 
    import torch as th
 
    n = 5
-   g = lg.Graph()
-   g.add(n)
+   g = lg.Graph().add(n)
    g['x'] = th.rand(n, 3) ## Or, g.set_data('x', th.rand(n, 3))
 
    g
@@ -111,8 +110,7 @@ It is recommended to run the following instructions in a python console to view 
    from torch import nn
 
    n = 5
-   g = lg.Graph()
-   g.add(n, self_loop=False) ## No self loop edges added since no relational data is present
+   g = lg.Graph().add(n, self_loop=False) ## No self loop edges added since no relational data is present
    g['x'] = th.rand(n, 3)
    g['x']
    
@@ -131,8 +129,7 @@ It is recommended to run the following instructions in a python console to view 
    from lign.utils.functions import sum_tensors
 
    n = 5
-   g = lg.Graph()
-   g.add(n)
+   g = lg.Graph().add(n)
    g['x'] = th.rand(n, 3)
    g['x']
    
@@ -161,8 +158,7 @@ It is recommended to run the following instructions in a python console to view 
    from torch import nn
    from lign.nn import GCN
    n = 5
-   g = lg.Graph()
-   g.add(n)
+   g = lg.Graph().add(n)
    g['x'] = th.rand(n, 3)
    
    # Add 3 to all data in the dataset; doesn't require neighbors
@@ -185,8 +181,7 @@ It is recommended to run the following instructions in a python console to view 
    import lign as lg
    import torch as th
    n = 5
-   g = lg.Graph()
-   g.add(n)
+   g = lg.Graph().add(n)
    g['x'] = th.rand(n, 3)
    g[tuple(range(n))] = set(range(3, n)) ## Add edge from each node to 3 and 4
    g
@@ -196,8 +191,7 @@ It is recommended to run the following instructions in a python console to view 
    sub
    
    # Make sub graph with only edges from parent; edges are updated to reflect new indexes
-   sub = g.sub_graph(2, get_edges = True)
-   sub.add(2)
+   sub = g.sub_graph(2, get_edges = True).add(2)
    sub
    
    # Make sub graph with only data from parent
@@ -205,6 +199,7 @@ It is recommended to run the following instructions in a python console to view 
    sub = g.sub_graph([3, 4], get_data = True)
    sub.add([lg.node({'x': th.rand(3)}) for i in range(2)], add_edges = False)
    sub
+   
    sub[(2, 3)] = sub.get_parent_edges([0, 2])
    sub
    ```
@@ -215,8 +210,7 @@ It is recommended to run the following instructions in a python console to view 
    import lign as lg
    import torch as th
    n = 5
-   g = lg.Graph()
-   g.add(n)
+   g = lg.Graph().add(n)
    g['x'] = th.rand(n, 3)
 
    # Save to file

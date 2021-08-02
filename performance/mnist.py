@@ -93,14 +93,14 @@ opt = th.optim.Adam([ # optimizer for the full network
         {'params': classifier.parameters()}
     ], lr=LR)
 
+
 def test_and_log(num_labels, text, method=utl.clustering.NN()):
-    acc = lg.test.accuracy(base, 
-                    dataset_validate, 
-                    dataset_train, 
-                    "x", "labels", 
-                    LABELS[:num_labels], 
-                    cluster=(method, 5), 
-                    device=device)
+    acc = lg.test.accuracy(model = base,
+                labels = LABELS[:num_labels],
+                graphs = (dataset_train, dataset_validate),
+                tags = ("x", "labels"),
+                device = device,
+                sub_graph_size=SUBGRPAH_SIZE)
   
     accuracy.append(acc)
     m_name = method.__class__.__name__
