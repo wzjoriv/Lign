@@ -560,7 +560,7 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
 
         for node in nodes:
             mutual_edges = self.parent.get_edges(self.child_to_parent_index(node)).intersection(self.p_nodes)
-            edgs = [self.p_nodes.index(ed) for ed in mutual_edges]
+            edgs = set([self.p_nodes.index(ed) for ed in mutual_edges])
             edges.append(edgs)
 
             self.dataset["edges"][node] = edgs

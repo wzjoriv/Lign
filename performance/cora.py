@@ -20,7 +20,7 @@ os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 # ### Load Dataset
 
 dataset_name = "CORA" #<<<<<
-folder_name = "mnist_1"
+folder_name = "cora_1"
 
 dataset = lg.graph.Graph("../data/datasets/cora.lign")
 
