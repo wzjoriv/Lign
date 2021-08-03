@@ -430,6 +430,9 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
     def __init__(self, graph_dataset: Graph, nodes: Union[List[int], int], get_data: bool = False, get_edges: bool = False) -> None:
         super().__init__()
 
+        if torch.is_tensor(nodes):
+            nodes = nodes.tolist()
+
         self.parent = graph_dataset
         self.p_nodes = io.to_iter(nodes)
         self.i_nodes = list(range(len(self.p_nodes)))

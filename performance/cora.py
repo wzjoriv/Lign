@@ -43,9 +43,9 @@ else:
 
 LAMBDA = 0.08
 DIST_VEC_SIZE = 128 #128
-INIT_NUM_LAB = 6
+INIT_NUM_LAB = 4
 LABELS = np.arange(10)
-SUBGRPAH_SIZE = 500
+SUBGRPAH_SIZE = 128
 AMP_ENABLE = True and th.cuda.is_available()
 EPOCHS = 5
 LR = 1e-3
