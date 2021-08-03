@@ -53,7 +53,8 @@ RETRAIN_PER = { # (offset, frequency); When zero, true
     "superv": lambda x: not (x + 6)%3,
     "semi": lambda x: False,
     "unsuperv": lambda x: False,
-    "growing_exemplar": lambda x: False
+    "growing_exemplar": lambda x: False,
+    "fixed_exemplar": lambda x: False
 }
 ACCURACY_MED = utl.clustering.KNN()
 LOSS_FUN = nn.CrossEntropyLoss()
@@ -61,8 +62,8 @@ STEP_SIZE = 1
 
 num_of_labels = len(LABELS)
 np.random.shuffle(LABELS)
-t_methods = [lg.train.superv, lg.train.semi_superv, lg.train.unsuperv, lg.train.growing_exemplar]
-t_names = ["supervised", "semi-supervised", "unsupervised", "growing exemplar"]
+t_methods = [lg.train.superv, lg.train.semi_superv, lg.train.unsuperv, lg.train.growing_exemplar, lg.train.fixed_exemplar]
+t_names = ["supervised", "semi-supervised", "unsupervised", "growing exemplar", "fixed exemplar"]
 scaler = GradScaler() if AMP_ENABLE else None
 accuracy = []
 log = []
@@ -130,7 +131,7 @@ test_and_log(INIT_NUM_LAB, "Initial training", method=ACCURACY_MED)
 # online learning system
 for num_labels in introductions:
 
-    to_train = [RETRAIN_PER[t](num_labels) for t in ("superv", "semi", "unsuperv", "growing_exemplar")]
+    to_train = [RETRAIN_PER[t](num_labels) for t in ("superv", "semi", "unsuperv", "growing_exemplar", "fixed_exemplar")]
 
     if sum(to_train):
         classifier.DyLinear.update_size(num_labels)
