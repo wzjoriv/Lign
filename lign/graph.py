@@ -190,10 +190,13 @@ class Graph(Dataset):
         for node in nodes:
             self.dataset["edges"][node].update(edges)
 
-    def get_edges(self, nodes: Union[int, List[int], Set[int], Tuple[int]]) -> Union[set, List[Set]]:
+    def get_edges(self, nodes: Union[int, List[int], Set[int], Tuple[int]] = []) -> Union[set, List[Set]]:
         primitive = io.is_primitve(nodes)
         nodes = io.to_iter(nodes)
         edges = []
+        
+        if not len(nodes):
+            nodes = range(len(self))
 
         for node in nodes:
             edges.append(self.dataset["edges"][node])
@@ -259,7 +262,7 @@ class Graph(Dataset):
         return self
 
     def remove(self):
-        raise NotImplementedError("Removal of nodes not yet implemented")
+        raise NotImplementedError("Removal of nodes not yet implemented. In the meantime, you may use SubGraphs to isolate nodes.")
 
     # returns isolated graph
     def sub_graph(self, nodes: Union[int, List[int]], get_data: bool = False, get_edges: bool = False) -> SubGraph:
@@ -348,8 +351,7 @@ class Graph(Dataset):
         if func:
             if data:
                 for node in nodes:
-                    out = [self.dataset["__temp__"][node][i].data[data]
-                           for i in range(len(self.dataset["__temp__"][node]))]
+                    out = [self.dataset["__temp__"][node][i].data[data] for i in range(len(self.dataset["__temp__"][node]))]
                     out = func(out)
                     self.dataset["data"][data][node] = out
             else:

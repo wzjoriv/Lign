@@ -16,20 +16,21 @@ def validate(
     is_gcn = fn.has_gcn(model)
     with th.no_grad():
         tr_nodes, tr_labs = fn.filter_k_from_tags(tag_out, labels, train_graph, cluster[1])
-        sub = train_graph.sub_graph(tr_nodes, get_edges = is_gcn)
-        inp = sub.get_parent_data(tag_in).to(device)
+        tr_nodes = tr_nodes.tolist()
+        inp = train_graph.get_data(tag_in).to(device) if is_gcn else train_graph.get_data(tag_in, nodes=tr_nodes).to(device)
         
         cluster_m = cluster[0]
-        tr_vec = model(sub, inp) if is_gcn else model(inp)
+        tr_vec = model(train_graph, inp)[tr_nodes] if is_gcn else model(inp)
         cluster_m.train(tr_vec, tr_labs.to(device))
 
+        # Infer testing nodes
         ts_nodes = fn.filter_tags(tag_out, labels, test_graph)
         graph = test_graph.sub_graph(ts_nodes, get_edges = is_gcn)
 
-        inp = test_graph.get_data(tag_in).to(device) if is_gcn else graph.get_parent_data(tag_in).to(device)
+        inp = test_graph.get_data(tag_in).to(device) if is_gcn else graph.get_data(tag_in, nodes=tr_nodes).to(device)
         outp_t = graph.get_parent_data(tag_out).to(device)
 
-        rep_vec = model(test_graph, inp) if is_gcn else model(inp)
+        rep_vec = model(test_graph, inp)[ts_nodes] if is_gcn else model(inp)
         outp_p = th.zeros(rep_vec.size(0), dtype=rep_vec.dtype, device=rep_vec.device)
 
         for i in range(0, len(rep_vec), sub_graph_size):
