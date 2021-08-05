@@ -9,7 +9,7 @@ with open("requirements.txt", "r") as f:
     install_requires = [i for i in f.read().replace(' ', '').splitlines() if i[0] != '#']
 
 setup(name='lign',
-		version='0.1.0',
+		version='0.1.1',
 		description='A framework for working with graphs alongside PyTorch',
 		long_description=long_description,
 		long_description_content_type="text/markdown",
