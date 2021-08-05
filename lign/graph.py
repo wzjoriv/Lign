@@ -231,7 +231,7 @@ class Graph(Dataset):
     def pop_data(self, data: str) -> Union[Tensor, List[T], None]:
         return self.dataset["data"].pop(data, None)
 
-    def add(self, nodes: Optional[Union[int, Node, List[Node]]] = None, self_loop: bool = True) -> None:
+    def add(self, nodes: Optional[Union[int, Node, List[Node]]] = None, self_loop: bool = True, inplace: bool =False) -> None:
 
         if not nodes:
             nodes = Node()
@@ -259,7 +259,8 @@ class Graph(Dataset):
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
         
-        return self
+        if inplace:
+            return self
 
     def remove(self):
         raise NotImplementedError("Removal of nodes not yet implemented. In the meantime, you may use SubGraphs to isolate nodes.")
