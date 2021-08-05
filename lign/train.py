@@ -81,11 +81,11 @@ def superv(
         ):
 
     if kipf_approach:
-        full_graph = graph[0]
-        train_graph = graph[1]
-    else:
         full_graph = graph
         train_graph = graph
+    else:
+        full_graph = graph[0]
+        train_graph = graph[1]
     
     base, classifier = models
     tag_in, tag_out = tags
@@ -111,13 +111,13 @@ def superv(
         for batch in range(0, nodes_len, sub_graph_size):
             with th.no_grad():
                 b_nodes = nodes[batch:min(nodes_len, batch + sub_graph_size)]
-                sub = train_graph.sub_graph(b_nodes)
+                sub = train_graph.sub_graph(b_nodes, get_edges=is_classifier_gcn) if is_classifier_gcn else None
 
-                if kipf_approach:
+                if not kipf_approach:
                     b_nodes = train_graph.child_to_parent_index(b_nodes)
 
-                inp = full_graph.get_data(tag_in).to(device[0]) if is_base_gcn else sub.get_parent_data(tag_in).to(device[0])
-                outp = fn.onehot_encode(sub.get_parent_data(tag_out), labels).to(device[0])
+                inp = full_graph.get_data(tag_in).to(device[0]) if is_base_gcn else full_graph.get_data(tag_in, nodes=b_nodes).to(device[0])
+                outp = fn.onehot_encode(full_graph.get_data(tag_out, nodes=b_nodes), labels).to(device[0])
 
             opt.zero_grad()
 

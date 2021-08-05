@@ -25,10 +25,9 @@ def validate(
 
         # Infer testing nodes
         ts_nodes = fn.filter_tags(tag_out, labels, test_graph)
-        graph = test_graph.sub_graph(ts_nodes, get_edges = is_gcn)
 
-        inp = test_graph.get_data(tag_in).to(device) if is_gcn else graph.get_data(tag_in, nodes=tr_nodes).to(device)
-        outp_t = graph.get_parent_data(tag_out).to(device)
+        inp = test_graph.get_data(tag_in).to(device) if is_gcn else test_graph.get_data(tag_in, nodes=ts_nodes).to(device)
+        outp_t = test_graph.get_data(tag_out, nodes=ts_nodes).to(device)
 
         rep_vec = model(test_graph, inp)[ts_nodes] if is_gcn else model(inp)
         outp_p = th.zeros(rep_vec.size(0), dtype=rep_vec.dtype, device=rep_vec.device)
