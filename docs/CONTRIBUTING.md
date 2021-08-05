@@ -66,13 +66,13 @@ When contributing to the Lign, please make sure to follow these instruction and 
    git checkout -b feature/amazing-feature
    ```
 
-3. Commit your Changes
+3. Commit your changes + documentation
 
    ```sh
    git commit -m 'Add some AmazingFeature'
    ```
 
-4. Push to the Branch
+4. Push to the branch
 
    ```sh
    git push origin feature/AmazingFeature
@@ -114,24 +114,11 @@ Create one issue for each independent problem. Do not group multiple unrelated i
 
 ### Feature Request
 
-When requesting a feature, use the discussion panel on Github to discuss it first with the community. __After 24 hours__, some __considerations__, if the feature is __considered beneficial__ and __no duplicate__ functionality or request exists, please submit the request by creating an issue then inserting and filling the following template in the description. Additionally, insert ``[FEATURE]`` or ``[IMPROVEMENT]`` in the title of the Github Issue.
+When requesting a feature, use the discussion panel on GitHub to discuss it with the community first. If (1) no response is given after 24 hours or an unsatisfactory respond is given, (2) the feature is considered benefitial and (3) no duplicate feature(s) exist, feel free to submit a request by creating an issue with the following template. Additionally, insert ``[FEATURE]`` or ``[IMPROVEMENT]`` in the title of the GitHub Issue. Contributions that do not follow these guidelines may be removed or closed at the discretion of the reviewer
 
-_Create one feature for each independent improvement._
-_Do not group multiple unrelated features into one report_
+Create one feature for each independent improvement. Do not group multiple unrelated features into one report
 
-```text
-Feature:
-    - [One or two sentences about the feature]
-
-Reason:
-    - [This feature will make bla faster]
-
-Description (Optional):
-    [Use description to describe long features that are longer than a sentence, involve multiple files or provide greater detail]
-
-Comment (Optional):
-    [Use this template for features]
-```
+[Template][feature-template]
 
 ### Docstring
 
@@ -145,3 +132,4 @@ Feel free to read the [developer documentation](docs/dev) for more information a
 [example-url]: https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html#example-google
 [docstring-url]: https://google.github.io/styleguide/pyguide.html
 [issue-template]: https://github.com/JosueCom/Lign/blob/master/.github/ISSUE_TEMPLATE/issue-report.md
+[feature-template]: https://github.com/JosueCom/Lign/blob/master/.github/ISSUE_TEMPLATE/feature-request.md
