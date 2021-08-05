@@ -177,7 +177,7 @@ It is recommended to run the following instructions in a python console to view 
    print(g['x'])
    ```
 
-- Use clustering techniques for PyTorch
+- Use clustering techniques
 
    ```python
    from lign.utils.clustering import NN, KNN, KMeans
