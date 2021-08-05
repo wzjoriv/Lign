@@ -253,11 +253,11 @@ It is recommended to run the following instructions in a python console to view 
    ```python
    import lign.utils as utl
    
-   g0, g0_train, g0_validate = utl.load.mnist_to_lign("datasets/CIFAR100")
+   g0, g0_train, g0_validate = utl.load.mnist_to_lign("datasets/MNIST")
    
    g1, g1_train, g1_validate = utl.load.cifar_to_lign("datasets/CIFAR100")
    
-   g2, g2_train, g2_validate = utl.load.cora_to_lign("datasets/CIFAR100")
+   g2, g2_train, g2_validate = utl.load.cora_to_lign("datasets/CORA")
    ```
 
 _Please refer to the [documentation][examples-url] for other examples_
