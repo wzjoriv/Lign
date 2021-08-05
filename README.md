@@ -60,6 +60,8 @@ _For more details, please read the [developer documentation][dev-docs-url]_
    pip install -r docs/dev/requirements.txt
    ```
 
+   Or
+
    ```sh
    conda env create -f docs/dev/environment.yml -n lign
    conda activate lign
