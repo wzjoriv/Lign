@@ -37,4 +37,4 @@ Feel free to add console output  or [Screenshots](image.png)
 
 ## Comment (Optional)
 
-Use this template for issues
+Use comment for extra details i.e. illustrations, etc.
