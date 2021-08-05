@@ -1,6 +1,6 @@
 # Contributing
 
-Please follow the instructions below for for contributing to lign. Contributions that do not following the guidelines below may be removed or closed at the discretion of the reviewer.
+Please follow the instructions below for contributing to lign. Contributions that do not follow the guidelines below may be removed or closed at the discretion of the reviewer.
 
 ## Table of Contents
 
@@ -106,35 +106,11 @@ Comment (Optional):
 
 ### Issue
 
-When reporting a issue, use the discussion panel on Github to discuss it first with the community. __After 24 hours__, some __considerations__, if the issue is __considered novel__ and __no duplicate__ issue exists, please submit the report by creating an issue then inserting and filling the following template in the description. Additionally, insert ``[ISSUE]`` or ``[BUG]`` in the title of the Github Issue.
+When reporting an issue, use the discussion panel on GitHub to discuss it with the community first. If (1)  no response is given after 24 hours or an inarticulate respond was given, (2) the issue is considered novel and (3) no duplicate issue(s) exist, feel free to submit a request by creating an issue with the following template. Additionally, insert ``[ISSUE]`` or ``[BUG]`` in the title of the GitHub Issue. Contributions that do not follow these guidelines may be removed or closed at the discretion of the reviewer.
 
-_Create one issue for each independent problem._
-_Do not group multiple unrelated issues into one report_
+Create one issue for each independent problem. Do not group multiple unrelated issues into one report.
 
-```text
-Issue: 
-    - [One or two sentences about the issue]
-
-Replicate:
-    - [what to do to]
-    - [What else to do]
-    ```
-        Feel free to add code to replicate issue
-    ```
-
-Description (Optional):
-    [Use description to describe long issue that are longer than a sentence, involve multiple files or provide greater detail]
-
-Output (Optional):
-    ```
-        Feel free to add console output
-    ```
-    or 
-    [Screenshots](image.png)
-
-Comment (Optional):
-    [Use this template for issues]
-```
+[Template][issue-template]
 
 ### Feature Request
 
@@ -144,7 +120,7 @@ _Create one feature for each independent improvement._
 _Do not group multiple unrelated features into one report_
 
 ```text
-Feature: 
+Feature:
     - [One or two sentences about the feature]
 
 Reason:
@@ -168,3 +144,4 @@ Feel free to read the [developer documentation](docs/dev) for more information a
 [release-url]: https://github.com/JosueCom/Lign/releases
 [example-url]: https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html#example-google
 [docstring-url]: https://google.github.io/styleguide/pyguide.html
+[issue-template]: https://github.com/JosueCom/Lign/blob/master/.github/ISSUE_TEMPLATE/issue-report.md
