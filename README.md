@@ -1,16 +1,10 @@
 # Lign
 
-[![Lign logo](docs/imgs/logo.png "Lign logo")][repo-url]
+[![Lign logo][logo-url]][repo-url]
 
-A deep learning framework developed for implementing graph convolutional networks (GCNs), continual lifelong learning on graphs and other graph-based machine learning methods alongside PyTorch
+A graph framework that can be used to implement graph convolutional networks (GCNs), geometry machine learning, continual lifelong learning on graphs and other graph-based machine learning methods alongside [PyTorch](https://pytorch.org)
 
-[View Docs][docs-url]
-·
-[View Examples][examples-url]
-·
-[Report Bugs][bugs-url]
-·
-[Request Feature][bugs-url]
+[View Docs][docs-url] · [View Examples][examples-url] · [Report Bugs][bugs-url] · [Request Feature][bugs-url]
 
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
@@ -23,7 +17,6 @@ A deep learning framework developed for implementing graph convolutional network
 - [Lign](#lign)
   - [Table of Contents](#table-of-contents)
   - [About The Project](#about-the-project)
-    - [Built With](#built-with)
   - [Getting Started](#getting-started)
     - [Installation](#installation)
   - [Usage](#usage)
@@ -35,17 +28,15 @@ A deep learning framework developed for implementing graph convolutional network
 
 ## About The Project
 
-Lign (Lifelong learning Induced by Graph Neural networks) is a deep learning framework developed for implementing graph convolutional networks (GCNs), continual lifelong learning on graphs and other graph-related machine learning methods alongside PyTorch. It was build as a component of my master thesis for a proposed lifelong learning techinique (also named Lign) that works on graph and vector data.
+Lign (Lifelong learning Induced by Graph Neural networks) is a framework that can be used for a wide range of graph-related problems including but not limited to graph convolutional networks (GCNs), geometry machine learning, continual lifelong learning on graphs and other graph-related machine learning methods with a tight integration to [PyTorch](https://pytorch.org). It was build as a component of my master thesis for a proposed lifelong learning techinique (also named Lign) that works on both graph and vector data.
 
-### Built With
-
-- [PyTorch](https://pytorch.org)
+Ligns currently supports a wide range of functionalities such as clustering techiniques, GCN PyTorch module, graph creation and processing, data set to graph convention, rehersal methods/retraining for GCNS and coventional neural networks, and more. Future planned additions include STL file to graph conversion, graph to STL model along with others features.
 
 ## Getting Started
 
-These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign``, ``conda install lign -c josuecom -c pytorch`` or by downloading the [package][release-url] from github and saving in the ``site-packages/`` directory of your python interpreter.
+These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign``, ``conda install lign -c josuecom -c pytorch`` or by downloading the [package][release-url] from github and saving it in the ``site-packages/`` directory of your python interpreter.
 
-_For more details, please read the [developer documentation](docs/dev)_
+_For more details, please read the [developer documentation][dev-docs-url]_
 
 ### Installation
 
@@ -68,6 +59,8 @@ _For more details, please read the [developer documentation](docs/dev)_
    ```sh
    pip install -r docs/dev/requirements.txt
    ```
+
+   Or
 
    ```sh
    conda env create -f docs/dev/environment.yml -n lign
@@ -95,15 +88,15 @@ It is recommended to run the following instructions in a python console to view 
    g.add(n)
    g['x'] = th.rand(n, 3) ## Or, g.set_data('x', th.rand(n, 3))
 
-   g
-   g['x'] ## Or, g.get_data('x')
-   g[0] ## Or, g.get_nodes(1)
-   g[[1, 2]] ## Or, g.get_nodes([1, 2])
-   g[3:4] ## Or, g.get_nodes(slice(3, 4))
-   g[(4,)] ## Or, g.get_edges(4)
+   print(g)
+   print(g['x']) ## Or, g.get_data('x')
+   print(g[0]) ## Or, g.get_nodes(0)
+   print(g[[1, 2]]) ## Or, g.get_nodes([1, 2])
+   print(g[3:]) ## Or, g.get_nodes(slice(3, None))
+   print(g[(4,)]) ## Or, g.get_edges(4)
    ```
 
-- Process data with a neural network
+- Process data with a conventional neural network
 
    ```python
    import lign as lg
@@ -111,17 +104,22 @@ It is recommended to run the following instructions in a python console to view 
    from torch import nn
 
    n = 5
-   g = lg.Graph()
-   g.add(n, self_loop=False) ## No self loop edges added since no relational data is present
+   g = lg.Graph().add(n, self_loop=False, inplace=True) ## No self loop edges added since no relational data is present
    g['x'] = th.rand(n, 3)
-   g['x']
-   
+   print(g['x'])
+
+   # Data that is not relational maybe be process without the need of ligh graphs
+   x = = th.rand(n, 3)
+   x = linear(x)
+   print(x)
+
+   # However, you can use if you desire to use graph strctures
    linear = nn.Linear(3, 2)
    g['x'] = linear(g['x']) ## Or, g.apply(linear, data = 'x')
-   g['x']
+   print(g['x'])
    ```
 
-- Process data with a GCN
+- Process relational data with a GCN
 
    ```python
    import lign as lg
@@ -131,26 +129,26 @@ It is recommended to run the following instructions in a python console to view 
    from lign.utils.functions import sum_tensors
 
    n = 5
-   g = lg.Graph()
-   g.add(n)
+   g = lg.Graph().add(n, inplace=True)
    g['x'] = th.rand(n, 3)
-   g['x']
+   print(g['x'])
    
    # 1^{st} Approach: Basic gcn with no message passing
-   gcn = GCN(nn.Linear(3, 2))
+   # ## It can also be processed as if it is not a graph since edge information is not used
+   gcn = GCN(nn.Linear(3, 2)) 
    g['x'] = gcn(g, g['x'])
-   g['x']
+   print(g['x'])
    
    # 2^{nd} Approach: Basic gcn with message passing via neighbors data summation
    g[(2, 3, 4)] = {2, 3, 4} ## Add edges to nodes 2, 3, 4; nodes can be removed via g.remove_edges()
    gcn = GCN(nn.Linear(2, 3), aggregation = sum_tensors)
    g['x'] = gcn(g, g['x'])
-   g['x']
+   print(g['x'])
    
    # 3^{rd} Approach: Proposed GCN with discovery and inclusion layers
    gcn = GCN(nn.Linear(3, 2), aggregation = sum_tensors, inclusion = nn.Linear(2, 3))
    g['x'] = gcn(g, g['x'])
-   g['x']
+   print(g['x'])
    ```
 
 - Apply function
@@ -161,22 +159,44 @@ It is recommended to run the following instructions in a python console to view 
    from torch import nn
    from lign.nn import GCN
    n = 5
-   g = lg.Graph()
-   g.add(n)
+   g = lg.Graph().add(n, inplace=True)
    g['x'] = th.rand(n, 3)
    
-   # Add 3 to all data in the dataset; doesn't require neighbors
-   add_constant = lambda x: x + 3
-   g.apply(add_constant, data='x') ## use apply if involving individual nodes
-   g['x']
+   # Use apply if involving individual nodes
+   ## Adds 3 to all node's 'x' data in the data set; doesn't require neighbors
+   g.apply(lambda x: x + 3, data='x')
+   print(g['x'])
    
-   # Sum neighbors 'x' value together; require neighbors
+   # Use push or pull if only involving multiple nodes. Nodes will push/pull data via edges
+   ## Sums neighbors 'x' value together; require neighbors
    def sum_tensors(neighs):
        return th.stack(neighs).sum(dim = 0)
     
    g[(2, 3, 4)] = {2, 3, 4}
-   g.push(sum_tensors, data='x') ## Use push or pull if only involving multiple nodes
-   g['x']
+   g.push(sum_tensors, data='x')
+   print(g['x'])
+   ```
+
+- Use clustering techniques for PyTorch
+
+   ```python
+   from lign.utils.clustering import NN, KNN, KMeans
+   import torch as th
+   
+   n = 20
+   x = th.rand(n, 3)
+   labels = (x[:, 0] > 0.5)*1
+   predict = th.rand(4, 3)
+   print(predict)
+
+   cluster = NN(x, labels)
+   print(cluster(predict))
+
+   cluster = KNN(x, labels, k=3)
+   print(cluster(predict))
+
+   cluster = KMeans(x, k=2)
+   print(cluster(predict))
    ```
 
 - Create sub graphs
@@ -185,28 +205,28 @@ It is recommended to run the following instructions in a python console to view 
    import lign as lg
    import torch as th
    n = 5
-   g = lg.Graph()
-   g.add(n)
+   g = lg.Graph().add(n, inplace=True)
    g['x'] = th.rand(n, 3)
    g[tuple(range(n))] = set(range(3, n)) ## Add edge from each node to 3 and 4
-   g
+   print(g)
    
    # Make sub graph with all data and edges from parent; edges are updated to reflect new indexes
    sub = g.sub_graph([2, 3, 4], get_data = True, get_edges = True)
-   sub
+   print(sub)
    
    # Make sub graph with only edges from parent; edges are updated to reflect new indexes
    sub = g.sub_graph(2, get_edges = True)
    sub.add(2)
-   sub
+   print(sub)
    
    # Make sub graph with only data from parent
-   # Add nodes not known to the parent graph
+   ## Add nodes not known to the parent graph
    sub = g.sub_graph([3, 4], get_data = True)
-   sub.add([lg.node({'x': th.rand(3)}) for i in range(2)], add_edges = False)
-   sub
+   sub.add([lg.node({'x': th.rand(3)}) for i in range(2)], self_loop = False)
+   print(sub)
+   
    sub[(2, 3)] = sub.get_parent_edges([0, 2])
-   sub
+   print(sub)
    ```
 
 - Save and load created graphs
@@ -215,8 +235,7 @@ It is recommended to run the following instructions in a python console to view 
    import lign as lg
    import torch as th
    n = 5
-   g = lg.Graph()
-   g.add(n)
+   g = lg.Graph().add(n, inplace=True)
    g['x'] = th.rand(n, 3)
 
    # Save to file
@@ -226,10 +245,22 @@ It is recommended to run the following instructions in a python console to view 
    f = lg.Graph("data/graph.lign")
 
    # Check all data are the same
-   (f['x'] == g['x']).all()
+   print((f['x'] == g['x']).all())
    ```
 
-_Please refer to the [documentation](docs/examples) for other examples_
+- Convert common data set to lign graphs
+
+   ```python
+   import lign.utils as utl
+   
+   g0, g0_train, g0_validate = utl.load.mnist_to_lign("datasets/CIFAR100")
+   
+   g1, g1_train, g1_validate = utl.load.cifar_to_lign("datasets/CIFAR100")
+   
+   g2, g2_train, g2_validate = utl.load.cora_to_lign("datasets/CIFAR100")
+   ```
+
+_Please refer to the [documentation][examples-url] for other examples_
 
 ## Future
 
@@ -237,17 +268,17 @@ See the [open issues][issues-url] for a list of proposed features (and known iss
 
 ## Citation
 
-Refer to [CITATION.bib](docs/CITATION.bib) for BibTex citation
+Refer to [CITATION.bib][citation-url] for BibTex citation
 
 ## Contributing
 
-Read [CONTRIBUTING.md](docs/CONTRIBUTING.md) for details on how to add to this repository.
+Read [CONTRIBUTING.md][contributing-url] for details on how to add to this repository.
 
 _**tl;dr** Fork, create a new branch, commits features and make a pull request with documented changes_
 
 ## License
 
-Distributed under the Mozilla Public License Version 2.0. See [LICENSE](LICENSE) for more information.
+Distributed under the Mozilla Public License Version 2.0. See [LICENSE][license-url] for more information.
 
 ## Contact
 
@@ -270,3 +301,7 @@ Distributed under the Mozilla Public License Version 2.0. See [LICENSE](LICENSE)
 [release-url]: https://github.com/JosueCom/Lign/releases
 [issues-url]: https://github.com/JosueCom/Lign/issues
 [repo-url]: https://github.com/JosueCom/Lign
+[dev-docs-url]: https://github.com/JosueCom/Lign/tree/master/docs/dev
+[citation-url]: https://github.com/JosueCom/Lign/blob/master/docs/CITATION.bib
+[contributing-url]: https://github.com/JosueCom/Lign/blob/master/docs/CONTRIBUTING.md
+[logo-url]: https://raw.githubusercontent.com/JosueCom/Lign/master/docs/imgs/logo.png

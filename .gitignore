@@ -4,6 +4,7 @@
 *.pyc
 __pycache__
 /build/
+/dist/
 /lign.egg-info/
 
 ## development environment

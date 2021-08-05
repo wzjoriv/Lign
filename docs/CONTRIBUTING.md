@@ -1,5 +1,7 @@
 # Contributing
 
+Please follow the instructions below for for contributing to lign. Contributions that do not following the guidelines below may be removed or closed at the discretion of the reviewer.
+
 ## Table of Contents
 
 - [Contributing](#contributing)
@@ -16,9 +18,9 @@
 
 ## Getting Started
 
-These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign`` or by downloading the [package][release-url] on github.
+These are instructions for getting started with development. If only interested in the package, please install Lign via ``pip install lign``, ``conda install lign -c josuecom -c pytorch`` or by downloading the [package][release-url] from github and saving it in the ``site-packages/`` directory of your python interpreter.
 
-_For more details, please read the [development documentation](docs/dev)_
+_For more details, please read the [developer documentation](docs/dev)_
 
 ### Installation
 
@@ -36,13 +38,15 @@ _For more details, please read the [development documentation](docs/dev)_
 
 3. Install prerequisites
 
+   _It is recommended to install [PyTorch](https://pytorch.org) via the official site first for optimal performance_
+
    ```sh
    pip install -r docs/dev/requirements.txt
    ```
 
    ```sh
-   conda env create -f docs/dev/environment.yml -n Lign
-   conda activate Lign
+   conda env create -f docs/dev/environment.yml -n lign
+   conda activate lign
    ```
 
 4. Install package
@@ -53,7 +57,7 @@ _For more details, please read the [development documentation](docs/dev)_
 
 ### Making Changes
 
-When contributing to the LIGn, please make sure to follow these instruction as a documenting any chnages made.
+When contributing to the Lign, please make sure to follow these instruction and document any changes made.
 
 1. Fork the project
 2. Create your feature branch
@@ -78,11 +82,11 @@ When contributing to the LIGn, please make sure to follow these instruction as a
 
 ## Documentation
 
-If you create a pull request, you must document any changes made. There are four types of documentations that may be made based on the extend of the contribution.
+If you contribute to lign, you must follow the following standards and document any changes made as described below. There are four types of documentations that may be made based on the extend of the contribution.
 
 ### Pull Request
 
-When contributing any change, please insert and fill the following template in the pull request description.
+When contributing any changes, first document your code by following the convention under [Docstring](#docstring). After, create a pull request. Lastly, insert and fill the following template in the pull request description.
 
 ```text
 Changes: 
@@ -102,7 +106,7 @@ Comment (Optional):
 
 ### Issue
 
-When reporting an issue, please insert and fill the following template in the description. Additionally, insert ``[ISSUE]`` or ``[BUG]`` in the title of the Github Issue.
+When reporting a issue, use the discussion panel on Github to discuss it first with the community. __After 24 hours__, some __considerations__, if the issue is __considered novel__ and __no duplicate__ issue exists, please submit the report by creating an issue then inserting and filling the following template in the description. Additionally, insert ``[ISSUE]`` or ``[BUG]`` in the title of the Github Issue.
 
 _Create one issue for each independent problem._
 _Do not group multiple unrelated issues into one report_
@@ -134,7 +138,7 @@ Comment (Optional):
 
 ### Feature Request
 
-When requesting a feature, please insert and fill the following template in the description. Additionally, insert ``[FEATURE]`` or ``[IMPROVEMENT]`` in the title of the Github Issue.
+When requesting a feature, use the discussion panel on Github to discuss it first with the community. __After 24 hours__, some __considerations__, if the feature is __considered beneficial__ and __no duplicate__ functionality or request exists, please submit the request by creating an issue then inserting and filling the following template in the description. Additionally, insert ``[FEATURE]`` or ``[IMPROVEMENT]`` in the title of the Github Issue.
 
 _Create one feature for each independent improvement._
 _Do not group multiple unrelated features into one report_

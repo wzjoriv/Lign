@@ -17,6 +17,7 @@ import os
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 
 dataset_name = "CIFAR" #<<<<<
+folder_name = "cifar_1"
 
 trans = tv.transforms.Compose([
     tv.transforms.ToTensor(),
@@ -24,8 +25,6 @@ trans = tv.transforms.Compose([
 ])
 
 # ### Load Dataset
-
-dataset_name = "CIFAR" #<<<<<
 
 dataset = lg.graph.Graph("../data/datasets/cifar.lign")
 
@@ -46,35 +45,34 @@ else:
 
 # ### Hyperparameters
 
-LAMBDA = 0.05
-DIST_VEC_SIZE = 300 #128
+LAMBDA = 0.08
+DIST_VEC_SIZE = 500 #128
 INIT_NUM_LAB = 50
 LABELS = np.arange(100)
-SUBGRPAH_SIZE = 128
+SUBGRPAH_SIZE = 500
 AMP_ENABLE = True and th.cuda.is_available()
 EPOCHS = 200
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
-    "superv": lambda x: not (x + 50)%10, 
-    #"semi": lambda x: not (x + 1)%10,
+    "superv": lambda x: not (x + INIT_NUM_LAB)%10,
     "semi": lambda x: False,
-    #"unsuperv": lambda x: not (x + 5)%10
-    "unsuperv": lambda x: False
+    "unsuperv": lambda x: False,
+    "growing_exemplar": lambda x: False,
+    "fixed_exemplar": lambda x: False
 }
 ACCURACY_MED = utl.clustering.KNN()
 LOSS_FUN = nn.CrossEntropyLoss()
-STEP_SIZE = 1
+STEP_SIZE = 5
 
 num_of_labels = len(LABELS)
 np.random.shuffle(LABELS)
-t_methods = [lg.train.superv, lg.train.semi_superv, lg.train.unsuperv]
-t_names = ["supervised", "semi-supervised", "unsupervised"]
+t_methods = [lg.train.superv, lg.train.semi_superv, lg.train.unsuperv, lg.train.growing_exemplar, lg.train.fixed_exemplar]
+t_names = ["supervised", "semi-supervised", "unsupervised", "growing exemplar", "fixed exemplar"]
 scaler = GradScaler() if AMP_ENABLE else None
 accuracy = []
 log = []
 label_and_acc = [[], []]
-introductions = range(INIT_NUM_LAB + 1, num_of_labels + 1, STEP_SIZE) #start, end, step
-
+introductions = np.arange(INIT_NUM_LAB, num_of_labels+1, STEP_SIZE)[1:] #start, end, step
 # ---
 # ## Models
 # ### LIGN
@@ -90,22 +88,19 @@ classifier = CIFAR.Classifier(DIST_VEC_SIZE, INIT_NUM_LAB, device).to(device) # 
 # ----
 # ## Training
 
-opt = th.optim.Adam([ # optimizer for the full network
+opt = th.optim.AdamW([ # optimizer for the full network
         {'params': base.parameters()},
         {'params': classifier.parameters()}
     ], lr=LR)
 
 def test_and_log(num_labels, text, method=utl.clustering.NN()):
-    acc = lg.test.accuracy(base, 
-                    dataset_validate, 
-                    dataset_train, 
-                    "x", "labels", 
-                    LABELS[:num_labels], 
-                    cluster=(method, 5), 
-                    device=device)
-
-                    
-                    
+    acc = lg.test.accuracy(model = base,
+                labels = LABELS[:num_labels],
+                graphs = (dataset_train, dataset_validate),
+                tags = ("x", "labels"),
+                device = device,
+                sub_graph_size=SUBGRPAH_SIZE)
+  
     accuracy.append(acc)
     m_name = method.__class__.__name__
     log.append(f"Label: {num_labels}/{num_of_labels} -- Accuracy({m_name}): {round(acc, 2)}% -- {text}")
@@ -134,11 +129,11 @@ test_and_log(INIT_NUM_LAB, "Initial training", method=ACCURACY_MED)
 # online learning system
 for num_labels in introductions:
 
-    to_train = [RETRAIN_PER[t](num_labels) for t in ("superv", "semi", "unsuperv")]
+    to_train = [RETRAIN_PER[t](num_labels) for t in ("superv", "semi", "unsuperv", "growing_exemplar", "fixed_exemplar")]
 
     if sum(to_train):
         classifier.DyLinear.update_size(num_labels)
-        opt = th.optim.Adam([ # optimizer for the full network
+        opt = th.optim.AdamW([ # optimizer for the full network
                 {'params': base.parameters()},
                 {'params': classifier.parameters()}
             ], lr=LR)
@@ -166,14 +161,6 @@ for num_labels in introductions:
 time = str(tm_now()).replace(":", "-").replace(".", "").replace(" ", "_")
 filename = "LIGN_" + dataset_name + "_training_"+time
 
-## Save metrics
-metrics = {
-    "accuracy": accuracy,
-    "log": log,
-    "label_and_acc": label_and_acc
-}
-utl.io.json(metrics, os.path.join("cifar", "log", filename+".json"))
-
 ## Save hyperparameters
 para = {
     "LAMBDA": LAMBDA,
@@ -192,7 +179,7 @@ para = {
     }
 }
 
-utl.io.json(para, os.path.join("cifar", "parameters", filename+".json"))
+utl.io.json(para, os.path.join(folder_name, "parameters", filename+".json"))
 
 ## Save model
 check = {
@@ -203,6 +190,14 @@ check = {
 if AMP_ENABLE:
     check["scaler"] = scaler.state_dict()
 
-dr = os.path.join("cifar", "models")
+dr = os.path.join(folder_name, "models")
 utl.io.make_dir(dr)
 th.save(check, os.path.join(dr, filename+".pt"))
+
+## Save metrics
+metrics = {
+    "accuracy": accuracy,
+    "log": log,
+    "label_and_acc": label_and_acc
+}
+utl.io.json(metrics, os.path.join(folder_name, "log", filename+".json"))

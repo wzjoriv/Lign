@@ -6,4 +6,5 @@ pandas
 setuptools
 sphinx
 conda-build
+twine
 future

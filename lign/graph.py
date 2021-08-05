@@ -110,11 +110,11 @@ class Graph(Dataset):
 
         tp = type(indx)
 
-        if (tp is int or tp is slice or (tp is list and type(indx[0]) is int)):
+        if (tp is int or tp is slice or tp is list):
             return self.get_nodes(indx)
         elif (tp is str):
             return self.get_data(indx)
-        elif (tp is tuple and type(indx[0]) is int):
+        elif (tp is tuple):
             return self.get_edges(indx)
 
         raise TypeError("Input is invalid. Only List[int], slice, str, int or Tuple[int] is accepted")
@@ -190,10 +190,13 @@ class Graph(Dataset):
         for node in nodes:
             self.dataset["edges"][node].update(edges)
 
-    def get_edges(self, nodes: Union[int, List[int], Set[int], Tuple[int]]) -> Union[set, List[Set]]:
+    def get_edges(self, nodes: Union[int, List[int], Set[int], Tuple[int]] = []) -> Union[set, List[Set]]:
         primitive = io.is_primitve(nodes)
         nodes = io.to_iter(nodes)
         edges = []
+        
+        if not len(nodes):
+            nodes = range(len(self))
 
         for node in nodes:
             edges.append(self.dataset["edges"][node])
@@ -228,7 +231,7 @@ class Graph(Dataset):
     def pop_data(self, data: str) -> Union[Tensor, List[T], None]:
         return self.dataset["data"].pop(data, None)
 
-    def add(self, nodes: Optional[Union[int, Node, List[Node]]] = None, self_loop: bool = True) -> None:
+    def add(self, nodes: Optional[Union[int, Node, List[Node]]] = None, self_loop: bool = True, inplace: bool =False) -> None:
 
         if not nodes:
             nodes = Node()
@@ -255,9 +258,12 @@ class Graph(Dataset):
 
             self.dataset["__temp__"].append([])
             self.dataset["count"] += 1
+        
+        if inplace:
+            return self
 
     def remove(self):
-        raise NotImplementedError("Removal of nodes not yet implemented")
+        raise NotImplementedError("Removal of nodes not yet implemented. In the meantime, you may use SubGraphs to isolate nodes.")
 
     # returns isolated graph
     def sub_graph(self, nodes: Union[int, List[int]], get_data: bool = False, get_edges: bool = False) -> SubGraph:
@@ -346,8 +352,7 @@ class Graph(Dataset):
         if func:
             if data:
                 for node in nodes:
-                    out = [self.dataset["__temp__"][node][i].data[data]
-                           for i in range(len(self.dataset["__temp__"][node]))]
+                    out = [self.dataset["__temp__"][node][i].data[data] for i in range(len(self.dataset["__temp__"][node]))]
                     out = func(out)
                     self.dataset["data"][data][node] = out
             else:
@@ -427,6 +432,9 @@ class Graph(Dataset):
 class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. changes made here might not be written back to parents unless data is a reference). Meant to be more efficient if only processing a few nodes from the dataset
     def __init__(self, graph_dataset: Graph, nodes: Union[List[int], int], get_data: bool = False, get_edges: bool = False) -> None:
         super().__init__()
+
+        if torch.is_tensor(nodes):
+            nodes = nodes.tolist()
 
         self.parent = graph_dataset
         self.p_nodes = io.to_iter(nodes)
@@ -558,7 +566,7 @@ class SubGraph(Graph):  # creates a isolated graph from the dataset (i.e. change
 
         for node in nodes:
             mutual_edges = self.parent.get_edges(self.child_to_parent_index(node)).intersection(self.p_nodes)
-            edgs = [self.p_nodes.index(ed) for ed in mutual_edges]
+            edgs = set([self.p_nodes.index(ed) for ed in mutual_edges])
             edges.append(edgs)
 
             self.dataset["edges"][node] = edgs
