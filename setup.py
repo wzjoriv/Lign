@@ -10,7 +10,7 @@ with open("requirements.txt", "r") as f:
 
 setup(name='lign',
 		version='0.1.0',
-		description='A deep learning framework developed for implementing graph convolutional networks (GCNs), continual lifelong learning on graphs and other graph-based machine learning methods alongside PyTorch',
+		description='A framework for working with graphs alongside PyTorch',
 		long_description=long_description,
 		long_description_content_type="text/markdown",
 		license="Mozilla Public License Version 2.0",
