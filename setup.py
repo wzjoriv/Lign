@@ -10,7 +10,7 @@ with open("requirements.txt", "r") as f:
 
 setup(name='lign',
 		version='0.1.1',
-		description='A framework for working with graphs alongside PyTorch',
+		description='A graph framework that works alongside PyTorch',
 		long_description=long_description,
 		long_description_content_type="text/markdown",
 		license="Mozilla Public License Version 2.0",
