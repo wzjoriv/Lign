@@ -79,13 +79,6 @@ def superv(
             tags = ('x', 'label'), device = (th.device('cpu'), None), 
             lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200, kipf_approach=False
         ):
-
-    if kipf_approach:
-        full_graph = graph
-        train_graph = graph
-    else:
-        full_graph = graph[0]
-        train_graph = graph[1]
     
     base, classifier = models
     tag_in, tag_out = tags
@@ -95,6 +88,13 @@ def superv(
 
     is_base_gcn = fn.has_gcn(base)
     is_classifier_gcn = fn.has_gcn(classifier)
+
+    if kipf_approach:
+        full_graph = graph[0]
+        train_graph = graph[1]
+    else:
+        full_graph = graph
+        train_graph = graph
 
     nodes = fn.filter_tags(tag_out, labels, train_graph)
     
@@ -113,7 +113,7 @@ def superv(
                 b_nodes = nodes[batch:min(nodes_len, batch + sub_graph_size)]
                 sub = train_graph.sub_graph(b_nodes, get_edges=is_classifier_gcn) if is_classifier_gcn else None
 
-                if not kipf_approach:
+                if kipf_approach:
                     b_nodes = train_graph.child_to_parent_index(b_nodes)
 
                 inp = full_graph.get_data(tag_in).to(device[0]) if is_base_gcn else full_graph.get_data(tag_in, nodes=b_nodes).to(device[0])
