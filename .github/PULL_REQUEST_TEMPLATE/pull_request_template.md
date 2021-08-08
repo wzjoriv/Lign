@@ -1,6 +1,8 @@
 # Pull Request
 
-__When contributing any changes, first document your code by following the convention under [Docstring](#docstring). After, create a pull request. Lastly, insert and fill the following template in the pull request description.___
+__When contributing any changes, first document your code by following the convention described in [Docstring](../../docs/CONTRIBUTING.md#docstring). After, create a pull request. Lastly, insert and fill the following template in the pull request description.___
+
+___Create one pull request for each independent overall functionality. Do not include multiple unrelated functionalities into one request. Feel free to remove this comment and the one above.___
 
 ## Changes
 

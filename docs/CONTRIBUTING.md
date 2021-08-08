@@ -88,21 +88,9 @@ If you contribute to lign, you must follow the following standards and document 
 
 When contributing any changes, first document your code by following the convention under [Docstring](#docstring). After, create a pull request. Lastly, insert and fill the following template in the pull request description.
 
-```text
-Changes: 
-    - [made change 1 and 2]
-    - [made another change here]
+Create one pull request for each independent overall functionality. Do not include multiple unrelated functionalities into one request.
 
-Reason:
-    - [I made change 1 and 2 to make an example]
-    - [Made another change to show how to reference nested files]
-
-Description (Optional):
-    [Use description to describe long changes that are longer than a sentence, involve multiple files or provide greater detail]
-
-Comment (Optional):
-    [Use this template for pull requests]
-```
+[Template][pull-template]
 
 ### Issue
 
@@ -131,5 +119,6 @@ Feel free to read the [developer documentation](docs/dev) for more information a
 [release-url]: https://github.com/JosueCom/Lign/releases
 [example-url]: https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html#example-google
 [docstring-url]: https://google.github.io/styleguide/pyguide.html
-[issue-template]: https://github.com/JosueCom/Lign/blob/master/.github/ISSUE_TEMPLATE/issue-report.md
-[feature-template]: https://github.com/JosueCom/Lign/blob/master/.github/ISSUE_TEMPLATE/feature-request.md
+[issue-template]: https://github.com/JosueCom/Lign/blob/master/.github/ISSUE_TEMPLATE/issue_report_template.md
+[feature-template]: https://github.com/JosueCom/Lign/blob/master/.github/ISSUE_TEMPLATE/feature_request_template.md
+[pull-template]: https://github.com/JosueCom/Lign/blob/master/.github/PULL_REQUEST_TEMPLATE/pull_request_template.md
