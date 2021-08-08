@@ -24,12 +24,12 @@ folder_name = "cora_1"
 
 dataset = lg.graph.Graph("../data/datasets/cora.lign")
 
-split = 6/7
+split = 5/6
 split_n = int(len(dataset)*split)
 nodes_n = list(range(len(dataset)))
 
-dataset_train = dataset.sub_graph(nodes_n[:split_n], get_data = True, get_edges=False)
-dataset_validate = dataset.sub_graph(nodes_n[split_n:], get_data = True, get_edges=False)
+dataset_train = dataset.sub_graph(nodes_n[:split_n], get_data = True, get_edges = True)
+dataset_validate = dataset.sub_graph(nodes_n[split_n:], get_data = True, get_edges = True)
 
 # ### Cuda GPUs
 
@@ -44,7 +44,7 @@ else:
 LAMBDA = 0.08
 DIST_VEC_SIZE = 128 #128
 INIT_NUM_LAB = 4
-LABELS = np.arange(10)
+LABELS = np.arange(7)
 SUBGRPAH_SIZE = 128
 AMP_ENABLE = True and th.cuda.is_available()
 EPOCHS = 5
