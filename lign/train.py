@@ -8,7 +8,7 @@ from lign.utils.clustering import KMeans, KNN
 def growing_exemplar(
             models, graph, labels, opt, 
             tags = ('x', 'label'), examplar_n = 20, device = (th.device('cpu'), None), 
-            lossF = nn.CrossEntropyLoss(), epochs=200, sub_graph_size = 128
+            lossF = nn.CrossEntropyLoss(), epochs=200, sub_graph_size = 128, kipf_approach=False
         ):
 
     tag_in, tag_out = tags
@@ -18,21 +18,23 @@ def growing_exemplar(
     sub = graph.sub_graph(tr_nodes, get_data=True)
 
     superv(models, sub, labels, opt, 
-            tags = (tag_in, tag_out), device = device, lossF = lossF, epochs = epochs, sub_graph_size = sub_graph_size)
+            tags = (tag_in, tag_out), device = device, lossF = lossF, 
+            epochs = epochs, sub_graph_size = sub_graph_size, kipf_approach = kipf_approach)
 
 def fixed_exemplar(
             models, graph, labels, opt, 
             tags = ('x', 'label'), examplar_n = 2000, device = (th.device('cpu'), None), 
-            lossF = nn.CrossEntropyLoss(), epochs=200, sub_graph_size = 128
+            lossF = nn.CrossEntropyLoss(), epochs=200, sub_graph_size = 128, kipf_approach=False
         ):
 
     growing_exemplar(models, graph, labels, opt, 
-            tags = tags, examplar_n=int(examplar_n/len(labels)), device = device, lossF=lossF, epochs=epochs, sub_graph_size = sub_graph_size)
+            tags = tags, examplar_n=int(examplar_n/len(labels)), device = device, lossF=lossF, 
+            epochs=epochs, sub_graph_size = sub_graph_size, kipf_approach = kipf_approach)
 
 def unsuperv(
             models, graph, labels, opt, 
             tags = ('x', 'label'), cluster = KMeans(), device = (th.device('cpu'), None), 
-            lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200
+            lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200, kipf_approach=False
         ):
 
     tag_in, tag_out = tags
@@ -48,14 +50,15 @@ def unsuperv(
     graph.set_data('_p_label_', data)
 
     superv(models, graph, labels, opt, 
-            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, sub_graph_size = sub_graph_size)
+            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, 
+            epochs = epochs, sub_graph_size = sub_graph_size, kipf_approach = kipf_approach)
 
     graph.pop_data('_p_label_')
 
 def semi_superv(
             models, graph, labels, opt, 
             tags = ('x', 'label'), k = 5, cluster = KNN(), device = (th.device('cpu'), None), 
-            lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200
+            lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200, kipf_approach=False
         ):
 
     tag_in, tag_out = tags
@@ -70,7 +73,8 @@ def semi_superv(
     graph.set_data('_p_label_', data)
 
     superv(models, graph, labels, opt, 
-            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, sub_graph_size = sub_graph_size)
+            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, 
+            epochs = epochs, sub_graph_size = sub_graph_size, kipf_approach = kipf_approach)
 
     graph.pop_data('_p_label_')
 

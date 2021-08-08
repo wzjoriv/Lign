@@ -41,16 +41,16 @@ else:
     
 # ### Hyperparameters
 
-LAMBDA = 0.08
+LAMBDA = 0.2
 DIST_VEC_SIZE = 128 #128
 INIT_NUM_LAB = 4
 LABELS = np.arange(7)
 SUBGRPAH_SIZE = 128
 AMP_ENABLE = True and th.cuda.is_available()
-EPOCHS = 5
+EPOCHS = 15
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
-    "superv": lambda x: not (x + 6)%3,
+    "superv": lambda x: not (x - INIT_NUM_LAB)%3,
     "semi": lambda x: False,
     "unsuperv": lambda x: False,
     "growing_exemplar": lambda x: False,
@@ -68,8 +68,7 @@ scaler = GradScaler() if AMP_ENABLE else None
 accuracy = []
 log = []
 label_and_acc = [[], []]
-introductions = range(INIT_NUM_LAB + 1, num_of_labels + 1, STEP_SIZE) #start, end, step
-#LABELS = np.array([3, 1, 0, 9, 5, 7, 2, 4, 8, 6]) ## cora
+introductions = np.arange(INIT_NUM_LAB, num_of_labels+1, STEP_SIZE)[1:] #start, end, step
 
 
 # ---
@@ -92,7 +91,7 @@ classifier = CORA.Classifier(DIST_VEC_SIZE, INIT_NUM_LAB, device).to(device) # c
 opt = th.optim.Adam([ # optimizer for the full network
         {'params': base.parameters()},
         {'params': classifier.parameters()}
-    ], lr=LR)
+    ], lr=LR, weight_decay = 5e-4)
 
 
 def test_and_log(num_labels, text, method=utl.clustering.NN()):
@@ -117,13 +116,14 @@ test_and_log(INIT_NUM_LAB, "Original", method=ACCURACY_MED)
 
 lg.train.superv(models = (base, classifier),
                         labels = LABELS[:INIT_NUM_LAB],
-                        graph = dataset_train,
+                        graph = (dataset, dataset_train),
                         opt = opt,
                         tags = ("x", "labels"),
                         device = (device, scaler),
                         lossF = LOSS_FUN,
                         epochs=EPOCHS, 
-                        sub_graph_size=SUBGRPAH_SIZE)
+                        sub_graph_size=SUBGRPAH_SIZE,
+                        kipf_approach=True)
 
 # trained network
 test_and_log(INIT_NUM_LAB, "Initial training", method=ACCURACY_MED)
@@ -138,7 +138,7 @@ for num_labels in introductions:
         opt = th.optim.Adam([ # optimizer for the full network
                 {'params': base.parameters()},
                 {'params': classifier.parameters()}
-            ], lr=LR)
+            ], lr=LR, weight_decay = 5e-4)
         
         EPOCHS -= int(EPOCHS*LAMBDA)
 
@@ -148,13 +148,14 @@ for num_labels in introductions:
 
             t_methods[i](models = (base, classifier),
                         labels = LABELS[:num_labels],
-                        graph = dataset_train,
+                        graph = (dataset, dataset_train),
                         opt = opt,
                         tags = ("x", "labels"),
                         device = (device, scaler),
                         lossF = LOSS_FUN,
                         epochs=EPOCHS, 
-                        sub_graph_size=SUBGRPAH_SIZE)
+                        sub_graph_size=SUBGRPAH_SIZE,
+                        kipf_approach=True)
     
     test_and_log(num_labels, "Tested with labels " + str(LABELS[:num_labels]), method=ACCURACY_MED)
 

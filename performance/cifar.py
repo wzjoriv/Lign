@@ -54,7 +54,7 @@ AMP_ENABLE = True and th.cuda.is_available()
 EPOCHS = 200
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
-    "superv": lambda x: not (x + INIT_NUM_LAB)%10,
+    "superv": lambda x: not (x - INIT_NUM_LAB)%10,
     "semi": lambda x: False,
     "unsuperv": lambda x: False,
     "growing_exemplar": lambda x: False,
@@ -96,7 +96,7 @@ opt = th.optim.AdamW([ # optimizer for the full network
 def test_and_log(num_labels, text, method=utl.clustering.NN()):
     acc = lg.test.accuracy(model = base,
                 labels = LABELS[:num_labels],
-                graphs = (dataset_train, dataset_validate),
+                graphs = (dataset, dataset_validate),
                 tags = ("x", "labels"),
                 device = device,
                 sub_graph_size=SUBGRPAH_SIZE)

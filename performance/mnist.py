@@ -50,7 +50,7 @@ AMP_ENABLE = True and th.cuda.is_available()
 EPOCHS = 5
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
-    "superv": lambda x: not (x + 6)%3,
+    "superv": lambda x: not (x - INIT_NUM_LAB)%3,
     "semi": lambda x: False,
     "unsuperv": lambda x: False,
     "growing_exemplar": lambda x: False,
@@ -158,7 +158,7 @@ for num_labels in introductions:
     
     test_and_log(num_labels, "Tested with labels " + str(LABELS[:num_labels]), method=ACCURACY_MED)
 
-# ### Save State
+""" # ### Save State
 
 time = str(tm_now()).replace(":", "-").replace(".", "").replace(" ", "_")
 filename = "LIGN_" + dataset_name + "_training_"+time
@@ -202,4 +202,4 @@ if AMP_ENABLE:
 
 dr = os.path.join(folder_name, "models")
 utl.io.make_dir(dr)
-th.save(check, os.path.join(dr, filename+".pt"))
+th.save(check, os.path.join(dr, filename+".pt")) """
