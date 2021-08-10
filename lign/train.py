@@ -94,11 +94,9 @@ def superv(
     is_classifier_gcn = fn.has_gcn(classifier)
 
     if kipf_approach:
-        full_graph = graph[0]
-        train_graph = graph[1]
+        full_graph, train_graph = graph
     else:
-        full_graph = graph
-        train_graph = graph
+        full_graph = train_graph = graph
 
     nodes = fn.filter_tags(tag_out, labels, train_graph)
     

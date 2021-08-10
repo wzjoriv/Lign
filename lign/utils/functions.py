@@ -68,5 +68,5 @@ def sum_data(neighs):
     return out
 
 def sum_tensors(neighs):
-    return neighs.sum(dim = 0)
+    return neighs.sum(dim = 1)
 
