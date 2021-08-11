@@ -163,14 +163,6 @@ for num_labels in introductions:
 time = str(tm_now()).replace(":", "-").replace(".", "").replace(" ", "_")
 filename = "LIGN_" + dataset_name + "_training_"+time
 
-## Save metrics
-metrics = {
-    "accuracy": accuracy,
-    "log": log,
-    "label_and_acc": label_and_acc
-}
-utl.io.json(metrics, os.path.join(folder_name, "log", filename+".json"))
-
 ## Save hyperparameters
 para = {
     "LAMBDA": LAMBDA,
@@ -202,4 +194,12 @@ if AMP_ENABLE:
 
 dr = os.path.join(folder_name, "models")
 utl.io.make_dir(dr)
-th.save(check, os.path.join(dr, filename+".pt")) """
+th.save(check, os.path.join(dr, filename+".pt")) 
+
+## Save metrics
+metrics = {
+    "accuracy": accuracy,
+    "log": log,
+    "label_and_acc": label_and_acc
+}
+utl.io.json(metrics, os.path.join(folder_name, "log", filename+".json"))"""

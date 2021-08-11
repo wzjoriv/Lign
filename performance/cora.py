@@ -45,12 +45,12 @@ LAMBDA = 0.2
 DIST_VEC_SIZE = 128 #128
 INIT_NUM_LAB = 4
 LABELS = np.arange(7)
-SUBGRPAH_SIZE = 128
+SUBGRPAH_SIZE = 500
 AMP_ENABLE = True and th.cuda.is_available()
-EPOCHS = 15
+EPOCHS = 10
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
-    "superv": lambda x: not (x - INIT_NUM_LAB)%3,
+    "superv": lambda x: not (x - INIT_NUM_LAB)%2,
     "semi": lambda x: False,
     "unsuperv": lambda x: False,
     "growing_exemplar": lambda x: False,
@@ -88,7 +88,7 @@ classifier = CORA.Classifier(DIST_VEC_SIZE, INIT_NUM_LAB, device).to(device) # c
 # ## Training
 # ### Snippets
 
-opt = th.optim.Adam([ # optimizer for the full network
+opt = th.optim.AdamW([ # optimizer for the full network
         {'params': base.parameters()},
         {'params': classifier.parameters()}
     ], lr=LR, weight_decay = 5e-4)
@@ -97,10 +97,11 @@ opt = th.optim.Adam([ # optimizer for the full network
 def test_and_log(num_labels, text, method=utl.clustering.NN()):
     acc = lg.test.accuracy(model = base,
                 labels = LABELS[:num_labels],
-                graphs = (dataset_train, dataset_validate),
+                graphs = (dataset, dataset_train, dataset_validate),
                 tags = ("x", "labels"),
                 device = device,
-                sub_graph_size=SUBGRPAH_SIZE)
+                sub_graph_size=SUBGRPAH_SIZE,
+                kipf_approach=True)
   
     accuracy.append(acc)
     m_name = method.__class__.__name__
@@ -135,7 +136,7 @@ for num_labels in introductions:
 
     if sum(to_train):
         classifier.DyLinear.update_size(num_labels)
-        opt = th.optim.Adam([ # optimizer for the full network
+        opt = th.optim.AdamW([ # optimizer for the full network
                 {'params': base.parameters()},
                 {'params': classifier.parameters()}
             ], lr=LR, weight_decay = 5e-4)
@@ -163,14 +164,6 @@ for num_labels in introductions:
 
 time = str(tm_now()).replace(":", "-").replace(".", "").replace(" ", "_")
 filename = "LIGN_" + dataset_name + "_training_"+time
-
-## Save metrics
-metrics = {
-    "accuracy": accuracy,
-    "log": log,
-    "label_and_acc": label_and_acc
-}
-utl.io.json(metrics, os.path.join(folder_name, "log", filename+".json"))
 
 ## Save hyperparameters
 para = {
@@ -204,3 +197,12 @@ if AMP_ENABLE:
 dr = os.path.join(folder_name, "models")
 utl.io.make_dir(dr)
 th.save(check, os.path.join(dr, filename+".pt"))
+
+## Save metrics
+metrics = {
+    "accuracy": accuracy,
+    "log": log,
+    "label_and_acc": label_and_acc
+}
+
+utl.io.json(metrics, os.path.join(folder_name, "log", filename+".json"))
