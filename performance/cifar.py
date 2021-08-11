@@ -61,7 +61,7 @@ RETRAIN_PER = { # (offset, frequency); When zero, true
     "fixed_exemplar": lambda x: False
 }
 ACCURACY_MED = utl.clustering.KNN()
-LOSS_FUN = nn.CrossEntropyLoss()
+LOSS_FUN = nn.NLLLoss()
 STEP_SIZE = 5
 
 num_of_labels = len(LABELS)
