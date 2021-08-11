@@ -41,13 +41,13 @@ else:
     
 # ### Hyperparameters
 
-LAMBDA = 0.2
+LAMBDA = 0.3
 DIST_VEC_SIZE = 128 #128
 INIT_NUM_LAB = 4
 LABELS = np.arange(7)
 SUBGRPAH_SIZE = 500
 AMP_ENABLE = True and th.cuda.is_available()
-EPOCHS = 10
+EPOCHS = 128
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
     "superv": lambda x: not (x - INIT_NUM_LAB)%2,
@@ -106,7 +106,7 @@ def test_and_log(num_labels, text, method=utl.clustering.NN()):
     accuracy.append(acc)
     m_name = method.__class__.__name__
     log.append(f"Label: {num_labels}/{num_of_labels} -- Accuracy({m_name}): {round(acc, 2)}% -- {text}")
-    label_and_acc[0].append(num_labels)
+    label_and_acc[0].append(int(num_labels))
     label_and_acc[1].append(acc)
     print(log[-1])
 

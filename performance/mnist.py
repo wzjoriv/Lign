@@ -106,7 +106,7 @@ def test_and_log(num_labels, text, method=utl.clustering.NN()):
     accuracy.append(acc)
     m_name = method.__class__.__name__
     log.append(f"Label: {num_labels}/{num_of_labels} -- Accuracy({m_name}): {round(acc, 2)}% -- {text}")
-    label_and_acc[0].append(num_labels)
+    label_and_acc[0].append(int(num_labels))
     label_and_acc[1].append(acc)
     print(log[-1])
 
