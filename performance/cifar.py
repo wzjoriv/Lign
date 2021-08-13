@@ -17,7 +17,7 @@ import os
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 
 dataset_name = "CIFAR" #<<<<<
-folder_name = "cifar_1"
+folder_name = "cifar_2"
 
 trans = tv.transforms.Compose([
     tv.transforms.ToTensor(),
@@ -45,23 +45,23 @@ else:
 
 # ### Hyperparameters
 
-LAMBDA = 0.08
-DIST_VEC_SIZE = 500 #128
-INIT_NUM_LAB = 50
+LAMBDA = 0.2
+DIST_VEC_SIZE = 150 #128
+INIT_NUM_LAB = 20
 LABELS = np.arange(100)
 SUBGRPAH_SIZE = 500
 AMP_ENABLE = True and th.cuda.is_available()
-EPOCHS = 200
+EPOCHS = 100
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
-    "superv": lambda x: not (x + INIT_NUM_LAB)%10,
+    "superv": lambda x: not (x - INIT_NUM_LAB)%20,
     "semi": lambda x: False,
     "unsuperv": lambda x: False,
     "growing_exemplar": lambda x: False,
     "fixed_exemplar": lambda x: False
 }
 ACCURACY_MED = utl.clustering.KNN()
-LOSS_FUN = nn.CrossEntropyLoss()
+LOSS_FUN = nn.NLLLoss()
 STEP_SIZE = 5
 
 num_of_labels = len(LABELS)
@@ -96,7 +96,7 @@ opt = th.optim.AdamW([ # optimizer for the full network
 def test_and_log(num_labels, text, method=utl.clustering.NN()):
     acc = lg.test.accuracy(model = base,
                 labels = LABELS[:num_labels],
-                graphs = (dataset_train, dataset_validate),
+                graphs = (dataset, dataset_validate),
                 tags = ("x", "labels"),
                 device = device,
                 sub_graph_size=SUBGRPAH_SIZE)
@@ -104,7 +104,7 @@ def test_and_log(num_labels, text, method=utl.clustering.NN()):
     accuracy.append(acc)
     m_name = method.__class__.__name__
     log.append(f"Label: {num_labels}/{num_of_labels} -- Accuracy({m_name}): {round(acc, 2)}% -- {text}")
-    label_and_acc[0].append(num_labels)
+    label_and_acc[0].append(int(num_labels))
     label_and_acc[1].append(acc)
     print(log[-1])
 

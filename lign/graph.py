@@ -299,8 +299,7 @@ class Graph(Dataset):
             if func:
                 if data:
                     for node in nodes:
-                        out = [self.dataset["__temp__"][node][i].data[data]
-                               for i in range(len(self.dataset["__temp__"][node]))]
+                        out = [nd.data[data] for nd in self.dataset["__temp__"][node]]
                         out = func(out)
                         self.dataset["data"][data][node] = out
                 else:
@@ -347,16 +346,16 @@ class Graph(Dataset):
         for node in nodes:
             nd = self[node]
             for edge in nd.edges:
-                self.dataset["__temp__"][edge].append(nd)
+                self.dataset["__temp__"][edge].append((nd, edge))
 
         if func:
             if data:
                 for node in nodes:
-                    out = [self.dataset["__temp__"][node][i].data[data] for i in range(len(self.dataset["__temp__"][node]))]
-                    out = func(out)
+                    nds = [nd[1] for nd in self.dataset["__temp__"][node]]
+                    out = func(self.get_data(data, nds))
                     self.dataset["data"][data][node] = out
             else:
-                out = [func(self.dataset["__temp__"][node]) for node in nodes]
+                out = [func(self.dataset["__temp__"][node][1]) for node in nodes]
 
                 for indx, node in enumerate(nodes):
 

@@ -8,7 +8,7 @@ from lign.utils.clustering import KMeans, KNN
 def growing_exemplar(
             models, graph, labels, opt, 
             tags = ('x', 'label'), examplar_n = 20, device = (th.device('cpu'), None), 
-            lossF = nn.CrossEntropyLoss(), epochs=200, sub_graph_size = 128
+            lossF = nn.CrossEntropyLoss(), epochs=200, sub_graph_size = 128, kipf_approach=False
         ):
 
     tag_in, tag_out = tags
@@ -18,21 +18,23 @@ def growing_exemplar(
     sub = graph.sub_graph(tr_nodes, get_data=True)
 
     superv(models, sub, labels, opt, 
-            tags = (tag_in, tag_out), device = device, lossF = lossF, epochs = epochs, sub_graph_size = sub_graph_size)
+            tags = (tag_in, tag_out), device = device, lossF = lossF, 
+            epochs = epochs, sub_graph_size = sub_graph_size, kipf_approach = kipf_approach)
 
 def fixed_exemplar(
             models, graph, labels, opt, 
             tags = ('x', 'label'), examplar_n = 2000, device = (th.device('cpu'), None), 
-            lossF = nn.CrossEntropyLoss(), epochs=200, sub_graph_size = 128
+            lossF = nn.CrossEntropyLoss(), epochs=200, sub_graph_size = 128, kipf_approach=False
         ):
 
     growing_exemplar(models, graph, labels, opt, 
-            tags = tags, examplar_n=int(examplar_n/len(labels)), device = device, lossF=lossF, epochs=epochs, sub_graph_size = sub_graph_size)
+            tags = tags, examplar_n=int(examplar_n/len(labels)), device = device, lossF=lossF, 
+            epochs=epochs, sub_graph_size = sub_graph_size, kipf_approach = kipf_approach)
 
 def unsuperv(
             models, graph, labels, opt, 
             tags = ('x', 'label'), cluster = KMeans(), device = (th.device('cpu'), None), 
-            lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200
+            lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200, kipf_approach=False
         ):
 
     tag_in, tag_out = tags
@@ -48,14 +50,15 @@ def unsuperv(
     graph.set_data('_p_label_', data)
 
     superv(models, graph, labels, opt, 
-            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, sub_graph_size = sub_graph_size)
+            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, 
+            epochs = epochs, sub_graph_size = sub_graph_size, kipf_approach = kipf_approach)
 
     graph.pop_data('_p_label_')
 
 def semi_superv(
             models, graph, labels, opt, 
             tags = ('x', 'label'), k = 5, cluster = KNN(), device = (th.device('cpu'), None), 
-            lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200
+            lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200, kipf_approach=False
         ):
 
     tag_in, tag_out = tags
@@ -70,7 +73,8 @@ def semi_superv(
     graph.set_data('_p_label_', data)
 
     superv(models, graph, labels, opt, 
-            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, epochs = epochs, sub_graph_size = sub_graph_size)
+            tags = (tag_in, '_p_label_'), device = device, lossF = lossF, 
+            epochs = epochs, sub_graph_size = sub_graph_size, kipf_approach = kipf_approach)
 
     graph.pop_data('_p_label_')
 
@@ -79,13 +83,6 @@ def superv(
             tags = ('x', 'label'), device = (th.device('cpu'), None), 
             lossF = nn.CrossEntropyLoss(), epochs=1000, sub_graph_size = 200, kipf_approach=False
         ):
-
-    if kipf_approach:
-        full_graph = graph
-        train_graph = graph
-    else:
-        full_graph = graph[0]
-        train_graph = graph[1]
     
     base, classifier = models
     tag_in, tag_out = tags
@@ -95,6 +92,11 @@ def superv(
 
     is_base_gcn = fn.has_gcn(base)
     is_classifier_gcn = fn.has_gcn(classifier)
+
+    if kipf_approach:
+        full_graph, train_graph = graph
+    else:
+        full_graph = train_graph = graph
 
     nodes = fn.filter_tags(tag_out, labels, train_graph)
     
@@ -113,7 +115,7 @@ def superv(
                 b_nodes = nodes[batch:min(nodes_len, batch + sub_graph_size)]
                 sub = train_graph.sub_graph(b_nodes, get_edges=is_classifier_gcn) if is_classifier_gcn else None
 
-                if not kipf_approach:
+                if kipf_approach:
                     b_nodes = train_graph.child_to_parent_index(b_nodes)
 
                 inp = full_graph.get_data(tag_in).to(device[0]) if is_base_gcn else full_graph.get_data(tag_in, nodes=b_nodes).to(device[0])

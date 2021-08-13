@@ -170,7 +170,7 @@ It is recommended to run the following instructions in a python console to view 
    # Use push or pull if only involving multiple nodes. Nodes will push/pull data via edges
    ## Sums neighbors 'x' value together; require neighbors
    def sum_tensors(neighs):
-       return th.stack(neighs).sum(dim = 0)
+      return neighs.sum(dim = 0)
     
    g[(2, 3, 4)] = {2, 3, 4}
    g.push(sum_tensors, data='x')

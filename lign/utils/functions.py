@@ -68,5 +68,7 @@ def sum_data(neighs):
     return out
 
 def sum_tensors(neighs):
-    return th.stack(neighs).sum(dim = 0)
+    return neighs.sum(dim = 0)
 
+def get_accuracy(prediction, truth):
+    return (prediction == truth).sum().item() * 100.0/prediction.size(0)

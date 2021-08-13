@@ -50,14 +50,14 @@ AMP_ENABLE = True and th.cuda.is_available()
 EPOCHS = 5
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
-    "superv": lambda x: not (x + 6)%3,
+    "superv": lambda x: not (x - INIT_NUM_LAB)%3,
     "semi": lambda x: False,
     "unsuperv": lambda x: False,
     "growing_exemplar": lambda x: False,
     "fixed_exemplar": lambda x: False
 }
 ACCURACY_MED = utl.clustering.KNN()
-LOSS_FUN = nn.CrossEntropyLoss()
+LOSS_FUN = nn.NLLLoss()
 STEP_SIZE = 1
 
 num_of_labels = len(LABELS)
@@ -106,7 +106,7 @@ def test_and_log(num_labels, text, method=utl.clustering.NN()):
     accuracy.append(acc)
     m_name = method.__class__.__name__
     log.append(f"Label: {num_labels}/{num_of_labels} -- Accuracy({m_name}): {round(acc, 2)}% -- {text}")
-    label_and_acc[0].append(num_labels)
+    label_and_acc[0].append(int(num_labels))
     label_and_acc[1].append(acc)
     print(log[-1])
 
@@ -158,18 +158,10 @@ for num_labels in introductions:
     
     test_and_log(num_labels, "Tested with labels " + str(LABELS[:num_labels]), method=ACCURACY_MED)
 
-# ### Save State
+""" # ### Save State
 
 time = str(tm_now()).replace(":", "-").replace(".", "").replace(" ", "_")
 filename = "LIGN_" + dataset_name + "_training_"+time
-
-## Save metrics
-metrics = {
-    "accuracy": accuracy,
-    "log": log,
-    "label_and_acc": label_and_acc
-}
-utl.io.json(metrics, os.path.join(folder_name, "log", filename+".json"))
 
 ## Save hyperparameters
 para = {
@@ -202,4 +194,12 @@ if AMP_ENABLE:
 
 dr = os.path.join(folder_name, "models")
 utl.io.make_dir(dr)
-th.save(check, os.path.join(dr, filename+".pt"))
+th.save(check, os.path.join(dr, filename+".pt")) 
+
+## Save metrics
+metrics = {
+    "accuracy": accuracy,
+    "log": log,
+    "label_and_acc": label_and_acc
+}
+utl.io.json(metrics, os.path.join(folder_name, "log", filename+".json"))"""

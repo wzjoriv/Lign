@@ -24,12 +24,12 @@ folder_name = "cora_1"
 
 dataset = lg.graph.Graph("../data/datasets/cora.lign")
 
-split = 6/7
+split = 5/6
 split_n = int(len(dataset)*split)
 nodes_n = list(range(len(dataset)))
 
-dataset_train = dataset.sub_graph(nodes_n[:split_n], get_data = True, get_edges=False)
-dataset_validate = dataset.sub_graph(nodes_n[split_n:], get_data = True, get_edges=False)
+dataset_train = dataset.sub_graph(nodes_n[:split_n], get_data = True, get_edges = True)
+dataset_validate = dataset.sub_graph(nodes_n[split_n:], get_data = True, get_edges = True)
 
 # ### Cuda GPUs
 
@@ -41,23 +41,23 @@ else:
     
 # ### Hyperparameters
 
-LAMBDA = 0.08
+LAMBDA = 0.3
 DIST_VEC_SIZE = 128 #128
 INIT_NUM_LAB = 4
-LABELS = np.arange(10)
-SUBGRPAH_SIZE = 128
+LABELS = np.arange(7)
+SUBGRPAH_SIZE = 500
 AMP_ENABLE = True and th.cuda.is_available()
-EPOCHS = 5
+EPOCHS = 128
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
-    "superv": lambda x: not (x + 6)%3,
+    "superv": lambda x: not (x - INIT_NUM_LAB)%2,
     "semi": lambda x: False,
     "unsuperv": lambda x: False,
     "growing_exemplar": lambda x: False,
     "fixed_exemplar": lambda x: False
 }
 ACCURACY_MED = utl.clustering.KNN()
-LOSS_FUN = nn.CrossEntropyLoss()
+LOSS_FUN = nn.NLLLoss()
 STEP_SIZE = 1
 
 num_of_labels = len(LABELS)
@@ -68,8 +68,7 @@ scaler = GradScaler() if AMP_ENABLE else None
 accuracy = []
 log = []
 label_and_acc = [[], []]
-introductions = range(INIT_NUM_LAB + 1, num_of_labels + 1, STEP_SIZE) #start, end, step
-#LABELS = np.array([3, 1, 0, 9, 5, 7, 2, 4, 8, 6]) ## cora
+introductions = np.arange(INIT_NUM_LAB, num_of_labels+1, STEP_SIZE)[1:] #start, end, step
 
 
 # ---
@@ -89,24 +88,25 @@ classifier = CORA.Classifier(DIST_VEC_SIZE, INIT_NUM_LAB, device).to(device) # c
 # ## Training
 # ### Snippets
 
-opt = th.optim.Adam([ # optimizer for the full network
+opt = th.optim.AdamW([ # optimizer for the full network
         {'params': base.parameters()},
         {'params': classifier.parameters()}
-    ], lr=LR)
+    ], lr=LR, weight_decay = 5e-4)
 
 
 def test_and_log(num_labels, text, method=utl.clustering.NN()):
     acc = lg.test.accuracy(model = base,
                 labels = LABELS[:num_labels],
-                graphs = (dataset_train, dataset_validate),
+                graphs = (dataset, dataset_train, dataset_validate),
                 tags = ("x", "labels"),
                 device = device,
-                sub_graph_size=SUBGRPAH_SIZE)
+                sub_graph_size=SUBGRPAH_SIZE,
+                kipf_approach=True)
   
     accuracy.append(acc)
     m_name = method.__class__.__name__
     log.append(f"Label: {num_labels}/{num_of_labels} -- Accuracy({m_name}): {round(acc, 2)}% -- {text}")
-    label_and_acc[0].append(num_labels)
+    label_and_acc[0].append(int(num_labels))
     label_and_acc[1].append(acc)
     print(log[-1])
 
@@ -117,13 +117,14 @@ test_and_log(INIT_NUM_LAB, "Original", method=ACCURACY_MED)
 
 lg.train.superv(models = (base, classifier),
                         labels = LABELS[:INIT_NUM_LAB],
-                        graph = dataset_train,
+                        graph = (dataset, dataset_train),
                         opt = opt,
                         tags = ("x", "labels"),
                         device = (device, scaler),
                         lossF = LOSS_FUN,
                         epochs=EPOCHS, 
-                        sub_graph_size=SUBGRPAH_SIZE)
+                        sub_graph_size=SUBGRPAH_SIZE,
+                        kipf_approach=True)
 
 # trained network
 test_and_log(INIT_NUM_LAB, "Initial training", method=ACCURACY_MED)
@@ -135,10 +136,10 @@ for num_labels in introductions:
 
     if sum(to_train):
         classifier.DyLinear.update_size(num_labels)
-        opt = th.optim.Adam([ # optimizer for the full network
+        opt = th.optim.AdamW([ # optimizer for the full network
                 {'params': base.parameters()},
                 {'params': classifier.parameters()}
-            ], lr=LR)
+            ], lr=LR, weight_decay = 5e-4)
         
         EPOCHS -= int(EPOCHS*LAMBDA)
 
@@ -148,13 +149,14 @@ for num_labels in introductions:
 
             t_methods[i](models = (base, classifier),
                         labels = LABELS[:num_labels],
-                        graph = dataset_train,
+                        graph = (dataset, dataset_train),
                         opt = opt,
                         tags = ("x", "labels"),
                         device = (device, scaler),
                         lossF = LOSS_FUN,
                         epochs=EPOCHS, 
-                        sub_graph_size=SUBGRPAH_SIZE)
+                        sub_graph_size=SUBGRPAH_SIZE,
+                        kipf_approach=True)
     
     test_and_log(num_labels, "Tested with labels " + str(LABELS[:num_labels]), method=ACCURACY_MED)
 
@@ -162,14 +164,6 @@ for num_labels in introductions:
 
 time = str(tm_now()).replace(":", "-").replace(".", "").replace(" ", "_")
 filename = "LIGN_" + dataset_name + "_training_"+time
-
-## Save metrics
-metrics = {
-    "accuracy": accuracy,
-    "log": log,
-    "label_and_acc": label_and_acc
-}
-utl.io.json(metrics, os.path.join(folder_name, "log", filename+".json"))
 
 ## Save hyperparameters
 para = {
@@ -203,3 +197,12 @@ if AMP_ENABLE:
 dr = os.path.join(folder_name, "models")
 utl.io.make_dir(dr)
 th.save(check, os.path.join(dr, filename+".pt"))
+
+## Save metrics
+metrics = {
+    "accuracy": accuracy,
+    "log": log,
+    "label_and_acc": label_and_acc
+}
+
+utl.io.json(metrics, os.path.join(folder_name, "log", filename+".json"))
