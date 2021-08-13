@@ -17,7 +17,7 @@ import os
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 
 dataset_name = "CIFAR" #<<<<<
-folder_name = "cifar_1"
+folder_name = "cifar_2"
 
 trans = tv.transforms.Compose([
     tv.transforms.ToTensor(),
@@ -45,16 +45,16 @@ else:
 
 # ### Hyperparameters
 
-LAMBDA = 0.08
-DIST_VEC_SIZE = 500 #128
-INIT_NUM_LAB = 50
+LAMBDA = 0.2
+DIST_VEC_SIZE = 150 #128
+INIT_NUM_LAB = 20
 LABELS = np.arange(100)
 SUBGRPAH_SIZE = 500
 AMP_ENABLE = True and th.cuda.is_available()
-EPOCHS = 200
+EPOCHS = 100
 LR = 1e-3
 RETRAIN_PER = { # (offset, frequency); When zero, true
-    "superv": lambda x: not (x - INIT_NUM_LAB)%10,
+    "superv": lambda x: not (x - INIT_NUM_LAB)%20,
     "semi": lambda x: False,
     "unsuperv": lambda x: False,
     "growing_exemplar": lambda x: False,
